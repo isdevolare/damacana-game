@@ -6,15 +6,19 @@ import { isMegaBoss } from '@/lib/config/bosses';
 import { useTranslations } from 'next-intl';
 import { audio } from '@/lib/audio/AudioEngine';
 import { motion } from 'framer-motion';
+import { currentChapter } from '@/lib/config/chapters';
 
 export function BossPanel() {
   const boss = useGame((s) => s.boss);
+  const completedChapters = useGame((s) => s.completedChapters);
   const tap = useGame((s) => s.tapDamacana);
   const sfxEnabled = useGame((s) => !s.audio.muted);
   const combo = useGame((s) => s.combo);
   const t = useTranslations();
   const mega = isMegaBoss(boss.tier);
   const elite = boss.isElite;
+  const chapter = currentChapter(completedChapters);
+  const finalBoss = boss.tier === chapter.finalBossTier;
   const name = elite
     ? t(`elite.${boss.nameKey}` as any)
     : t(`bosses.${boss.nameKey}` as any);
@@ -42,6 +46,7 @@ export function BossPanel() {
         <div className="font-space text-[11px] tracking-widest uppercase text-white/80">
           {elite && <span className="text-purple mr-1">★ {t('ui.elite')}</span>}
           {!elite && mega && <span className="text-gold mr-1">★ {t('ui.mega')}</span>}
+          {finalBoss && <span className="text-cyan mr-1">{t('chapters.finalBoss')}</span>}
           <span style={{ color: accent }}>T{boss.tier}</span> · {name}
         </div>
         <div className="font-vt text-white/70 text-sm">

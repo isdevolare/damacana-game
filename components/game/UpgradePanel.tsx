@@ -19,7 +19,7 @@ export function UpgradePanel() {
   const auto = UPGRADES.filter((u) => u.kind === 'auto');
 
   return (
-    <div className="px-3 pb-3 grid grid-cols-2 gap-3">
+    <div className="px-3 pb-3 grid max-h-[23vh] grid-cols-2 gap-3 overflow-y-auto">
       <div>
         <div className="text-[10px] font-space tracking-widest text-cyan/80 mb-1">
           {ui('tap')}

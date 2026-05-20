@@ -3,9 +3,7 @@
 import { Background } from './Background';
 import { TopBar } from './TopBar';
 import { Counter } from './Counter';
-import { ComboIndicator } from './ComboIndicator';
-import { DamacanaForm } from './DamacanaForm';
-import { BossPanel } from './BossPanel';
+import { CombatArena } from './CombatArena';
 import { UpgradePanel } from './UpgradePanel';
 import { EvolutionOverlay } from './EvolutionOverlay';
 import { PrestigeOverlay } from './PrestigeOverlay';
@@ -22,6 +20,9 @@ import { AchievementToast } from './AchievementToast';
 import { AchievementsModal } from './AchievementsModal';
 import { ProgressionPanel } from './ProgressionPanel';
 import { ShopModal } from './ShopModal';
+import { ChapterCompleteModal } from './ChapterCompleteModal';
+import { OfflineReturnModal } from './OfflineReturnModal';
+import { ProfileStatsModal } from './ProfileStatsModal';
 import { useScreenShake } from '@/lib/hooks/useScreenShake';
 import { useGameLoop } from '@/lib/hooks/useGameLoop';
 import { useAchievements } from '@/lib/hooks/useAchievements';
@@ -41,10 +42,8 @@ export function GameScreen({ locale }: { locale: string }) {
         <TopBar />
         <Counter />
         <div className="relative flex-1 flex flex-col">
-          <DamacanaForm />
-          <ComboIndicator />
+          <CombatArena />
         </div>
-        <BossPanel />
         <UpgradePanel />
         <ActiveAbilityBar />
       </div>
@@ -58,7 +57,10 @@ export function GameScreen({ locale }: { locale: string }) {
       <FactCard />
       <AchievementsModal />
       <ProgressionPanel />
+      <ProfileStatsModal />
       <ShopModal />
+      <ChapterCompleteModal />
+      <OfflineReturnModal />
       <AchievementToast />
       <SettingsPanel locale={locale} />
       <StartOverlay />

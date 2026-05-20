@@ -48,6 +48,81 @@
     "future": { "name": "gelecek" },
     "water": { "name": "su" }
   },
+  "chapters": {
+    "chapter": "BÖLÜM",
+    "level": "SEVİYE",
+    "levels": "Seviyeler",
+    "finalBoss": "FİNAL BOSS",
+    "bossTier": "Boss tier",
+    "objective": "ANA HEDEF",
+    "currentMission": "Aktif görev",
+    "completed": "GÖREV TAMAMLANDI",
+    "unlocked": "Açıldı",
+    "earth": {
+      "name": "Dünya",
+      "desc": "Tek bir damladan gezegen ölçeğinde sıvı çekirdeğe yoğunlaş.",
+      "objective": "Dünya formunu dengele ve dünya aşaması boss'unu yen.",
+      "complete": "Dünya'nın sıvı sinyali dengelendi. Rotada kırmızı gezegen açıldı."
+    },
+    "mars": {
+      "name": "Mars",
+      "desc": "İnce atmosfer, demir tozu ve basınçsız akışa dayan.",
+      "objective": "Mars basıncına uyum sağla ve kızıl gezegen muhafızını kır.",
+      "complete": "Mars teslim oldu. Halkalı dev artık menzilde."
+    },
+    "saturn": {
+      "name": "Satürn",
+      "desc": "Sıvı enerjiyi halkalar, buz ve yörünge enkazı arasından şekillendir.",
+      "objective": "Halka alanını geç ve Satürn'ün final muhafızını yen.",
+      "complete": "Satürn'ün halkaları akışınla hizalandı. Uranüs açıldı."
+    },
+    "uranus": {
+      "name": "Uranüs",
+      "desc": "Soğuk atmosfer basıncını daha derin kozmik akışa dönüştür.",
+      "objective": "Eğik buz devinde ustalaş ve savunma alanını çökert.",
+      "complete": "Uranüs tamamlandı. Neptün'ün derin mavi çekimi çağırıyor."
+    },
+    "neptune": {
+      "name": "Neptün",
+      "desc": "Rota yıldızlara ve anomalilere açılmadan önce fırtına eşiğine gir.",
+      "objective": "Neptün'ün final boss'unu yenerek gezegen rotasını bitir.",
+      "complete": "İlk gezegen rotası tamamlandı. Yıldız bölümleri bu MVP'nin ötesinde kalıyor."
+    }
+  },
+  "offline": {
+    "title": "DÖNÜŞ SİNYALİ",
+    "body": "{time} uzaktaydın, {amount} damacana kazandın."
+  },
+  "profile": {
+    "title": "PROFİL",
+    "subtitle": "run ve ömür boyu telemetri",
+    "stats": {
+      "playTime": "oyun süresi",
+      "totalEarned": "toplam kazanç",
+      "bossesDefeated": "yenilen boss",
+      "chaptersCompleted": "bölüm tamamlandı",
+      "knowledgeBulbs": "toplanan araştırma",
+      "prestigeCount": "prestij sayısı"
+    }
+  },
+  "combat": {
+    "boss": "Boss",
+    "chapterBoss": "Bölüm boss'u",
+    "hp": "HP",
+    "wave": "dalga",
+    "orbitDamage": "yörünge",
+    "chainReady": "zincir hazır",
+    "cosmicChain": "kozmik zincir",
+    "criticalRupture": "kritik kırılma",
+    "coreCollapsed": "ÇEKİRDEK ÇÖKTÜ",
+    "recovering": "sıvı çekirdek yenileniyor",
+    "mana": "Mana",
+    "abilities": {
+      "waveBurst": { "name": "Dalga Patlaması", "desc": "Çekirdeğin çevresinde alan kırılması" },
+      "orbitSlash": { "name": "Yörünge Kesimi", "desc": "Dönen halka hasarı" },
+      "coreHeal": { "name": "Çekirdek İyileştirme", "desc": "Çekirdek HP'sini yeniler" }
+    }
+  },
   "facts": {
     "cosmos_ageUniverse": {
       "title": "EVRENİN YAŞI",
@@ -375,12 +450,17 @@
     "speedrunner": { "name": "HIZLI KOŞAN", "desc": "20 dakikadan az sürede evrim 6'ya ulaş" },
     "patientOne": { "name": "SABIRLI", "desc": "Toplam 24 saat oyun süresi" },
     "voidResponds": { "name": "BOŞLUK YANIT VERİYOR", "desc": "Void Burst'ü 50 kez kullan" },
+    "earthMissionCompleted": { "name": "DÜNYA GÖREVİ TAMAMLANDI", "desc": "Bölüm 1: Dünya'yı temizle" },
+    "marsUnlocked": { "name": "MARS AÇILDI", "desc": "Bölüm 2: Mars'ı aç" },
+    "firstPlanetBossDefeated": { "name": "İLK GEZEGEN BOSS'U YENİLDİ", "desc": "Dünya'nın final boss'unu yen" },
+    "knowledgeFive": { "name": "ARAŞTIRMA ÖNBELLEĞİ", "desc": "Bonus için 5 bilgi ampulü topla" },
     "unclassifiable": { "name": "SINIFLANDIRILAMAZ", "desc": "Diğer tüm başarımları aç" }
   },
   "progression": {
     "title": "İLERLEME",
     "comingNext": "Sırada",
     "current": "Şu anki ★",
+    "deepSystems": "İkincil sistemler",
     "tier3": { "name": "★3 — POST-FAILED", "desc": "Yeni bir 8. evrim formu açılır." },
     "tier5": { "name": "★5 — ELİT BOSS'LAR", "desc": "Elit varyantlar 1.5× HP ve garantili kırık drop ile çıkar." },
     "tier10": { "name": "★10 — TEKİLLİK KRİSTALLERİ", "desc": "Elit boss'lar ✦ düşürebilir. Küçük bir dükkan açılır." },
@@ -409,36 +489,36 @@
     "nullEntity": "null varlık"
   },
   "levels": {
-    "drop": { "name": "DAMLA", "desc": "sonsuza dek düşen tek bir damla" },
-    "bigDrop": { "name": "BÜYÜK DAMLA", "desc": "damla fazla beslendi" },
-    "fiveBottleHuman": { "name": "5-DAMACANA İNSAN", "desc": "beş kapalı damacanadan oluşan bir kişi" },
-    "galactic": { "name": "GALAKTİK TÜKETİCİ", "desc": "yörüngeler arası içiyorsun" },
-    "transcendent": { "name": "AŞKIN TÜKETİCİ", "desc": "susuzluk artık biyolojik değil" },
-    "voidConsumer": { "name": "BOŞLUK TÜKETİCİSİ", "desc": "yıldızların arasındaki boşluktan içiyorsun" },
-    "classificationFailed": { "name": "CLASSIFICATION FAILED", "desc": "sistemin sana koyacak bir kategorisi yok" },
-    "postFailed": { "name": "POST-FAILED", "desc": "sistem pes ettikten sonra bile devam edersin" }
+    "drop": { "name": "KÖKEN DAMLASI", "desc": "Dünya çekiminde uyanan sıvı-enerji tohumu" },
+    "bigDrop": { "name": "DÜNYA GELGİT ÇEKİRDEĞİ", "desc": "damla gezegen ölçeğinde bir akıma dönüşür" },
+    "fiveBottleHuman": { "name": "MARS BASINÇ FORMU", "desc": "ince hava ve kızıl toz sıvı çekirdeği sıkıştırır" },
+    "galactic": { "name": "SATÜRN HALKA AKIMI", "desc": "yörünge buzu büyüyen kütlenin etrafında bükülür" },
+    "transcendent": { "name": "URANÜS BUZ AKIŞI", "desc": "soğuk atmosfer akışı kozmik basınca çevirir" },
+    "voidConsumer": { "name": "NEPTÜN FIRTINA BEDENİ", "desc": "mavi çekim sıvı formunu dış karanlığa çeker" },
+    "classificationFailed": { "name": "GEZEGEN SINIRI KIRILDI", "desc": "ilk rota yıldız uzayına doğru zorlanır" },
+    "postFailed": { "name": "GEZEGEN ÖTESİ SİNYAL", "desc": "gezegenlerden sonra yıldız yolu cevap vermeye başlar" }
   },
   "bosses": {
-    "faucetGhost": "musluk hayaleti",
-    "droughtSpirit": "kuraklık ruhu",
-    "fifthBottleEntity": "beşinci damacana varlığı",
-    "custodianEmptyBottle": "boş damacananın bekçisi",
-    "fridgeShaman": "buzdolabı şamanı",
-    "wellDjinn": "kuyu cini",
-    "oceanEnvoy": "okyanus elçisi",
-    "icebergJudge": "buzdağı hakimi",
-    "ancientBottleElder": "kadim damacana büyüğü",
-    "chlorineDwarf": "klor cücesi",
-    "flowKing": "akış kralı",
-    "antiqueDamacanaLord": "antika damacana lordu",
-    "voidDrinker": "boşluk içicisi",
-    "transcendentBoss": "aşkın boss",
-    "classificationError": "sınıflandırma hatası",
-    "leakingMoon": "sızdıran ay",
-    "saturdayFoamBeast": "cumartesi köpük canavarı",
-    "unstableDrip": "kararsız damla",
-    "bossOfBosses": "boss'ların boss'u",
-    "unnamedLiquid": "isimsiz sıvı"
+    "faucetGhost": "yüzey basınç yankısı",
+    "droughtSpirit": "kuru havza bekçisi",
+    "fifthBottleEntity": "kıtasal mühür",
+    "custodianEmptyBottle": "manto gelgit nöbetçisi",
+    "fridgeShaman": "dünya çekirdek muhafızı",
+    "wellDjinn": "kızıl toz kesici",
+    "oceanEnvoy": "ince hava sifonu",
+    "icebergJudge": "demir sırt devi",
+    "ancientBottleElder": "olympus basınç kapısı",
+    "chlorineDwarf": "mars final muhafızı",
+    "flowKing": "halka enkaz sürüsü",
+    "antiqueDamacanaLord": "buz kuşağı leviathanı",
+    "voidDrinker": "yörünge kesme motoru",
+    "transcendentBoss": "cassini gölgesi",
+    "classificationError": "satürn final muhafızı",
+    "leakingMoon": "eğik fırtına sondası",
+    "saturdayFoamBeast": "kriyojenik dalga cephesi",
+    "unstableDrip": "buz devi basınç duvarı",
+    "bossOfBosses": "neptün fırtına hükümdarı",
+    "unnamedLiquid": "dış karanlık anomalisi"
   },
   "upgrades": {
     "bigSip": { "name": "büyük yudum" },

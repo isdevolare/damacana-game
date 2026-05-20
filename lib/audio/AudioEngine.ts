@@ -208,6 +208,50 @@ class AudioEngine {
     setTimeout(() => m.dispose(), 250);
   }
 
+  sfxCombatHit(power = 1) {
+    if (!this.T || !this.sfxGain) return;
+    const s = new this.T.MonoSynth({
+      oscillator: { type: 'triangle' },
+      envelope: { attack: 0.002, decay: 0.08, sustain: 0, release: 0.08 },
+      filter: { Q: 4, type: 'lowpass' },
+      filterEnvelope: { attack: 0.002, decay: 0.08, sustain: 0, release: 0.08, baseFrequency: 1400, octaves: -2 },
+    }).connect(this.sfxGain);
+    const note = power > 8 ? 'G3' : power > 3 ? 'E3' : 'C3';
+    s.triggerAttackRelease(note, 0.09);
+    setTimeout(() => s.dispose(), 280);
+  }
+
+  sfxCriticalRupture() {
+    if (!this.T || !this.sfxGain) return;
+    const now = this.T.now();
+    const metal = new this.T.MetalSynth({
+      envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.12 },
+      harmonicity: 8,
+      modulationIndex: 18,
+      resonance: 2800,
+      octaves: 2,
+    } as any).connect(this.sfxGain);
+    const sweep = new this.T.Synth({
+      oscillator: { type: 'sawtooth' },
+      envelope: { attack: 0.01, decay: 0.22, sustain: 0, release: 0.16 },
+    }).connect(this.sfxGain);
+    sweep.frequency.setValueAtTime(1400, now);
+    sweep.frequency.exponentialRampToValueAtTime(120, now + 0.16);
+    sweep.triggerAttackRelease(1400, 0.2, now);
+    metal.triggerAttackRelease('C5', 0.08, now);
+    setTimeout(() => {
+      metal.dispose();
+      sweep.dispose();
+    }, 600);
+  }
+
+  sfxPlayerHit() {
+    if (!this.T || !this.sfxGain) return;
+    const m = new this.T.MembraneSynth({ pitchDecay: 0.08, octaves: 3 }).connect(this.sfxGain);
+    m.triggerAttackRelease('A1', '16n');
+    setTimeout(() => m.dispose(), 260);
+  }
+
   sfxBossDeath(mega = false) {
     if (!this.T || !this.sfxGain) return;
     const m = new this.T.MembraneSynth({ pitchDecay: 0.12, octaves: 8 }).connect(this.sfxGain);
@@ -293,6 +337,18 @@ class AudioEngine {
     s.triggerAttackRelease('E5', '16n', now);
     s.triggerAttackRelease('B5', '16n', now + 0.15);
     setTimeout(() => s.dispose(), 700);
+  }
+
+  sfxResearchCollected() {
+    if (!this.T || !this.sfxGain) return;
+    const synth = new this.T.PolySynth(this.T.Synth, {
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.01, decay: 0.18, sustain: 0.1, release: 0.5 },
+    }).connect(this.sfxGain);
+    const now = this.T.now();
+    synth.triggerAttackRelease(['C5', 'G5'], '16n', now);
+    synth.triggerAttackRelease(['E5', 'B5'], '8n', now + 0.14);
+    setTimeout(() => synth.dispose(), 900);
   }
 
   sfxPrestige() {

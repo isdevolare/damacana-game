@@ -48,6 +48,81 @@
     "future": { "name": "future" },
     "water": { "name": "water" }
   },
+  "chapters": {
+    "chapter": "CHAPTER",
+    "level": "LEVEL",
+    "levels": "Levels",
+    "finalBoss": "FINAL BOSS",
+    "bossTier": "Boss tier",
+    "objective": "PRIMARY OBJECTIVE",
+    "currentMission": "Current mission",
+    "completed": "MISSION COMPLETE",
+    "unlocked": "Unlocked",
+    "earth": {
+      "name": "Earth",
+      "desc": "Condense from a lone droplet into a world-scale liquid core.",
+      "objective": "Stabilize the Earth form and defeat the world-stage boss.",
+      "complete": "Earth's liquid signal is stable. A red planet has opened on the route."
+    },
+    "mars": {
+      "name": "Mars",
+      "desc": "Survive thin atmosphere, iron dust, and pressure-starved flow.",
+      "objective": "Adapt to Mars pressure and break the red planet guardian.",
+      "complete": "Mars has yielded. The ringed giant is now within reach."
+    },
+    "saturn": {
+      "name": "Saturn",
+      "desc": "Shape liquid energy through rings, ice, and orbital debris.",
+      "objective": "Cross the ring field and defeat Saturn's final guardian.",
+      "complete": "Saturn's rings have aligned with your current. Uranus is unlocked."
+    },
+    "uranus": {
+      "name": "Uranus",
+      "desc": "Turn cold atmospheric pressure into deeper cosmic flow.",
+      "objective": "Master the tilted ice giant and collapse its defense field.",
+      "complete": "Uranus is complete. Neptune's deep blue gravity is calling."
+    },
+    "neptune": {
+      "name": "Neptune",
+      "desc": "Enter the storm edge before the route expands toward stars and anomalies.",
+      "objective": "End the planetary route by defeating Neptune's final boss.",
+      "complete": "The first planetary route is complete. Stellar chapters remain beyond this MVP."
+    }
+  },
+  "offline": {
+    "title": "RETURN SIGNAL",
+    "body": "You were away for {time}, gained {amount} damacana."
+  },
+  "profile": {
+    "title": "PROFILE",
+    "subtitle": "run and lifetime telemetry",
+    "stats": {
+      "playTime": "play time",
+      "totalEarned": "total earned",
+      "bossesDefeated": "bosses defeated",
+      "chaptersCompleted": "chapters complete",
+      "knowledgeBulbs": "research collected",
+      "prestigeCount": "prestige count"
+    }
+  },
+  "combat": {
+    "boss": "Boss",
+    "chapterBoss": "Chapter boss",
+    "hp": "HP",
+    "wave": "wave",
+    "orbitDamage": "orbit",
+    "chainReady": "chain ready",
+    "cosmicChain": "cosmic chain",
+    "criticalRupture": "critical rupture",
+    "coreCollapsed": "CORE COLLAPSED",
+    "recovering": "restoring liquid core",
+    "mana": "Mana",
+    "abilities": {
+      "waveBurst": { "name": "Wave Burst", "desc": "AoE rupture around the core" },
+      "orbitSlash": { "name": "Orbit Slash", "desc": "Orbiting ring damage" },
+      "coreHeal": { "name": "Core Heal", "desc": "Restore core HP" }
+    }
+  },
   "facts": {
     "cosmos_ageUniverse": {
       "title": "THE AGE OF THE UNIVERSE",
@@ -375,12 +450,17 @@
     "speedrunner": { "name": "SPEEDRUNNER", "desc": "Reach evolution 6 in under 20 minutes" },
     "patientOne": { "name": "PATIENT ONE", "desc": "Total play time 24 hours" },
     "voidResponds": { "name": "THE VOID RESPONDS", "desc": "Use Void Burst 50 times" },
+    "earthMissionCompleted": { "name": "EARTH MISSION COMPLETED", "desc": "Clear Chapter 1: Earth" },
+    "marsUnlocked": { "name": "MARS UNLOCKED", "desc": "Open Chapter 2: Mars" },
+    "firstPlanetBossDefeated": { "name": "FIRST PLANET BOSS DEFEATED", "desc": "Defeat Earth's final boss" },
+    "knowledgeFive": { "name": "RESEARCH CACHE", "desc": "Collect 5 knowledge bulbs for a bonus" },
     "unclassifiable": { "name": "UNCLASSIFIABLE", "desc": "Unlock all other achievements" }
   },
   "progression": {
     "title": "PROGRESSION",
     "comingNext": "Coming next",
     "current": "Current ★",
+    "deepSystems": "Secondary systems",
     "tier3": { "name": "★3 — POST-FAILED", "desc": "A new 8th evolution form unlocks." },
     "tier5": { "name": "★5 — ELITE BOSSES", "desc": "Elite variants appear with 1.5× HP and guaranteed shard drops." },
     "tier10": { "name": "★10 — SINGULARITY CRYSTALS", "desc": "Elite bosses can drop ✦. A small shop opens." },
@@ -409,36 +489,36 @@
     "nullEntity": "null entity"
   },
   "levels": {
-    "drop": { "name": "DROP", "desc": "a single drop, falling forever" },
-    "bigDrop": { "name": "BIG DROP", "desc": "the drop has been overfed" },
-    "fiveBottleHuman": { "name": "5-BOTTLE HUMAN", "desc": "a person made of five sealed bottles" },
-    "galactic": { "name": "GALACTIC CONSUMER", "desc": "you drink across orbits" },
-    "transcendent": { "name": "TRANSCENDENT CONSUMER", "desc": "thirst is no longer biological" },
-    "voidConsumer": { "name": "VOID CONSUMER", "desc": "you sip from the gap between stars" },
-    "classificationFailed": { "name": "CLASSIFICATION FAILED", "desc": "the system has no category for you" },
-    "postFailed": { "name": "POST-FAILED", "desc": "after the system gives up, you keep going" }
+    "drop": { "name": "ORIGIN DROPLET", "desc": "a liquid-energy seed wakes under Earth's gravity" },
+    "bigDrop": { "name": "EARTH TIDE CORE", "desc": "the droplet grows into a world-scale current" },
+    "fiveBottleHuman": { "name": "MARS PRESSURE FORM", "desc": "thin air and red dust compress the liquid core" },
+    "galactic": { "name": "SATURN RING CURRENT", "desc": "orbital ice bends around your growing mass" },
+    "transcendent": { "name": "URANUS ICEFLOW", "desc": "cold atmosphere turns flow into cosmic pressure" },
+    "voidConsumer": { "name": "NEPTUNE STORM BODY", "desc": "blue gravity pulls your liquid form toward the outer dark" },
+    "classificationFailed": { "name": "PLANETARY LIMIT BREAK", "desc": "the first route strains against stellar space" },
+    "postFailed": { "name": "POST-PLANETARY SIGNAL", "desc": "after the planets, the star path starts to answer" }
   },
   "bosses": {
-    "faucetGhost": "the faucet ghost",
-    "droughtSpirit": "drought spirit",
-    "fifthBottleEntity": "the fifth-bottle entity",
-    "custodianEmptyBottle": "custodian of the empty bottle",
-    "fridgeShaman": "fridge shaman",
-    "wellDjinn": "well djinn",
-    "oceanEnvoy": "ocean envoy",
-    "icebergJudge": "iceberg judge",
-    "ancientBottleElder": "ancient bottle elder",
-    "chlorineDwarf": "chlorine dwarf",
-    "flowKing": "flow king",
-    "antiqueDamacanaLord": "antique damacana lord",
-    "voidDrinker": "void drinker",
-    "transcendentBoss": "transcendent boss",
-    "classificationError": "classification error",
-    "leakingMoon": "the leaking moon",
-    "saturdayFoamBeast": "saturday foam beast",
-    "unstableDrip": "the unstable drip",
-    "bossOfBosses": "boss of bosses",
-    "unnamedLiquid": "the unnamed liquid"
+    "faucetGhost": "surface pressure echo",
+    "droughtSpirit": "dry basin warden",
+    "fifthBottleEntity": "continental seal",
+    "custodianEmptyBottle": "mantle tide sentinel",
+    "fridgeShaman": "earth core guardian",
+    "wellDjinn": "red dust interceptor",
+    "oceanEnvoy": "thin-air siphon",
+    "icebergJudge": "iron ridge colossus",
+    "ancientBottleElder": "olympus pressure gate",
+    "chlorineDwarf": "mars final guardian",
+    "flowKing": "ring debris swarm",
+    "antiqueDamacanaLord": "ice band leviathan",
+    "voidDrinker": "orbital shear engine",
+    "transcendentBoss": "cassini shadow",
+    "classificationError": "saturn final guardian",
+    "leakingMoon": "tilted storm probe",
+    "saturdayFoamBeast": "cryogenic wavefront",
+    "unstableDrip": "ice giant pressure wall",
+    "bossOfBosses": "neptune storm sovereign",
+    "unnamedLiquid": "outer dark anomaly"
   },
   "upgrades": {
     "bigSip": { "name": "big sip" },

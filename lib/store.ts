@@ -9,7 +9,17 @@ import { bossHp, bossNameKey, bossReward, isMegaBoss, shardDropChance, eliteBoss
 import { nodeById, previousNode } from './config/skillTree';
 import { AbsurdEvent, EventReward, pickRandomEvent } from './config/events';
 import { CATEGORIES, categoryComplete, factById, pickFactForLevel, pickRandomBonusFact } from './config/facts';
-import { ELITE_NAME_KEYS, SHOP_ITEMS, shouldBeElite } from './config/progression';
+import { ELITE_NAME_KEYS, KNOWLEDGE_BULB_TIMING, OFFLINE_PROGRESS, SHOP_ITEMS, shouldBeElite } from './config/progression';
+import { ChapterId, firstCompletableChapter, nextChapter } from './config/chapters';
+import {
+  BASE_COMBAT_STATS,
+  COMBAT,
+  CombatAbilityId,
+  CombatStatBonuses,
+  CombatStats,
+  EMPTY_COMBAT_STAT_BONUSES,
+  combatAbilityById,
+} from './config/combat';
 
 export interface Buff {
   id: string;
@@ -24,6 +34,15 @@ export interface BossState {
   hpCur: number;
   hpMax: number;
   isElite: boolean;
+}
+
+export interface CombatHitOptions {
+  damageMult?: number;
+  rewardMult?: number;
+  comboBoost?: number;
+  forceCrit?: boolean;
+  passive?: boolean;
+  silent?: boolean;
 }
 
 interface Persisted {
@@ -52,7 +71,16 @@ interface Persisted {
   bestCombo: number;
   fastestLevel6Ms: number | null;
   totalPlayMs: number;
+  lastActiveAt: number;
+  offlineMaxMs: number;
   voidBurstUses: number;
+  completedChapters: ChapterId[];
+  knowledgeBulbsCollected: number;
+  nextKnowledgeBulbAt: number;
+  playerHp: number;
+  playerMana: number;
+  combatStatBonuses: CombatStatBonuses;
+  combatAbilityCooldowns: Record<string, number>;
   shop: { tapBoost: number; flowBoost: number; shardBoost: number };
   // audio settings
   audio: { master: number; music: number; sfx: number; muted: boolean };
@@ -72,6 +100,7 @@ export interface GameState extends Persisted {
   showAchievements: boolean;
   showProgression: boolean;
   showShop: boolean;
+  showProfile: boolean;
   currentEvent: AbsurdEvent | null;
   floatingNumbers: Array<{ id: number; value: number; x: number; y: number; crit?: boolean }>;
   shake: { intensity: 'small' | 'medium' | 'hard'; at: number } | null;
@@ -83,13 +112,20 @@ export interface GameState extends Persisted {
   currentFact: string | null;
   // achievement toast
   achievementToast: string | null;
+  showChapterComplete: { chapterId: ChapterId; nextChapterId: ChapterId | null } | null;
+  offlineReward: { awayMs: number; gained: number } | null;
 
   // actions
-  tapDamacana: (clientX?: number, clientY?: number) => void;
+  tapDamacana: (clientX?: number, clientY?: number, options?: CombatHitOptions) => void;
   tickAuto: (dtMs: number) => void;
   buyUpgrade: (id: string) => void;
   buyTreeNode: (id: string) => void;
   fireAbility: (id: 'voidBurst' | 'flood' | 'timeLoop') => void;
+  applyCombatDamage: (amount: number) => { damage: number; hp: number; collapsed: boolean };
+  healCombatHp: (amount: number) => void;
+  restoreCombatMana: (amount: number) => void;
+  regenCombatResources: (dtMs: number) => void;
+  spendCombatAbility: (id: CombatAbilityId) => boolean;
   setShowTree: (v: boolean) => void;
   setShowPrestige: (v: boolean) => void;
   setShowSettings: (v: boolean) => void;
@@ -97,7 +133,11 @@ export interface GameState extends Persisted {
   setShowAchievements: (v: boolean) => void;
   setShowProgression: (v: boolean) => void;
   setShowShop: (v: boolean) => void;
+  setShowProfile: (v: boolean) => void;
   dismissEvolution: () => void;
+  dismissChapterComplete: () => void;
+  dismissOfflineReward: () => void;
+  claimOfflineProgress: () => void;
   triggerEvent: () => void;
   resolveEventChoice: (key: string) => void;
   dismissEvent: () => void;
@@ -110,6 +150,7 @@ export interface GameState extends Persisted {
   // bulb / fact
   spawnBulbForLevel: (level: number) => void;
   spawnRandomBulb: () => void;
+  scheduleNextKnowledgeBulb: () => void;
   tapBulb: () => void;
   expireBulb: () => void;
   closeFactCard: () => void;
@@ -205,6 +246,20 @@ function derivedAutoTapRate(state: Persisted): number {
   return r;
 }
 
+function derivedCombatStats(state: Persisted): CombatStats {
+  const bonuses = state.combatStatBonuses ?? EMPTY_COMBAT_STAT_BONUSES;
+  const levelHp = state.bestLevel * COMBAT.playerHpPerLevel;
+  const levelMana = state.bestLevel * COMBAT.playerManaPerLevel;
+  return {
+    maxHp: BASE_COMBAT_STATS.maxHp + levelHp + bonuses.maxHp,
+    maxMana: BASE_COMBAT_STATS.maxMana + levelMana + bonuses.maxMana,
+    hpRegen: BASE_COMBAT_STATS.hpRegen + bonuses.hpRegen,
+    manaRegen: BASE_COMBAT_STATS.manaRegen + bonuses.manaRegen,
+    armor: BASE_COMBAT_STATS.armor + bonuses.armor,
+    damageReduction: Math.min(0.75, BASE_COMBAT_STATS.damageReduction + bonuses.damageReduction),
+  };
+}
+
 function comboMax(state: Persisted): number {
   return state.tree['comboMaster'] ? BALANCE.combo.masterMax : BALANCE.combo.baseMax;
 }
@@ -259,6 +314,25 @@ function applyRewardToState(state: Persisted, reward: EventReward): Partial<Pers
   return patch;
 }
 
+function randomKnowledgeDelayMs() {
+  const { minMs, maxMs } = KNOWLEDGE_BULB_TIMING;
+  return Math.floor(minMs + Math.random() * (maxMs - minMs));
+}
+
+function completeChapterPatch(
+  state: Persisted,
+  defeatedBossTier: number,
+): Partial<Pick<Persisted, 'completedChapters'>> & { showChapterComplete?: GameState['showChapterComplete'] } {
+  const chapter = firstCompletableChapter(state.completedChapters, state.levelIdx, defeatedBossTier);
+  if (!chapter) return {};
+  const completedChapters = [...state.completedChapters, chapter.id];
+  const upcoming = nextChapter(chapter.id);
+  return {
+    completedChapters,
+    showChapterComplete: { chapterId: chapter.id, nextChapterId: upcoming?.id ?? null },
+  };
+}
+
 let floatingIdCounter = 1;
 
 const initialState: Persisted = {
@@ -285,7 +359,16 @@ const initialState: Persisted = {
   bestCombo: 1,
   fastestLevel6Ms: null,
   totalPlayMs: 0,
+  lastActiveAt: Date.now(),
+  offlineMaxMs: OFFLINE_PROGRESS.defaultMaxMs,
   voidBurstUses: 0,
+  completedChapters: [],
+  knowledgeBulbsCollected: 0,
+  nextKnowledgeBulbAt: 0,
+  playerHp: BASE_COMBAT_STATS.maxHp,
+  playerMana: BASE_COMBAT_STATS.maxMana,
+  combatStatBonuses: EMPTY_COMBAT_STAT_BONUSES,
+  combatAbilityCooldowns: {},
   shop: { tapBoost: 0, flowBoost: 0, shardBoost: 0 },
   audio: { master: 0.7, music: 0.6, sfx: 0.8, muted: false },
   hasStarted: false,
@@ -305,6 +388,7 @@ export const useGame = create<GameState>()(
       showAchievements: false,
       showProgression: false,
       showShop: false,
+      showProfile: false,
       currentEvent: null,
       floatingNumbers: [],
       shake: null,
@@ -314,26 +398,34 @@ export const useGame = create<GameState>()(
       pendingBulbLevel: null,
       currentFact: null,
       achievementToast: null,
+      showChapterComplete: null,
+      offlineReward: null,
 
-      tapDamacana: (clientX, clientY) => {
+      tapDamacana: (clientX, clientY, options = {}) => {
         const s = get();
         const now = Date.now();
         let combo = s.combo;
-        if (now - s.lastTapAt <= BALANCE.combo.window) {
-          combo = Math.min(comboMax(s), combo + BALANCE.combo.step);
-        } else {
-          combo = 1 + BALANCE.combo.step;
+        if (!options.passive) {
+          const step = BALANCE.combo.step * (options.comboBoost ?? 1);
+          if (now - s.lastTapAt <= BALANCE.combo.window) {
+            combo = Math.min(comboMax(s), combo + step);
+          } else {
+            combo = 1 + step;
+          }
         }
         const perTap = derivedPerTap(s);
-        const { crit, mult: critMult } = tapHasCrit(s);
+        const roll = tapHasCrit(s);
+        const crit = options.forceCrit || roll.crit;
+        const critMult = options.forceCrit ? Math.max(roll.mult, BALANCE.crit.critMult) : roll.mult;
         let multiplier = combo * (crit ? critMult : 1);
-        const newTapsCount = s.tapsThisRun + 1;
-        const lucky = s.tree['luckyTap'] && newTapsCount % BALANCE.luckyTap.interval === 0;
+        multiplier *= options.damageMult ?? 1;
+        const newTapsCount = options.passive ? s.tapsThisRun : s.tapsThisRun + 1;
+        const lucky = !options.passive && s.tree['luckyTap'] && newTapsCount % BALANCE.luckyTap.interval === 0;
         if (lucky) multiplier *= BALANCE.luckyTap.mult;
 
         const dmg = Math.max(1, Math.floor(perTap * multiplier));
         const bossDmgMult = s.tree['bossKiller'] ? 2 : 1;
-        const earn = dmg;
+        const earn = Math.max(0, Math.floor(dmg * (options.rewardMult ?? 1)));
 
         let boss = { ...s.boss };
         let shardsDelta = 0;
@@ -341,11 +433,13 @@ export const useGame = create<GameState>()(
         let dmcDelta = earn;
         let bossKillsRun = s.bossKillsThisRun;
         let bossKillsLife = s.bossKillsLifetime;
+        let chapterPatch: ReturnType<typeof completeChapterPatch> = {};
         boss.hpCur -= Math.floor(dmg * bossDmgMult);
 
         let bestBossTier = s.bestBossTier;
         const eliteUnlocked = s.totalPrestiges >= 5;
         if (boss.hpCur <= 0) {
+          const defeatedTier = boss.tier;
           const reward = bossReward(boss.tier, s.levelIdx);
           dmcDelta += reward;
           const mega = isMegaBoss(boss.tier);
@@ -371,7 +465,8 @@ export const useGame = create<GameState>()(
           }
           bossKillsRun += 1;
           bossKillsLife += 1;
-          const nextTier = boss.tier + 1;
+          chapterPatch = completeChapterPatch(s, defeatedTier);
+          const nextTier = defeatedTier + 1;
           if (nextTier > bestBossTier) bestBossTier = nextTier;
           boss = freshBoss(nextTier, s.levelIdx, eliteUnlocked);
           set({ shake: { intensity: mega ? 'hard' : 'medium', at: now } });
@@ -385,10 +480,12 @@ export const useGame = create<GameState>()(
 
         const fx = clientX ?? window.innerWidth / 2;
         const fy = clientY ?? window.innerHeight / 2;
-        const floating = [
-          ...s.floatingNumbers.slice(-12),
-          { id: floatingIdCounter++, value: dmg, x: fx, y: fy, crit: crit || lucky },
-        ];
+        const floating = options.silent
+          ? s.floatingNumbers
+          : [
+              ...s.floatingNumbers.slice(-12),
+              { id: floatingIdCounter++, value: dmg, x: fx, y: fy, crit: crit || lucky },
+            ];
 
         const recentEarnings = [
           ...s.recentEarnings.filter((r) => now - r.t < 20_000),
@@ -409,7 +506,7 @@ export const useGame = create<GameState>()(
           crystals: s.crystals + crystalsDelta,
           boss,
           combo,
-          lastTapAt: now,
+          lastTapAt: options.passive ? s.lastTapAt : now,
           tapsThisRun: newTapsCount,
           bossKillsThisRun: bossKillsRun,
           bossKillsLifetime: bossKillsLife,
@@ -420,6 +517,7 @@ export const useGame = create<GameState>()(
           fastestLevel6Ms,
           floatingNumbers: floating,
           recentEarnings,
+          ...chapterPatch,
           ...(leveledUp
             ? {
                 showEvolution: { name: arr[newLevelIdx].key, desc: arr[newLevelIdx].key },
@@ -458,6 +556,7 @@ export const useGame = create<GameState>()(
         let bossKillsRun = s.bossKillsThisRun;
         let bossKillsLife = s.bossKillsLifetime;
         let shakeNeeded: GameState['shake'] = s.shake;
+        let chapterPatch: ReturnType<typeof completeChapterPatch> = {};
         const eliteUnlocked = s.totalPrestiges >= 5;
 
         if (autoTapRate > 0) {
@@ -470,6 +569,7 @@ export const useGame = create<GameState>()(
             boss.hpCur -= apply;
             dmgPool -= apply / bossDmgMult;
             if (boss.hpCur <= 0) {
+              const defeatedTier = boss.tier;
               const reward = bossReward(boss.tier, s.levelIdx);
               dmcDelta += reward;
               const mega = isMegaBoss(boss.tier);
@@ -492,7 +592,8 @@ export const useGame = create<GameState>()(
               if (boss.isElite && s.totalPrestiges >= 10 && Math.random() < 0.05) crystalsDelta += 1;
               bossKillsRun += 1;
               bossKillsLife += 1;
-              const nextTier = boss.tier + 1;
+              chapterPatch = completeChapterPatch({ ...s, completedChapters: chapterPatch.completedChapters ?? s.completedChapters }, defeatedTier);
+              const nextTier = defeatedTier + 1;
               if (nextTier > bestBossTier) bestBossTier = nextTier;
               boss = freshBoss(nextTier, s.levelIdx, eliteUnlocked);
               shakeNeeded = { intensity: mega ? 'hard' : 'medium', at: now };
@@ -513,7 +614,7 @@ export const useGame = create<GameState>()(
         ];
 
         let combo = s.combo;
-        if (now - s.lastTapAt > BALANCE.combo.decay) combo = 1;
+        if (now - s.lastTapAt > BALANCE.combo.decay) combo = 0;
 
         let fastestLevel6Ms = s.fastestLevel6Ms;
         if (leveledUp && newLevelIdx >= 6) {
@@ -537,6 +638,7 @@ export const useGame = create<GameState>()(
           recentEarnings,
           shake: shakeNeeded,
           fastestLevel6Ms,
+          ...chapterPatch,
           ...(leveledUp
             ? {
                 showEvolution: { name: arr[newLevelIdx].key, desc: arr[newLevelIdx].key },
@@ -605,11 +707,14 @@ export const useGame = create<GameState>()(
           let bestBossTier = s.bestBossTier;
           let bossKillsRun = s.bossKillsThisRun;
           let bossKillsLife = s.bossKillsLifetime;
+          let chapterPatch: ReturnType<typeof completeChapterPatch> = {};
           if (boss.hpCur <= 0) {
+            const defeatedTier = boss.tier;
             dmcDelta += bossReward(boss.tier, s.levelIdx);
             bossKillsRun += 1;
             bossKillsLife += 1;
-            const nextTier = boss.tier + 1;
+            chapterPatch = completeChapterPatch(s, defeatedTier);
+            const nextTier = defeatedTier + 1;
             if (nextTier > bestBossTier) bestBossTier = nextTier;
             boss = freshBoss(nextTier, s.levelIdx, s.totalPrestiges >= 5);
           }
@@ -621,6 +726,7 @@ export const useGame = create<GameState>()(
             bossKillsThisRun: bossKillsRun,
             bossKillsLifetime: bossKillsLife,
             voidBurstUses: s.voidBurstUses + 1,
+            ...chapterPatch,
             shake: { intensity: 'hard', at: now },
             activeAbilityCooldowns: { ...s.activeAbilityCooldowns, voidBurst: now + BALANCE.abilities.voidBurst.cooldown },
           });
@@ -652,8 +758,92 @@ export const useGame = create<GameState>()(
       setShowAchievements: (v) => set({ showAchievements: v }),
       setShowProgression: (v) => set({ showProgression: v }),
       setShowShop: (v) => set({ showShop: v }),
+      setShowProfile: (v) => set({ showProfile: v }),
 
       dismissEvolution: () => set({ showEvolution: null }),
+      dismissChapterComplete: () => set({ showChapterComplete: null }),
+      dismissOfflineReward: () => set({ offlineReward: null }),
+
+      applyCombatDamage: (amount) => {
+        const s = get();
+        const stats = derivedCombatStats(s);
+        const reduced = Math.max(1, Math.floor((amount - stats.armor) * (1 - stats.damageReduction)));
+        const hp = Math.max(0, Math.min(s.playerHp ?? stats.maxHp, stats.maxHp) - reduced);
+        set({ playerHp: hp });
+        return { damage: reduced, hp, collapsed: hp <= 0 };
+      },
+
+      healCombatHp: (amount) => {
+        const s = get();
+        const stats = derivedCombatStats(s);
+        set({ playerHp: Math.min(stats.maxHp, Math.max(0, s.playerHp ?? stats.maxHp) + amount) });
+      },
+
+      restoreCombatMana: (amount) => {
+        const s = get();
+        const stats = derivedCombatStats(s);
+        set({ playerMana: Math.min(stats.maxMana, Math.max(0, s.playerMana ?? 0) + amount) });
+      },
+
+      regenCombatResources: (dtMs) => {
+        const s = get();
+        const stats = derivedCombatStats(s);
+        const hp = Math.min(stats.maxHp, Math.max(0, s.playerHp ?? stats.maxHp) + (stats.hpRegen * dtMs) / 1000);
+        const mana = Math.min(stats.maxMana, Math.max(0, s.playerMana ?? 0) + (stats.manaRegen * dtMs) / 1000);
+        set({ playerHp: hp, playerMana: mana });
+      },
+
+      spendCombatAbility: (id) => {
+        const s = get();
+        const ability = combatAbilityById(id);
+        if (!ability) return false;
+        const now = Date.now();
+        if ((s.combatAbilityCooldowns[id] ?? 0) > now) return false;
+        if ((s.playerMana ?? 0) < ability.manaCost) return false;
+        set({
+          playerMana: Math.max(0, (s.playerMana ?? 0) - ability.manaCost),
+          combatAbilityCooldowns: {
+            ...(s.combatAbilityCooldowns ?? {}),
+            [id]: now + ability.cooldownMs,
+          },
+        });
+        return true;
+      },
+
+      claimOfflineProgress: () => {
+        const s = get();
+        if (!s.hasStarted) {
+          set({ lastActiveAt: Date.now() });
+          return;
+        }
+        const now = Date.now();
+        const awayMs = Math.max(0, now - s.lastActiveAt);
+        const cappedMs = Math.min(awayMs, s.offlineMaxMs || OFFLINE_PROGRESS.defaultMaxMs);
+        const ps = derivedPerSec(s);
+        const gained = Math.floor((ps * cappedMs) / 1000);
+        if (awayMs < OFFLINE_PROGRESS.minNotifyMs || gained <= 0) {
+          set({ lastActiveAt: now });
+          return;
+        }
+
+        const totalEarned = s.totalEarned + gained;
+        const newLevelIdx = levelForTotal(totalEarned, s.totalPrestiges);
+        const arr = activeLevels(s.totalPrestiges);
+        set({
+          damacana: s.damacana + gained,
+          totalEarned,
+          levelIdx: newLevelIdx,
+          bestLevel: Math.max(s.bestLevel, newLevelIdx),
+          lastActiveAt: now,
+          offlineReward: { awayMs: cappedMs, gained },
+          ...(newLevelIdx > s.levelIdx
+            ? {
+                showEvolution: { name: arr[newLevelIdx].key, desc: arr[newLevelIdx].key },
+                pendingBulbLevel: null,
+              }
+            : {}),
+        });
+      },
 
       triggerEvent: () => {
         const s = get();
@@ -720,7 +910,16 @@ export const useGame = create<GameState>()(
           bestCombo: s.bestCombo,
           fastestLevel6Ms: s.fastestLevel6Ms,
           totalPlayMs: s.totalPlayMs,
+          lastActiveAt: Date.now(),
+          offlineMaxMs: s.offlineMaxMs || OFFLINE_PROGRESS.defaultMaxMs,
           voidBurstUses: s.voidBurstUses,
+          completedChapters: s.completedChapters,
+          knowledgeBulbsCollected: s.knowledgeBulbsCollected,
+          nextKnowledgeBulbAt: Date.now() + randomKnowledgeDelayMs(),
+          playerHp: Math.min(s.playerHp ?? BASE_COMBAT_STATS.maxHp, derivedCombatStats(s).maxHp),
+          playerMana: Math.min(s.playerMana ?? BASE_COMBAT_STATS.maxMana, derivedCombatStats(s).maxMana),
+          combatStatBonuses: s.combatStatBonuses ?? EMPTY_COMBAT_STAT_BONUSES,
+          combatAbilityCooldowns: s.combatAbilityCooldowns ?? {},
           shop: s.shop,
           audio: s.audio,
           hasStarted: s.hasStarted,
@@ -734,8 +933,11 @@ export const useGame = create<GameState>()(
           recentEarnings: [],
           currentEvent: null,
           currentBulb: null,
+          lastBulbAt: s.lastBulbAt,
           pendingBulbLevel: null,
           currentFact: null,
+          showChapterComplete: null,
+          offlineReward: null,
           combo: 1,
           lastTapAt: 0,
         });
@@ -749,10 +951,34 @@ export const useGame = create<GameState>()(
       start: () => {
         const s = get();
         const dmc = s.tree['startingGift'] && s.totalEarned === 0 ? 100 : s.damacana;
-        set({ hasStarted: true, damacana: dmc, runStartAt: Date.now() });
+        const now = Date.now();
+        set({
+          hasStarted: true,
+          damacana: dmc,
+          runStartAt: now,
+          lastActiveAt: now,
+          playerHp: s.playerHp ?? derivedCombatStats(s).maxHp,
+          playerMana: s.playerMana ?? derivedCombatStats(s).maxMana,
+          nextKnowledgeBulbAt: s.nextKnowledgeBulbAt || now + randomKnowledgeDelayMs(),
+        });
       },
 
-      reset: () => set({ ...initialState, boss: freshBoss(1, 0, false), runStartAt: Date.now() }),
+      reset: () => {
+        const now = Date.now();
+        set({
+          ...initialState,
+          boss: freshBoss(1, 0, false),
+          runStartAt: now,
+          lastActiveAt: now,
+          playerHp: BASE_COMBAT_STATS.maxHp,
+          playerMana: BASE_COMBAT_STATS.maxMana,
+          combatStatBonuses: EMPTY_COMBAT_STAT_BONUSES,
+          combatAbilityCooldowns: {},
+          nextKnowledgeBulbAt: 0,
+          showChapterComplete: null,
+          offlineReward: null,
+        });
+      },
 
       pushFloating: (value, x, y, crit) => {
         const s = get();
@@ -782,6 +1008,7 @@ export const useGame = create<GameState>()(
             y: 8 + Math.random() * 22,
           },
           lastBulbAt: Date.now(),
+          nextKnowledgeBulbAt: Date.now() + randomKnowledgeDelayMs(),
           pendingBulbLevel: null,
         });
       },
@@ -790,7 +1017,10 @@ export const useGame = create<GameState>()(
         const s = get();
         if (s.currentBulb) return;
         const fact = pickRandomBonusFact(new Set(s.collectedFacts));
-        if (!fact) return;
+        if (!fact) {
+          set({ nextKnowledgeBulbAt: Date.now() + randomKnowledgeDelayMs() });
+          return;
+        }
         set({
           currentBulb: {
             factId: fact.id,
@@ -799,17 +1029,32 @@ export const useGame = create<GameState>()(
             y: 8 + Math.random() * 22,
           },
           lastBulbAt: Date.now(),
+          nextKnowledgeBulbAt: Date.now() + randomKnowledgeDelayMs(),
         });
+      },
+
+      scheduleNextKnowledgeBulb: () => {
+        set({ nextKnowledgeBulbAt: Date.now() + randomKnowledgeDelayMs() });
       },
 
       tapBulb: () => {
         const s = get();
         if (!s.currentBulb) return;
-        set({ currentFact: s.currentBulb.factId, currentBulb: null });
+        const nextCount = s.knowledgeBulbsCollected + 1;
+        const bonusShard = nextCount % 5 === 0 ? 1 : 0;
+        set({
+          currentFact: s.currentBulb.factId,
+          currentBulb: null,
+          knowledgeBulbsCollected: nextCount,
+          shards: s.shards + bonusShard,
+          nextKnowledgeBulbAt: Date.now() + randomKnowledgeDelayMs(),
+        });
       },
 
       expireBulb: () => {
-        if (get().currentBulb) set({ currentBulb: null });
+        if (get().currentBulb) {
+          set({ currentBulb: null, nextKnowledgeBulbAt: Date.now() + randomKnowledgeDelayMs() });
+        }
       },
 
       closeFactCard: () => {
@@ -848,7 +1093,7 @@ export const useGame = create<GameState>()(
 
       addPlayTime: (ms) => {
         const s = get();
-        set({ totalPlayMs: s.totalPlayMs + ms });
+        set({ totalPlayMs: s.totalPlayMs + ms, lastActiveAt: Date.now() });
       },
     }),
     {
@@ -878,7 +1123,16 @@ export const useGame = create<GameState>()(
         bestCombo: s.bestCombo,
         fastestLevel6Ms: s.fastestLevel6Ms,
         totalPlayMs: s.totalPlayMs,
+        lastActiveAt: s.lastActiveAt,
+        offlineMaxMs: s.offlineMaxMs,
         voidBurstUses: s.voidBurstUses,
+        completedChapters: s.completedChapters,
+        knowledgeBulbsCollected: s.knowledgeBulbsCollected,
+        nextKnowledgeBulbAt: s.nextKnowledgeBulbAt,
+        playerHp: s.playerHp,
+        playerMana: s.playerMana,
+        combatStatBonuses: s.combatStatBonuses,
+        combatAbilityCooldowns: s.combatAbilityCooldowns,
         shop: s.shop,
         audio: s.audio,
         hasStarted: s.hasStarted,
@@ -897,6 +1151,9 @@ export function selectPerSec(s: GameState) {
 }
 export function selectAutoTapRate(s: GameState) {
   return derivedAutoTapRate(s);
+}
+export function selectCombatStats(s: GameState) {
+  return derivedCombatStats(s);
 }
 export function selectComboMax(s: GameState) {
   return comboMax(s);

@@ -20,20 +20,20 @@ export function Counter() {
   }, [dmc]);
 
   return (
-    <div className="text-center pt-3 px-3 select-none">
+    <div className="text-center pt-2 px-3 select-none">
       <motion.div
         key={pulse}
         initial={{ scale: 1 }}
         animate={{ scale: [1, 1.06, 1] }}
         transition={{ duration: 0.25 }}
-        className="font-vt text-[44px] leading-none text-white drop-shadow-[0_0_18px_rgba(184,122,255,0.55)]"
+        className="font-vt text-[36px] leading-none text-white drop-shadow-[0_0_18px_rgba(184,122,255,0.55)]"
       >
         {fmt(dmc)}
       </motion.div>
-      <div className="text-[11px] font-space tracking-widest text-purple/80 mt-1">
+      <div className="text-[10px] font-space tracking-widest text-purple/80 mt-1">
         {t('damacana')}
       </div>
-      <div className="flex items-center justify-center gap-4 mt-2 text-[11px] font-space text-white/60">
+      <div className="flex items-center justify-center gap-3 mt-1.5 text-[10px] font-space text-white/60">
         <span>
           <span className="text-cyan">{fmt(perTap)}</span> / {t('tap')}
         </span>

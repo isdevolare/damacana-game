@@ -51,3 +51,13 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'flowBoost',  cost: 1, pct: 0.10 },
   { id: 'shardBoost', cost: 1, pct: 0.10 },
 ];
+
+export const KNOWLEDGE_BULB_TIMING = {
+  minMs: 5 * 60 * 1000,
+  maxMs: 10 * 60 * 1000,
+};
+
+export const OFFLINE_PROGRESS = {
+  defaultMaxMs: 60 * 60 * 1000,
+  minNotifyMs: 30 * 1000,
+};

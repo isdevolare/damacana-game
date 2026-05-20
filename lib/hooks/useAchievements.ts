@@ -18,6 +18,8 @@ export function useAchievements() {
   const bestCombo = useGame((s) => s.bestCombo);
   const fastestLevel6Ms = useGame((s) => s.fastestLevel6Ms);
   const voidBurstUses = useGame((s) => s.voidBurstUses);
+  const completedChapters = useGame((s) => s.completedChapters);
+  const knowledgeBulbsCollected = useGame((s) => s.knowledgeBulbsCollected);
   const achievements = useGame((s) => s.achievements);
   const unlock = useGame((s) => s.unlockAchievement);
 
@@ -40,6 +42,8 @@ export function useAchievements() {
       voidBurstUses,
       cosmosComplete: categoryComplete('cosmos', collected),
       unlockedCount,
+      completedChapters,
+      knowledgeBulbsCollected,
     };
     for (const a of ACHIEVEMENTS) {
       if (!achievements.includes(a.id) && a.check(astate)) {
@@ -49,6 +53,6 @@ export function useAchievements() {
   }, [
     levelIdx, bestLevel, totalPrestiges, bossKillsThisRun, bossKillsLifetime,
     bestBossTier, collectedFacts, shards, tree, bestCombo, fastestLevel6Ms,
-    voidBurstUses, achievements, unlock,
+    voidBurstUses, completedChapters, knowledgeBulbsCollected, achievements, unlock,
   ]);
 }

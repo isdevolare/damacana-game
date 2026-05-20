@@ -34,7 +34,7 @@ export function Lightbulb() {
           exit={{ opacity: 0, scale: 1.6, y: -60 }}
           transition={{ duration: 0.4 }}
           onClick={() => {
-            if (sfxEnabled) audio.sfxEventDing();
+            if (sfxEnabled) audio.sfxResearchCollected();
             tapBulb();
           }}
           className="fixed z-40 w-[60px] h-[60px] flex items-center justify-center"

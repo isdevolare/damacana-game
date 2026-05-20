@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useGame } from '@/lib/store';
-import { LEVELS } from '@/lib/config/levels';
+import { activeLevels } from '@/lib/config/levels';
 import { Form } from '@/lib/svg/forms';
 import { audio } from '@/lib/audio/AudioEngine';
 import { useRef } from 'react';
@@ -13,9 +13,11 @@ export function DamacanaForm() {
   const combo = useGame((s) => s.combo);
   const tree = useGame((s) => s.tree);
   const sfxEnabled = useGame((s) => !s.audio.muted);
+  const totalPrestiges = useGame((s) => s.totalPrestiges);
   const tapsRef = useRef(0);
 
-  const form = LEVELS[levelIdx].form;
+  const levels = activeLevels(totalPrestiges);
+  const form = levels[Math.min(levelIdx, levels.length - 1)].form;
   const halo = tree['halo'];
   const crown = tree['crown'];
 

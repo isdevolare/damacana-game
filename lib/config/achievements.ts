@@ -20,13 +20,16 @@ export interface AchievementState {
   voidBurstUses: number;
   cosmosComplete: boolean;
   unlockedCount: number;
+  completedChapters: string[];
+  knowledgeBulbsCollected: number;
 }
 
 const NON_TERMINAL_IDS = [
   'firstDrop', 'evolving', 'classified', 'reset', 'loopContinues', 'eternal',
   'bossHunter', 'bossMaster', 'megaSlayer', 'knowledgeBegins', 'polymath',
   'omniscient', 'cosmosCalls', 'shardHoarder', 'skillForest', 'comboLord',
-  'speedrunner', 'patientOne', 'voidResponds',
+  'speedrunner', 'patientOne', 'voidResponds', 'earthMissionCompleted',
+  'marsUnlocked', 'firstPlanetBossDefeated', 'knowledgeFive',
 ];
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -49,6 +52,10 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'speedrunner',      check: (s) => s.fastestLevel6Ms !== null && s.fastestLevel6Ms <= 20 * 60 * 1000 },
   { id: 'patientOne',       check: (s) => s.totalPlayMs >= 24 * 60 * 60 * 1000 },
   { id: 'voidResponds',     check: (s) => s.voidBurstUses >= 50 },
+  { id: 'earthMissionCompleted', check: (s) => s.completedChapters.includes('earth') },
+  { id: 'marsUnlocked',     check: (s) => s.completedChapters.includes('earth') },
+  { id: 'firstPlanetBossDefeated', check: (s) => s.bestBossTier >= 6 || s.completedChapters.includes('earth') },
+  { id: 'knowledgeFive',    check: (s) => s.knowledgeBulbsCollected >= 5 },
   { id: 'unclassifiable',   check: (s) => s.unlockedCount >= NON_TERMINAL_IDS.length },
 ];
 

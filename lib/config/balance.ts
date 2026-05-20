@@ -1,11 +1,11 @@
 export const BALANCE = {
   evolution: { thresholds: [0, 150, 700, 4000, 25000, 150000, 1000000] },
   combo: {
-    window: 400,
-    decay: 1500,
-    baseMax: 5,
-    masterMax: 10,
-    step: 0.2,
+    window: 900,
+    decay: 2600,
+    baseMax: 15,
+    masterMax: 25,
+    step: 0.35,
   },
   boss: {
     hpBase: 10,

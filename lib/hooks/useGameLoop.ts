@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useGame } from '@/lib/store';
 import { audio } from '@/lib/audio/AudioEngine';
 import { BALANCE } from '@/lib/config/balance';
@@ -11,11 +11,17 @@ export function useGameLoop() {
   const has = useGame((s) => s.hasStarted);
   const levelIdx = useGame((s) => s.levelIdx);
   const tree = useGame((s) => s.tree);
-  const showEvolution = useGame((s) => s.showEvolution);
-  const spawnBulbForLevel = useGame((s) => s.spawnBulbForLevel);
   const spawnRandomBulb = useGame((s) => s.spawnRandomBulb);
+  const scheduleNextKnowledgeBulb = useGame((s) => s.scheduleNextKnowledgeBulb);
+  const nextKnowledgeBulbAt = useGame((s) => s.nextKnowledgeBulbAt);
+  const currentBulb = useGame((s) => s.currentBulb);
+  const claimOfflineProgress = useGame((s) => s.claimOfflineProgress);
   const addPlayTime = useGame((s) => s.addPlayTime);
-  const prevEvo = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (!has) return;
+    claimOfflineProgress();
+  }, [has, claimOfflineProgress]);
 
   // tick loop
   useEffect(() => {
@@ -51,35 +57,20 @@ export function useGameLoop() {
     return () => clearTimeout(timer);
   }, [has, tree, triggerEvent]);
 
-  // guaranteed bulb 2s after evolution overlay closes
+  // knowledge bulbs use a persisted randomized 5-10 minute schedule.
   useEffect(() => {
     if (!has) return;
-    const isOpen = showEvolution !== null;
-    if (prevEvo.current && !isOpen) {
-      const pending = useGame.getState().pendingBulbLevel;
-      if (pending !== null) {
-        const id = setTimeout(() => spawnBulbForLevel(pending), 2000);
-        prevEvo.current = isOpen;
-        return () => clearTimeout(id);
-      }
+    if (currentBulb) return;
+    if (!nextKnowledgeBulbAt) {
+      scheduleNextKnowledgeBulb();
+      return;
     }
-    prevEvo.current = isOpen;
-  }, [has, showEvolution, spawnBulbForLevel]);
-
-  // random bonus bulb every 90-180s, 50% chance per check
-  useEffect(() => {
-    if (!has) return;
-    let timer: ReturnType<typeof setTimeout>;
-    const schedule = () => {
-      const wait = 90_000 + Math.random() * 90_000;
-      timer = setTimeout(() => {
-        if (Math.random() < 0.5) spawnRandomBulb();
-        schedule();
-      }, wait);
-    };
-    schedule();
+    const wait = Math.max(0, nextKnowledgeBulbAt - Date.now());
+    const timer = setTimeout(() => {
+      spawnRandomBulb();
+    }, wait);
     return () => clearTimeout(timer);
-  }, [has, spawnRandomBulb]);
+  }, [has, currentBulb, nextKnowledgeBulbAt, scheduleNextKnowledgeBulb, spawnRandomBulb]);
 
   // sync audio with level
   useEffect(() => {

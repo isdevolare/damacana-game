@@ -1,7 +1,8 @@
 'use client';
 
 import { useGame } from '@/lib/store';
-import { LEVELS } from '@/lib/config/levels';
+import { activeLevels } from '@/lib/config/levels';
+import { chapterForLevel } from '@/lib/config/chapters';
 import { useEffect, useState } from 'react';
 
 interface Star { id: number; x: number; y: number; s: number; o: number; d: number }
@@ -9,7 +10,11 @@ interface Flow { id: number; x: number; d: number; delay: number; h: number }
 
 export function Background() {
   const levelIdx = useGame((s) => s.levelIdx);
-  const bg = LEVELS[levelIdx].bgGradient;
+  const totalPrestiges = useGame((s) => s.totalPrestiges);
+  const levels = activeLevels(totalPrestiges);
+  const level = levels[Math.min(levelIdx, levels.length - 1)];
+  const chapter = chapterForLevel(levelIdx);
+  const bg = level.bgGradient;
 
   const [stars, setStars] = useState<Star[]>([]);
   const [flows, setFlows] = useState<Flow[]>([]);
@@ -41,6 +46,19 @@ export function Background() {
       className="fixed inset-0 z-0 transition-[background] duration-700"
       style={{ background: bg }}
     >
+      <div
+        className="absolute left-1/2 top-[12%] h-[210px] w-[210px] -translate-x-1/2 rounded-full opacity-35 blur-[1px]"
+        style={{
+          background: `radial-gradient(circle at 35% 30%, rgba(255,255,255,0.85), ${chapter.accent} 18%, transparent 62%)`,
+          boxShadow: `0 0 90px 24px ${chapter.glow}`,
+        }}
+      />
+      {chapter.id === 'saturn' && (
+        <div
+          className="absolute left-1/2 top-[calc(12%+92px)] h-8 w-[300px] -translate-x-1/2 -rotate-12 rounded-full border opacity-35"
+          style={{ borderColor: chapter.accent, boxShadow: `0 0 28px ${chapter.glow}` }}
+        />
+      )}
       {stars.map((s) => (
         <div
           key={s.id}
