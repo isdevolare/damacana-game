@@ -1,0 +1,564 @@
+{
+  "ui": {
+    "damacana": "damacana",
+    "tap": "tap",
+    "sec": "sec",
+    "flow": "flow",
+    "mega": "MEGA",
+    "level": "LEVEL",
+    "shards": "void shards",
+    "skillTree": "skill tree",
+    "settings": "settings",
+    "master": "master",
+    "music": "music",
+    "sfx": "sfx",
+    "mute": "mute",
+    "unmute": "unmute",
+    "language": "language",
+    "close": "close",
+    "later": "later",
+    "prestigeNow": "prestige",
+    "prestigeTitle": "classification failed",
+    "prestigeDesc": "the system can no longer name what you are. fold it all back into the void and begin again, more potent than before.",
+    "resetAll": "reset all progress",
+    "tapToStart": "tap to start",
+    "codex": "knowledge codex",
+    "achievements": "achievements",
+    "progression": "progression",
+    "comingNext": "Coming next",
+    "comingSoon": "COMING SOON",
+    "unlocked": "unlocked",
+    "locked": "locked",
+    "all": "all",
+    "elite": "ELITE",
+    "tapMe": "tap me",
+    "didYouKnow": "Did you know?",
+    "reward": "Reward",
+    "close": "close",
+    "shop": "singularity shop",
+    "buy": "buy",
+    "owned": "owned",
+    "megaPrestige": "mega-prestige"
+  },
+  "categories": {
+    "cosmos": { "name": "cosmos" },
+    "quantum": { "name": "quantum" },
+    "earth": { "name": "earth" },
+    "life": { "name": "life" },
+    "future": { "name": "future" },
+    "water": { "name": "water" }
+  },
+  "facts": {
+    "cosmos_ageUniverse": {
+      "title": "THE AGE OF THE UNIVERSE",
+      "body": "The universe is 13.8 billion years old. Most of that time was spent waiting for atoms to cool, stars to form, and you to show up.",
+      "twist": "And yet, here you are, drinking water and tapping a bottle."
+    },
+    "cosmos_observableSize": {
+      "title": "THE OBSERVABLE UNIVERSE",
+      "body": "About 93 billion light-years across — and that is only the part where light has had time to reach us. The full universe could be unimaginably larger.",
+      "twist": "Everything you have ever seen is the corner of a corner of a corner."
+    },
+    "cosmos_galaxyCount": {
+      "title": "HOW MANY GALAXIES",
+      "body": "At least two trillion galaxies, each filled with hundreds of billions of stars. Most of them you will never know existed.",
+      "twist": "Every dot in the night sky is a city you will never visit."
+    },
+    "cosmos_blackHoleTime": {
+      "title": "BLACK HOLE TIME",
+      "body": "Near the event horizon of a black hole, time stretches. One hour for you could be seven years for someone far away.",
+      "twist": "The ultimate deadline extension."
+    },
+    "cosmos_andromedaCollision": {
+      "title": "THE ANDROMEDA COLLISION",
+      "body": "In about 4.5 billion years, the Milky Way and Andromeda will merge into a single new galaxy.",
+      "twist": "Nobody asked them. They are doing it anyway."
+    },
+    "cosmos_cmb": {
+      "title": "STATIC FROM THE BIG BANG",
+      "body": "The faint static on old TVs was partly the afterglow of the Big Bang itself, finally reaching your antenna.",
+      "twist": "The universe was broadcasting. We just had bad reception."
+    },
+    "cosmos_fermiParadox": {
+      "title": "THE FERMI PARADOX",
+      "body": "The universe is vast and ancient. By all reasonable math, we should be drowning in alien civilizations. We see none.",
+      "twist": "Where is everyone? Maybe they are very, very quiet."
+    },
+    "cosmos_darkMatter": {
+      "title": "DARK MATTER",
+      "body": "About 85% of the matter in the universe is invisible. We cannot see it, touch it, or detect it directly.",
+      "twist": "Most of the universe is something we have never met."
+    },
+    "cosmos_voyager": {
+      "title": "VOYAGER'S JOURNEY",
+      "body": "Voyager 1 has been flying away from us since 1977. At its speed, it would take 40,000 years to reach the nearest star.",
+      "twist": "A piece of us is out there, slowly leaving the neighborhood."
+    },
+    "cosmos_greatAttractor": {
+      "title": "THE GREAT ATTRACTOR",
+      "body": "Our entire galaxy is being pulled toward something enormous we cannot see directly, hidden behind the Milky Way's bulge.",
+      "twist": "Something out there is calling us in. We are going."
+    },
+
+    "quantum_superposition": {
+      "title": "SUPERPOSITION",
+      "body": "A particle can be in two places at once — but only until you look at it. The moment of observation collapses it into one.",
+      "twist": "Reality is shy. It changes when you stare."
+    },
+    "quantum_entanglement": {
+      "title": "ENTANGLEMENT",
+      "body": "Two particles, once entangled, can change together instantly across any distance — even across the entire universe.",
+      "twist": "Some bonds are stronger than space itself."
+    },
+    "quantum_observerEffect": {
+      "title": "THE OBSERVER EFFECT",
+      "body": "At quantum scales, the act of measuring something changes what is being measured. There is no neutral observation.",
+      "twist": "You cannot peek without leaving fingerprints."
+    },
+    "quantum_tunneling": {
+      "title": "TUNNELING",
+      "body": "Particles can pass through walls they classically should not be able to cross. The Sun shines partly because of this.",
+      "twist": "Right now, somewhere in your body, an electron is breaking a rule."
+    },
+    "quantum_emptyAtom": {
+      "title": "YOU ARE MOSTLY EMPTY",
+      "body": "Atoms are 99.9999999999996% empty space. If you removed all the empty space from every human, humanity would fit in a sugar cube.",
+      "twist": "You are a very convincing illusion of solidity."
+    },
+    "quantum_waveParticle": {
+      "title": "WAVE OR PARTICLE",
+      "body": "Light behaves like a wave when you ask it wave questions, and like a particle when you ask it particle questions.",
+      "twist": "Reality answers the question you actually asked, not the one you meant."
+    },
+    "quantum_planck": {
+      "title": "THE PLANCK LENGTH",
+      "body": "Below 1.6 × 10⁻³⁵ meters, the very concept of distance stops making sense. Space becomes foam.",
+      "twist": "Zoom in too far, and the floor disappears."
+    },
+    "quantum_zeroPoint": {
+      "title": "ZERO-POINT ENERGY",
+      "body": "Empty space is not empty. Even a perfect vacuum contains an enormous amount of energy in constant motion.",
+      "twist": "Nothing, it turns out, is busy."
+    },
+    "quantum_manyWorlds": {
+      "title": "THE MANY WORLDS",
+      "body": "One interpretation of quantum physics says every choice splits reality. Every coin flip creates two universes.",
+      "twist": "Somewhere, you made the other choice. You are doing fine there too."
+    },
+    "quantum_foam": {
+      "title": "QUANTUM FOAM",
+      "body": "At the smallest scales, reality is not smooth. Particles flicker into and out of existence in a chaotic bubbling foam.",
+      "twist": "The ground floor of reality is bubbling like soup."
+    },
+
+    "earth_innerCore": {
+      "title": "THE INNER CORE",
+      "body": "Earth's inner core is a solid ball of iron about the size of the Moon, spinning slightly faster than the surface.",
+      "twist": "There is a tiny iron moon inside our planet, doing its own thing."
+    },
+    "earth_age": {
+      "title": "HOW OLD WE ARE",
+      "body": "Earth is 4.5 billion years old. Life appeared around 3.8 billion years ago, so almost all of Earth's history has had life on it.",
+      "twist": "Life showed up early and refused to leave."
+    },
+    "earth_olympusMons": {
+      "title": "MOUNT EVEREST IS SHORT",
+      "body": "Olympus Mons on Mars stands 22 km tall — almost three times the height of Everest.",
+      "twist": "We have the wrong planet for serious mountaineering."
+    },
+    "earth_pacific": {
+      "title": "THE PACIFIC IS HUGE",
+      "body": "The Pacific Ocean contains nearly half of the planet's free water. Every continent on Earth could fit inside it.",
+      "twist": "One ocean. It could swallow everything and still have room."
+    },
+    "earth_continentsMove": {
+      "title": "CONTINENTS MOVE",
+      "body": "The continents drift 2–5 cm per year. The Atlantic gets wider each year by roughly the length of a fingernail's growth.",
+      "twist": "Geography is just very slow weather."
+    },
+    "earth_breath": {
+      "title": "EVERY BREATH IS HISTORIC",
+      "body": "Each breath you take statistically contains atoms once breathed by people who lived thousands of years ago.",
+      "twist": "The air remembers, and it is in your lungs right now."
+    },
+    "earth_lightning": {
+      "title": "LIGHTNING IS HOTTER THAN THE SUN",
+      "body": "A lightning bolt can reach about 30,000 °C — five times hotter than the surface of the Sun. Briefly.",
+      "twist": "The sky throws tiny stars at the ground sometimes."
+    },
+    "earth_glassRain": {
+      "title": "GLASS RAIN",
+      "body": "On the planet HD 189733b, winds reach 8,700 km/h and it rains sideways drops of molten glass.",
+      "twist": "Suddenly your weather sounds reasonable."
+    },
+    "earth_lightToAndromeda": {
+      "title": "LIGHT FROM EARTH",
+      "body": "Light reflecting off Earth right now will reach the Andromeda galaxy in 2.5 million years.",
+      "twist": "You are leaving a trail across the universe whether you want to or not."
+    },
+    "earth_oxygenApocalypse": {
+      "title": "THE OXYGEN APOCALYPSE",
+      "body": "When cyanobacteria first produced oxygen, it was a deadly poison. It nearly wiped out all life on Earth.",
+      "twist": "The air we love almost killed everything."
+    },
+
+    "life_lastAncestor": {
+      "title": "THE LAST COMMON ANCESTOR",
+      "body": "Every living thing on Earth — every tree, fish, bacterium, you — descends from a single common organism that lived 4 billion years ago.",
+      "twist": "We are all reunion attendees."
+    },
+    "life_youAreShip": {
+      "title": "YOU ARE A SHIP",
+      "body": "You carry more bacterial cells in your body than human cells. You are less a person and more a moving ecosystem.",
+      "twist": "Technically, you are a city with a name."
+    },
+    "life_brainPower": {
+      "title": "BRAIN POWER",
+      "body": "Your brain uses about 20% of your body's total energy. It runs on roughly 20 watts — less than a dim light bulb.",
+      "twist": "All your dreams are powered by a desk lamp."
+    },
+    "life_sharks": {
+      "title": "HUMANS ARE NEW",
+      "body": "Modern humans have existed for around 300,000 years. Sharks have existed for 450 million years. They have outlasted entire forests.",
+      "twist": "Sharks were practicing before we even had hands."
+    },
+    "life_tardigrades": {
+      "title": "TARDIGRADES",
+      "body": "Tiny water bears that survive space vacuum, boiling water, freezing temperatures, and radiation. They will be here long after we are not.",
+      "twist": "The future inherits whoever is hardest to kill."
+    },
+    "life_octopus": {
+      "title": "OCTOPUSES THINK WITH THEIR ARMS",
+      "body": "Two-thirds of an octopus's neurons are in its tentacles. Each arm partly thinks for itself.",
+      "twist": "Imagine your fingers having opinions."
+    },
+    "life_trees": {
+      "title": "TREES TALK",
+      "body": "Forests share nutrients and chemical signals through underground fungal networks. The trees know who their neighbors are.",
+      "twist": "The wood beneath you is gossiping."
+    },
+    "life_whaleLanguage": {
+      "title": "WHALES HAVE CULTURE",
+      "body": "Different whale pods sing different dialects and pass them down through generations. They have culture in the open ocean.",
+      "twist": "Somewhere right now, a whale is teaching another whale a song."
+    },
+    "life_immortalJellyfish": {
+      "title": "THE IMMORTAL JELLYFISH",
+      "body": "Turritopsis dohrnii can revert to its juvenile form and biologically never age out of existence on its own.",
+      "twist": "Aging is not a law of nature. It is a habit."
+    },
+    "life_dnaTeaspoon": {
+      "title": "DNA STORAGE",
+      "body": "All the DNA from every person alive on Earth would fit inside a single teaspoon.",
+      "twist": "All of us, in a spoon."
+    },
+
+    "future_sunDeath": {
+      "title": "THE SUN WILL DIE",
+      "body": "In about 5 billion years, the Sun will swell into a red giant, swallowing Mercury, Venus, and probably Earth.",
+      "twist": "The lights stay on for a while yet."
+    },
+    "future_heatDeath": {
+      "title": "HEAT DEATH",
+      "body": "Eventually, in around 10¹⁰⁰ years, the universe runs out of usable energy. Everything goes dim, cold, and still.",
+      "twist": "The universe ends in a slow exhale, not a bang."
+    },
+    "future_lastStars": {
+      "title": "THE LAST STARS",
+      "body": "In about 100 trillion years, the last star will run out of fuel. Then only black holes will remain, slowly evaporating.",
+      "twist": "The night sky is on a long timer."
+    },
+    "future_protonDecay": {
+      "title": "PROTON DECAY",
+      "body": "Even matter is not eternal. Protons may decay over 10³⁴ years. The atoms themselves eventually unwind.",
+      "twist": "Patience is a feature of physics."
+    },
+    "future_frozenCosmos": {
+      "title": "A LONELIER SKY",
+      "body": "The universe is expanding faster every year. Eventually, every galaxy will be too far away to ever see again.",
+      "twist": "The night sky will go dark, one galaxy at a time."
+    },
+    "future_simulation": {
+      "title": "THE SIMULATION QUESTION",
+      "body": "Some physicists argue that the math of reality looks suspiciously like a simulation. The numbers fit too well.",
+      "twist": "If this is a sim, hi to whoever is reading the logs."
+    },
+    "future_greatFilter": {
+      "title": "THE GREAT FILTER",
+      "body": "Why have we not met aliens? Maybe most civilizations destroy themselves before they can leave their home planet.",
+      "twist": "The universe may be quiet because the rest already failed."
+    },
+    "future_aiAscent": {
+      "title": "AI ASCENT",
+      "body": "Within decades, we may build minds that think a million times faster than us, in directions we cannot follow.",
+      "twist": "The future may not be human, but it will be ours to invite in."
+    },
+    "future_generationShips": {
+      "title": "GENERATION SHIPS",
+      "body": "Reaching another star realistically means building cities that fly for thousands of years, carrying generations who never see Earth.",
+      "twist": "A childhood spent looking out the same window into nothing."
+    },
+    "future_theEnd": {
+      "title": "THE END",
+      "body": "In the deepest future, nothing remains but cold and silence. But the universe got 13 billion years of being awake. So do you.",
+      "twist": "It is not nothing to have happened at all."
+    },
+
+    "water_origin": {
+      "title": "WHERE WATER CAME FROM",
+      "body": "Most of Earth's water arrived on icy comets and asteroids during the chaotic early years of the solar system.",
+      "twist": "Your morning glass is delivery from outer space."
+    },
+    "water_marianaDepth": {
+      "title": "DEEPER THAN MARIANA",
+      "body": "The Mariana Trench is 11 km deep. Sunlight effectively dies before 1 km. Most of the ocean is dark.",
+      "twist": "Most of Earth is a basement we never visit."
+    },
+    "water_iceWeird": {
+      "title": "ICE IS STRANGE",
+      "body": "Solid water floats on liquid water. Almost no other substance in the universe does this. Life as we know it depends on it.",
+      "twist": "Fish survive winter because of a weird trick of chemistry."
+    },
+    "water_71percent": {
+      "title": "71 PERCENT",
+      "body": "About 71% of Earth's surface is covered in water. Of all of that, only 0.001% is in the average glass on a table.",
+      "twist": "We are a planet drowning in fresh paint."
+    },
+    "water_europa": {
+      "title": "THE OCEANS OF EUROPA",
+      "body": "Beneath the ice of Jupiter's moon Europa, there is more liquid water than in all of Earth's oceans combined.",
+      "twist": "A bigger ocean is waiting, just colder and farther away."
+    },
+    "water_timeCapsule": {
+      "title": "WATER IS A TIME CAPSULE",
+      "body": "Water cycles forever. The water you drink today may have once been inside a dinosaur or a thunderstorm a million years ago.",
+      "twist": "You are sharing a glass with everyone who ever lived."
+    },
+    "water_heavyWater": {
+      "title": "HEAVY WATER",
+      "body": "Add a neutron to hydrogen, and water becomes heavier. \"Heavy water\" looks the same but is denser and slightly toxic.",
+      "twist": "Same flavor, different mass. Reality has variants."
+    },
+    "water_everywhere": {
+      "title": "ONE WATER MOLECULE",
+      "body": "A single water molecule has likely been inside thousands of organisms, oceans, and rivers throughout history.",
+      "twist": "Your tap water has lived more lives than you have."
+    },
+    "water_deepLayers": {
+      "title": "THE OCEAN HAS LAYERS",
+      "body": "Below 1 km of ocean it is permanently dark and freezing. The creatures there often make their own light.",
+      "twist": "An entire world lit only by what its inhabitants chose to glow."
+    },
+    "water_antarcticLakes": {
+      "title": "HIDDEN LAKES",
+      "body": "There are more than 400 lakes of liquid water buried under the Antarctic ice. Some have been sealed off for millions of years.",
+      "twist": "There are rooms on this planet nobody has ever entered."
+    }
+  },
+  "achievements": {
+    "firstDrop": { "name": "FIRST DROP", "desc": "Reach evolution level 1" },
+    "evolving": { "name": "EVOLVING", "desc": "Reach evolution level 3" },
+    "classified": { "name": "CLASSIFIED", "desc": "Reach CLASSIFICATION FAILED" },
+    "reset": { "name": "RESET", "desc": "Your first prestige" },
+    "loopContinues": { "name": "THE LOOP CONTINUES", "desc": "5 prestiges" },
+    "eternal": { "name": "ETERNAL", "desc": "25 prestiges" },
+    "bossHunter": { "name": "BOSS HUNTER", "desc": "Kill 50 bosses in one run" },
+    "bossMaster": { "name": "BOSS MASTER", "desc": "Kill 500 bosses (lifetime)" },
+    "megaSlayer": { "name": "MEGA SLAYER", "desc": "Defeat a tier-25 boss" },
+    "knowledgeBegins": { "name": "THE KNOWLEDGE BEGINS", "desc": "Collect your first fact" },
+    "polymath": { "name": "POLYMATH", "desc": "Collect 30 facts" },
+    "omniscient": { "name": "OMNISCIENT", "desc": "Collect all 60 facts" },
+    "cosmosCalls": { "name": "COSMOS CALLS", "desc": "Complete the Cosmos category" },
+    "shardHoarder": { "name": "SHARD HOARDER", "desc": "Have 100 shards at once" },
+    "skillForest": { "name": "SKILL FOREST", "desc": "Own 12 skill tree nodes" },
+    "comboLord": { "name": "COMBO LORD", "desc": "Reach combo ×10" },
+    "speedrunner": { "name": "SPEEDRUNNER", "desc": "Reach evolution 6 in under 20 minutes" },
+    "patientOne": { "name": "PATIENT ONE", "desc": "Total play time 24 hours" },
+    "voidResponds": { "name": "THE VOID RESPONDS", "desc": "Use Void Burst 50 times" },
+    "unclassifiable": { "name": "UNCLASSIFIABLE", "desc": "Unlock all other achievements" }
+  },
+  "progression": {
+    "title": "PROGRESSION",
+    "comingNext": "Coming next",
+    "current": "Current ★",
+    "tier3": { "name": "★3 — POST-FAILED", "desc": "A new 8th evolution form unlocks." },
+    "tier5": { "name": "★5 — ELITE BOSSES", "desc": "Elite variants appear with 1.5× HP and guaranteed shard drops." },
+    "tier10": { "name": "★10 — SINGULARITY CRYSTALS", "desc": "Elite bosses can drop ✦. A small shop opens." },
+    "tier15": { "name": "★15 — CODEX ARTIFACTS", "desc": "Completing a fact category grants a permanent +5% bonus." },
+    "tier25": { "name": "★25 — MEGA-PRESTIGE", "desc": "Reset shards + tree for Cosmic Ascension Points." }
+  },
+  "shop": {
+    "title": "singularity shop",
+    "tapBoost": { "name": "permanent +10% tap", "desc": "boosts tap power forever" },
+    "flowBoost": { "name": "permanent +10% flow", "desc": "boosts passive flow forever" },
+    "shardBoost": { "name": "permanent +10% shards", "desc": "boosts shard gain forever" }
+  },
+  "levels8": {
+    "postFailed": { "name": "POST-FAILED", "desc": "after the system gives up, you keep going" }
+  },
+  "elite": {
+    "warden": "warden of the deeper void",
+    "crystalScribe": "crystal scribe",
+    "lastEcho": "the last echo",
+    "fractalKing": "fractal king",
+    "hollowAxiom": "hollow axiom",
+    "weightlessJudge": "weightless judge",
+    "broadcastSpecter": "broadcast specter",
+    "siphonOfStars": "siphon of stars",
+    "thresholdGuardian": "threshold guardian",
+    "nullEntity": "null entity"
+  },
+  "levels": {
+    "drop": { "name": "DROP", "desc": "a single drop, falling forever" },
+    "bigDrop": { "name": "BIG DROP", "desc": "the drop has been overfed" },
+    "fiveBottleHuman": { "name": "5-BOTTLE HUMAN", "desc": "a person made of five sealed bottles" },
+    "galactic": { "name": "GALACTIC CONSUMER", "desc": "you drink across orbits" },
+    "transcendent": { "name": "TRANSCENDENT CONSUMER", "desc": "thirst is no longer biological" },
+    "voidConsumer": { "name": "VOID CONSUMER", "desc": "you sip from the gap between stars" },
+    "classificationFailed": { "name": "CLASSIFICATION FAILED", "desc": "the system has no category for you" },
+    "postFailed": { "name": "POST-FAILED", "desc": "after the system gives up, you keep going" }
+  },
+  "bosses": {
+    "faucetGhost": "the faucet ghost",
+    "droughtSpirit": "drought spirit",
+    "fifthBottleEntity": "the fifth-bottle entity",
+    "custodianEmptyBottle": "custodian of the empty bottle",
+    "fridgeShaman": "fridge shaman",
+    "wellDjinn": "well djinn",
+    "oceanEnvoy": "ocean envoy",
+    "icebergJudge": "iceberg judge",
+    "ancientBottleElder": "ancient bottle elder",
+    "chlorineDwarf": "chlorine dwarf",
+    "flowKing": "flow king",
+    "antiqueDamacanaLord": "antique damacana lord",
+    "voidDrinker": "void drinker",
+    "transcendentBoss": "transcendent boss",
+    "classificationError": "classification error",
+    "leakingMoon": "the leaking moon",
+    "saturdayFoamBeast": "saturday foam beast",
+    "unstableDrip": "the unstable drip",
+    "bossOfBosses": "boss of bosses",
+    "unnamedLiquid": "the unnamed liquid"
+  },
+  "upgrades": {
+    "bigSip": { "name": "big sip" },
+    "cosmicSip": { "name": "cosmic sip" },
+    "voidLip": { "name": "void lip" },
+    "axiomKiss": { "name": "axiom kiss" },
+    "faucet": { "name": "faucet" },
+    "damacanaPump": { "name": "damacana pump" },
+    "cosmicPipe": { "name": "cosmic pipe" },
+    "voidFlow": { "name": "void flow" },
+    "flowEngine": { "name": "flow engine" }
+  },
+  "tree": {
+    "offense": {
+      "title": "OFFENSE",
+      "sharpDrop": { "name": "sharp drop", "desc": "+25% tap power" },
+      "cosmicFang": { "name": "cosmic fang", "desc": "+50% tap power" },
+      "critDrop": { "name": "crit drop", "desc": "10% chance ×5 crit" },
+      "bossKiller": { "name": "boss killer", "desc": "+100% boss damage" },
+      "voidBurst": { "name": "void burst", "desc": "active: massive boss hit" },
+      "voidClaw": { "name": "void claw", "desc": "tap ×3, crit ×10" }
+    },
+    "flow": {
+      "title": "FLOW",
+      "wideFaucet": { "name": "wide faucet", "desc": "+25% passive flow" },
+      "flowChannel": { "name": "flow channel", "desc": "+50% passive flow" },
+      "autoTap": { "name": "auto-tap", "desc": "0.5 silent taps/sec" },
+      "fastPump": { "name": "fast pump", "desc": "+100% flow, auto-tap ×2" },
+      "flood": { "name": "flood", "desc": "active: 10s ×10 flow" },
+      "infiniteFlow": { "name": "infinite flow", "desc": "flow ×3, auto-tap 2/s" }
+    },
+    "void": {
+      "title": "VOID",
+      "shardAttractor": { "name": "shard attractor", "desc": "+50% shard drop" },
+      "halo": { "name": "halo", "desc": "a slow rotating ring" },
+      "doubleShard": { "name": "double shard", "desc": "25% chance ×2 shards" },
+      "evolutionShock": { "name": "evolution shock", "desc": "evolutions give ×2 dmc" },
+      "crown": { "name": "crown", "desc": "a glowing particle crown" },
+      "guaranteedShards": { "name": "guaranteed shards", "desc": "+5 shards per prestige" }
+    },
+    "chaos": {
+      "title": "CHAOS",
+      "startingGift": { "name": "starting gift", "desc": "start each run +100" },
+      "comboMaster": { "name": "combo master", "desc": "combo cap 5 → 10" },
+      "luckyTap": { "name": "lucky tap", "desc": "every 10th tap ×5" },
+      "eventMagnet": { "name": "event magnet", "desc": "events ×2 more often" },
+      "timeLoop": { "name": "time loop", "desc": "active: replay last 15s" },
+      "chaosCore": { "name": "chaos core", "desc": "10% free upgrade chance" }
+    }
+  },
+  "events": {
+    "missingGalaxy": { "text": "INCOMING TRANSMISSION: a galaxy is missing" },
+    "voidChecking": { "text": "the void is checking on you" },
+    "realityUpdate": { "text": "REALITY UPDATE 2.4.7 — installing… done" },
+    "asteroidRating": { "text": "an asteroid has rated you 4.7/5" },
+    "oceanSilent": { "text": "the ocean has stopped responding" },
+    "cosmicGroupChat": { "text": "you've been added to a cosmic group chat" },
+    "starFollow": { "text": "a star is following you back" },
+    "moonBuffering": { "text": "the moon is buffering" },
+    "physicsBreak": { "text": "physics is taking a break" },
+    "reflectionThumbs": { "text": "your reflection sent you a thumbs up" },
+    "universeCalling": {
+      "text": "the universe is calling. answer?",
+      "answer": "answer",
+      "decline": "decline"
+    },
+    "blackHoleDeal": {
+      "text": "a black hole offers a deal",
+      "take": "take",
+      "refuse": "refuse"
+    },
+    "unidentifiedSwap": {
+      "text": "an unidentified entity wants to swap places",
+      "swap": "swap",
+      "stay": "stay"
+    },
+    "gravitySubscription": {
+      "text": "your subscription to gravity expires in 5 seconds",
+      "renew": "renew",
+      "lapse": "let it lapse"
+    },
+    "starComedy": {
+      "text": "a star is doing comedy. laugh?",
+      "laugh": "laugh",
+      "silent": "stay silent"
+    },
+    "voidAudit": {
+      "text": "you are being audited by the void",
+      "cooperate": "cooperate",
+      "flee": "flee"
+    },
+    "alternateMerge": {
+      "text": "an alternate version of you wants to merge",
+      "merge": "merge",
+      "reject": "reject"
+    },
+    "simulationFeedback": {
+      "text": "the simulation is asking for feedback",
+      "fiveStars": "5 stars",
+      "oneStar": "1 star"
+    },
+    "planetDisappear": {
+      "text": "EMERGENCY: a planet is about to disappear unless you act",
+      "act": "act",
+      "ignore": "ignore"
+    },
+    "oneWorldLost": {
+      "text": "the universe is calling. if you don't answer, one world will be lost",
+      "answer": "answer",
+      "ignore": "ignore"
+    },
+    "systemBreach": {
+      "text": "system breach detected — quarantine recommended",
+      "quarantine": "quarantine",
+      "ignore": "ignore"
+    },
+    "onlyRunningProcess": {
+      "text": "you are the only running process. continue?",
+      "continue": "continue",
+      "halt": "halt"
+    }
+  }
+}

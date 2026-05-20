@@ -1,0 +1,564 @@
+{
+  "ui": {
+    "damacana": "damacana",
+    "tap": "tıkla",
+    "sec": "sn",
+    "flow": "akış",
+    "mega": "MEGA",
+    "level": "SEVİYE",
+    "shards": "boşluk kırıkları",
+    "skillTree": "yetenek ağacı",
+    "settings": "ayarlar",
+    "master": "ana ses",
+    "music": "müzik",
+    "sfx": "efekt",
+    "mute": "sustur",
+    "unmute": "aç",
+    "language": "dil",
+    "close": "kapat",
+    "later": "sonra",
+    "prestigeNow": "prestij",
+    "prestigeTitle": "sınıflandırma başarısız",
+    "prestigeDesc": "sistem artık ne olduğunu adlandıramıyor. her şeyi boşluğa geri katla ve daha güçlü yeniden başla.",
+    "resetAll": "tüm ilerlemeyi sıfırla",
+    "tapToStart": "başlamak için dokun",
+    "codex": "bilgi kodeksi",
+    "achievements": "başarımlar",
+    "progression": "ilerleme",
+    "comingNext": "Sırada",
+    "comingSoon": "YAKINDA",
+    "unlocked": "açıldı",
+    "locked": "kilitli",
+    "all": "hepsi",
+    "elite": "ELİT",
+    "tapMe": "bana dokun",
+    "didYouKnow": "Biliyor muydun?",
+    "reward": "Ödül",
+    "close": "kapat",
+    "shop": "tekillik dükkanı",
+    "buy": "al",
+    "owned": "var",
+    "megaPrestige": "mega-prestij"
+  },
+  "categories": {
+    "cosmos": { "name": "kozmos" },
+    "quantum": { "name": "kuantum" },
+    "earth": { "name": "dünya" },
+    "life": { "name": "yaşam" },
+    "future": { "name": "gelecek" },
+    "water": { "name": "su" }
+  },
+  "facts": {
+    "cosmos_ageUniverse": {
+      "title": "EVRENİN YAŞI",
+      "body": "Evren 13.8 milyar yaşında. Bu zamanın çoğu atomların soğumasını, yıldızların oluşmasını ve senin ortaya çıkmanı beklemekle geçti.",
+      "twist": "Yine de, işte buradasın — su içip damacanaya tıklıyorsun."
+    },
+    "cosmos_observableSize": {
+      "title": "GÖZLEMLENEBİLİR EVREN",
+      "body": "Yaklaşık 93 milyar ışık yılı genişliğinde — ve bu sadece ışığın bize ulaşabildiği kısım. Tamamı hayal edemeyeceğin kadar büyük olabilir.",
+      "twist": "Şimdiye kadar gördüğün her şey, bir köşenin köşesinin köşesi."
+    },
+    "cosmos_galaxyCount": {
+      "title": "KAÇ GALAKSİ",
+      "body": "En az iki trilyon galaksi, her birinde yüz milyarlarca yıldız. Çoğunun var olduğunu bile bilmeyeceksin.",
+      "twist": "Gökyüzündeki her nokta, hiç gitmeyeceğin bir şehir."
+    },
+    "cosmos_blackHoleTime": {
+      "title": "KARA DELİK ZAMANI",
+      "body": "Bir kara deliğin olay ufkuna yakın yerde zaman uzar. Senin için bir saat, uzaktaki biri için yedi yıl olabilir.",
+      "twist": "Tüm zamanların en iyi süre uzatması."
+    },
+    "cosmos_andromedaCollision": {
+      "title": "ANDROMEDA ÇARPIŞMASI",
+      "body": "Yaklaşık 4.5 milyar yıl içinde Samanyolu ve Andromeda birleşerek tek bir yeni galaksi olacak.",
+      "twist": "Kimse onlara sormadı. Yine de yapıyorlar."
+    },
+    "cosmos_cmb": {
+      "title": "BÜYÜK PATLAMANIN PARAZİTİ",
+      "body": "Eski televizyonlardaki cızırtının bir kısmı Büyük Patlamadan kalan radyasyondu — sonunda antenine ulaşmıştı.",
+      "twist": "Evren yayın yapıyordu. Sinyal kötüydü."
+    },
+    "cosmos_fermiParadox": {
+      "title": "FERMİ PARADOKSU",
+      "body": "Evren çok büyük ve çok eski. Her makul matematiğe göre uzaylı medeniyetlerinin içinde boğulmamız gerekirdi. Hiçbirini görmüyoruz.",
+      "twist": "Herkes nerede? Belki çok, çok sessizler."
+    },
+    "cosmos_darkMatter": {
+      "title": "KARANLIK MADDE",
+      "body": "Evrendeki maddenin yaklaşık %85'i görünmez. Göremiyor, dokunamıyor, doğrudan tespit edemiyoruz.",
+      "twist": "Evrenin büyük kısmı hiç tanımadığımız bir şey."
+    },
+    "cosmos_voyager": {
+      "title": "VOYAGER'IN YOLCULUĞU",
+      "body": "Voyager 1, 1977'den beri bizden uzaklaşıyor. Bu hızla en yakın yıldıza varması 40,000 yıl sürer.",
+      "twist": "Bizden bir parça orada — yavaşça mahalleyi terk ediyor."
+    },
+    "cosmos_greatAttractor": {
+      "title": "BÜYÜK ÇEKİCİ",
+      "body": "Tüm galaksimiz, doğrudan göremediğimiz dev bir şeye doğru çekiliyor — Samanyolu'nun arkasında saklı.",
+      "twist": "Orada bir şey bizi çağırıyor. Gidiyoruz."
+    },
+
+    "quantum_superposition": {
+      "title": "SÜPERPOZİSYON",
+      "body": "Bir parçacık aynı anda iki yerde olabilir — ama sen bakana kadar. Gözlem anı onu tek bir noktaya çökertir.",
+      "twist": "Gerçeklik utangaç. Bakınca değişir."
+    },
+    "quantum_entanglement": {
+      "title": "DOLANIKLIK",
+      "body": "Bir kez dolanıklaşmış iki parçacık, evrenin öbür ucu kadar uzak olsa bile anında birlikte değişir.",
+      "twist": "Bazı bağlar uzaydan bile güçlü."
+    },
+    "quantum_observerEffect": {
+      "title": "GÖZLEMCİ ETKİSİ",
+      "body": "Kuantum ölçeğinde, bir şeyi ölçmek o şeyi değiştirir. Tarafsız gözlem diye bir şey yoktur.",
+      "twist": "Parmak izi bırakmadan bakamazsın."
+    },
+    "quantum_tunneling": {
+      "title": "TÜNELLEME",
+      "body": "Parçacıklar klasik fiziğe göre geçemeyecekleri duvarlardan geçebilir. Güneşin parlamasının bir sebebi de budur.",
+      "twist": "Şu an vücudunda bir yerde bir elektron kural çiğniyor."
+    },
+    "quantum_emptyAtom": {
+      "title": "ÇOĞUNLUĞUN BOŞLUKTU",
+      "body": "Atomlar %99,9999999999996 oranında boş. Tüm insanlardan boşluğu çıkarırsan, insanlık bir küp şekerin içine sığar.",
+      "twist": "İkna edici bir katılık illüzyonusun."
+    },
+    "quantum_waveParticle": {
+      "title": "DALGA MI PARÇACIK MI",
+      "body": "Işık, dalga sorusu sorarsan dalga, parçacık sorusu sorarsan parçacık gibi davranır.",
+      "twist": "Gerçeklik sorduğun soruya cevap verir — sormak istediğine değil."
+    },
+    "quantum_planck": {
+      "title": "PLANCK UZUNLUĞU",
+      "body": "1.6 × 10⁻³⁵ metrenin altında mesafe kavramı anlamını yitirir. Uzay köpüğe dönüşür.",
+      "twist": "Yeteri kadar yakına zoom yaparsan zemin kaybolur."
+    },
+    "quantum_zeroPoint": {
+      "title": "SIFIR NOKTASI ENERJİSİ",
+      "body": "Boş uzay boş değildir. Mükemmel bir vakum bile durmadan hareket eden devasa miktarda enerji içerir.",
+      "twist": "Hiçbir şey, anlaşılan, çok meşgul."
+    },
+    "quantum_manyWorlds": {
+      "title": "ÇOK DÜNYALAR",
+      "body": "Kuantum fiziğinin bir yorumuna göre her seçim gerçekliği ikiye böler. Her yazı-tura iki evren yaratır.",
+      "twist": "Bir yerlerde diğer seçimi yaptın. Orada da iyisin."
+    },
+    "quantum_foam": {
+      "title": "KUANTUM KÖPÜĞÜ",
+      "body": "En küçük ölçeklerde gerçeklik düz değildir. Parçacıklar kaotik bir köpükte var olup yok olur.",
+      "twist": "Gerçekliğin zemini çorba gibi kaynıyor."
+    },
+
+    "earth_innerCore": {
+      "title": "İÇ ÇEKİRDEK",
+      "body": "Dünyanın iç çekirdeği, Ay büyüklüğünde katı bir demir top — ve yüzeyden biraz daha hızlı dönüyor.",
+      "twist": "Gezegenimizin içinde küçük bir demir ay, kendi işini yapıyor."
+    },
+    "earth_age": {
+      "title": "NE KADAR YAŞLIYIZ",
+      "body": "Dünya 4.5 milyar yaşında. Yaşam yaklaşık 3.8 milyar yıl önce ortaya çıktı; yani Dünya tarihinin neredeyse tamamında yaşam vardı.",
+      "twist": "Yaşam erken geldi ve gitmeyi reddetti."
+    },
+    "earth_olympusMons": {
+      "title": "EVEREST KÜÇÜK KALIR",
+      "body": "Mars'taki Olympus Mons 22 km yükseklikte — Everest'in neredeyse üç katı.",
+      "twist": "Ciddi dağcılık için yanlış gezegendeyiz."
+    },
+    "earth_pacific": {
+      "title": "PASİFİK DEV",
+      "body": "Pasifik Okyanusu gezegenin serbest suyunun yaklaşık yarısını barındırır. Tüm kıtalar onun içine sığar.",
+      "twist": "Bir okyanus, her şeyi yutsa bile hâlâ yer kalır."
+    },
+    "earth_continentsMove": {
+      "title": "KITALAR HAREKET EDER",
+      "body": "Kıtalar yılda 2-5 cm sürükleniyor. Atlantik her yıl, bir tırnağın uzayışı kadar genişliyor.",
+      "twist": "Coğrafya çok yavaş bir hava durumudur."
+    },
+    "earth_breath": {
+      "title": "HER NEFES TARİHİ",
+      "body": "Aldığın her nefes, istatistiksel olarak binlerce yıl önce yaşamış insanların solduğu atomları içerir.",
+      "twist": "Hava hatırlıyor — ve şu an ciğerlerinde."
+    },
+    "earth_lightning": {
+      "title": "ŞİMŞEK GÜNEŞTEN SICAK",
+      "body": "Bir şimşek 30,000 °C'ye ulaşabilir — Güneş yüzeyinden beş kat daha sıcak. Kısa süreliğine.",
+      "twist": "Gökyüzü bazen yere küçük yıldızlar fırlatıyor."
+    },
+    "earth_glassRain": {
+      "title": "CAM YAĞMURU",
+      "body": "HD 189733b gezegeninde rüzgârlar 8,700 km/saate ulaşır ve erimiş cam damlaları yana doğru yağar.",
+      "twist": "Aniden buradaki hava durumu makul gözüküyor."
+    },
+    "earth_lightToAndromeda": {
+      "title": "DÜNYADAN GİDEN IŞIK",
+      "body": "Şu an Dünyadan yansıyan ışık 2.5 milyon yıl sonra Andromeda galaksisine ulaşacak.",
+      "twist": "İstesen de istemesen de evrene bir iz bırakıyorsun."
+    },
+    "earth_oxygenApocalypse": {
+      "title": "OKSİJEN KIYAMETİ",
+      "body": "Siyanobakteriler oksijeni ilk ürettiğinde bu ölümcül bir zehirdi. Dünyadaki tüm yaşamı neredeyse silip süpürmüştü.",
+      "twist": "Sevdiğimiz hava neredeyse her şeyi öldürüyordu."
+    },
+
+    "life_lastAncestor": {
+      "title": "ORTAK ATA",
+      "body": "Dünyadaki her canlı — her ağaç, balık, bakteri, sen — 4 milyar yıl önce yaşamış tek bir ortak organizmadan geliyor.",
+      "twist": "Hepimiz bir aile toplantısına geldik."
+    },
+    "life_youAreShip": {
+      "title": "SEN BİR GEMİSİN",
+      "body": "Vücudunda insan hücrelerinden daha fazla bakteri hücresi taşıyorsun. Sen bir kişiden çok bir ekosistemsin.",
+      "twist": "Teknik olarak isimli bir şehirsin."
+    },
+    "life_brainPower": {
+      "title": "BEYİN GÜCÜ",
+      "body": "Beynin vücudunun toplam enerjisinin %20'sini kullanır. Yaklaşık 20 watt ile çalışır — loş bir ampulden az.",
+      "twist": "Bütün rüyalarına bir masa lambası güç veriyor."
+    },
+    "life_sharks": {
+      "title": "İNSANLAR YENİ",
+      "body": "Modern insanlar yaklaşık 300,000 yıldır var. Köpek balıkları 450 milyon yıldır var. Koca ormanlardan daha uzun süre dayandılar.",
+      "twist": "Köpek balıkları ellerimiz bile yokken pratik yapıyordu."
+    },
+    "life_tardigrades": {
+      "title": "TARDİGRADLAR",
+      "body": "Uzay vakumunda, kaynar suda, donma sıcaklığında ve radyasyonda hayatta kalan minik su ayıları. Biz gittikten çok sonra burada olacaklar.",
+      "twist": "Gelecek, öldürülmesi en zor olanı miras alır."
+    },
+    "life_octopus": {
+      "title": "AHTAPOTLAR KOLLARIYLA DÜŞÜNÜR",
+      "body": "Bir ahtapotun nöronlarının üçte ikisi dokunaçlarındadır. Her kol kısmen kendi başına düşünür.",
+      "twist": "Parmaklarının kendi fikirleri olduğunu hayal et."
+    },
+    "life_trees": {
+      "title": "AĞAÇLAR KONUŞUR",
+      "body": "Ormanlar besinleri ve kimyasal sinyalleri yer altındaki mantar ağları aracılığıyla paylaşır. Ağaçlar komşularını tanır.",
+      "twist": "Altındaki ahşap dedikodu yapıyor."
+    },
+    "life_whaleLanguage": {
+      "title": "BALİNALARIN KÜLTÜRÜ VAR",
+      "body": "Farklı balina sürüleri farklı şarkı lehçeleri söyler ve bunları nesilden nesile aktarır. Açık denizde kültürleri vardır.",
+      "twist": "Şu an bir yerde bir balina başka bir balinaya şarkı öğretiyor."
+    },
+    "life_immortalJellyfish": {
+      "title": "ÖLÜMSÜZ DENİZANASI",
+      "body": "Turritopsis dohrnii, juvenil formuna geri dönebilir ve biyolojik olarak kendiliğinden hiç yaşlanmaz.",
+      "twist": "Yaşlanma doğanın yasası değil. Sadece bir alışkanlık."
+    },
+    "life_dnaTeaspoon": {
+      "title": "BİR ÇAY KAŞIĞI DNA",
+      "body": "Dünyadaki tüm insanların DNA'sı tek bir çay kaşığına sığar.",
+      "twist": "Hepimiz bir kaşığın içinde."
+    },
+
+    "future_sunDeath": {
+      "title": "GÜNEŞ ÖLECEK",
+      "body": "Yaklaşık 5 milyar yıl içinde Güneş bir kırmızı deve dönüşecek, Merkür'ü, Venüs'ü ve muhtemelen Dünya'yı yutacak.",
+      "twist": "Işıklar bir süre daha açık."
+    },
+    "future_heatDeath": {
+      "title": "ISI ÖLÜMÜ",
+      "body": "Yaklaşık 10¹⁰⁰ yıl içinde evrenin kullanılabilir enerjisi tükenecek. Her şey loş, soğuk ve hareketsiz olacak.",
+      "twist": "Evren bir patlamayla değil, yavaş bir nefes vererek bitiyor."
+    },
+    "future_lastStars": {
+      "title": "SON YILDIZLAR",
+      "body": "Yaklaşık 100 trilyon yıl sonra son yıldız yakıtını tüketecek. Geriye sadece yavaşça buharlaşan kara delikler kalacak.",
+      "twist": "Gökyüzü uzun bir zamanlayıcıda."
+    },
+    "future_protonDecay": {
+      "title": "PROTON BOZUNMASI",
+      "body": "Madde bile sonsuz değil. Protonlar 10³⁴ yıl içinde bozunabilir. Atomlar bile sonunda çözülür.",
+      "twist": "Sabır, fiziğin bir özelliği."
+    },
+    "future_frozenCosmos": {
+      "title": "DAHA YALNIZ BİR GÖKYÜZÜ",
+      "body": "Evren her yıl daha hızlı genişliyor. Sonunda her galaksi bir daha asla görülemeyecek kadar uzaklaşacak.",
+      "twist": "Gece gökyüzü tek tek karartılacak."
+    },
+    "future_simulation": {
+      "title": "SİMÜLASYON SORUSU",
+      "body": "Bazı fizikçilere göre gerçekliğin matematiği bir simülasyona şüpheli derecede benziyor. Sayılar fazla iyi oturuyor.",
+      "twist": "Eğer bu bir simse, logları okuyan kim olursa olsun, merhaba."
+    },
+    "future_greatFilter": {
+      "title": "BÜYÜK FİLTRE",
+      "body": "Neden uzaylılarla karşılaşmadık? Belki çoğu medeniyet gezegenini terk edemeden kendini yok ediyor.",
+      "twist": "Evren belki sessiz çünkü gerisi zaten başaramadı."
+    },
+    "future_aiAscent": {
+      "title": "YAPAY ZEKANIN YÜKSELİŞİ",
+      "body": "On yıllar içinde bizden milyon kat hızlı düşünen zihinler inşa edebiliriz — bizim takip edemeyeceğimiz yönlere.",
+      "twist": "Gelecek insan olmayabilir, ama içeri davet etmek bize kalmış."
+    },
+    "future_generationShips": {
+      "title": "KUŞAK GEMİLERİ",
+      "body": "Başka bir yıldıza ulaşmak gerçekçi olarak binlerce yıl boyunca uçan şehirler inşa etmeyi gerektirir — Dünyayı hiç görmeyen kuşaklar taşıyan.",
+      "twist": "Aynı pencereden hiçliğe bakarak geçen bir çocukluk."
+    },
+    "future_theEnd": {
+      "title": "SON",
+      "body": "En derin gelecekte geriye sadece soğuk ve sessizlik kalır. Ama evren 13 milyar yıl uyanık kaldı. Sen de öyle.",
+      "twist": "Olmuş olmak hiç de az değil."
+    },
+
+    "water_origin": {
+      "title": "SU NEREDEN GELDİ",
+      "body": "Dünyanın suyunun çoğu, güneş sisteminin kaotik ilk yıllarında buzlu kuyrukluyıldızlar ve asteroitlerle geldi.",
+      "twist": "Sabah bardağın uzaydan kargo."
+    },
+    "water_marianaDepth": {
+      "title": "MARİANA'DAN DERİN",
+      "body": "Mariana Çukuru 11 km derinliğinde. Güneş ışığı pratikte 1 km'den önce ölür. Okyanusun büyük kısmı karanlıktır.",
+      "twist": "Dünyanın çoğu, hiç inmediğimiz bir bodrum."
+    },
+    "water_iceWeird": {
+      "title": "BUZ TUHAF",
+      "body": "Katı su, sıvı suyun üzerinde yüzer. Evrende neredeyse hiçbir madde bunu yapmaz. Bildiğimiz yaşam buna bağlı.",
+      "twist": "Balıklar kışı, kimyanın tuhaf bir numarası sayesinde atlatıyor."
+    },
+    "water_71percent": {
+      "title": "%71",
+      "body": "Dünyanın yüzeyinin yaklaşık %71'i suyla kaplı. Tüm bunun yalnızca %0,001'i bir masanın üzerindeki bardakta.",
+      "twist": "Boyanın içinde boğulan bir gezegeniz."
+    },
+    "water_europa": {
+      "title": "EUROPA'NIN OKYANUSLARI",
+      "body": "Jüpiter'in uydusu Europa'nın buzunun altında, Dünya'nın tüm okyanuslarından daha fazla sıvı su var.",
+      "twist": "Daha büyük bir okyanus bekliyor — sadece daha soğuk ve daha uzakta."
+    },
+    "water_timeCapsule": {
+      "title": "SU BİR ZAMAN KAPSÜLÜ",
+      "body": "Su sonsuza dek döner. Bugün içtiğin su belki bir dinozorun ya da bir milyon yıl önceki bir fırtınanın içindeydi.",
+      "twist": "Şimdiye kadar yaşamış herkesle aynı bardağı paylaşıyorsun."
+    },
+    "water_heavyWater": {
+      "title": "AĞIR SU",
+      "body": "Hidrojene bir nötron eklersen, su ağırlaşır. \"Ağır su\" aynı görünür ama daha yoğun ve hafif toksiktir.",
+      "twist": "Aynı tat, farklı kütle. Gerçekliğin varyantları var."
+    },
+    "water_everywhere": {
+      "title": "BİR SU MOLEKÜLÜ",
+      "body": "Tek bir su molekülü tarih boyunca muhtemelen binlerce canlının, okyanusun ve nehrin içinde olmuştur.",
+      "twist": "Musluk suyun senden çok yaşadı."
+    },
+    "water_deepLayers": {
+      "title": "OKYANUSUN KATMANLARI VAR",
+      "body": "Okyanusun 1 km altında sürekli karanlık ve donmaya yakın sıcaklık vardır. Oradaki canlılar genellikle kendi ışıklarını yapar.",
+      "twist": "Sakinlerinin parlamayı seçtiği şeylerle aydınlanan koca bir dünya."
+    },
+    "water_antarcticLakes": {
+      "title": "GİZLİ GÖLLER",
+      "body": "Antarktika buzunun altında 400'den fazla sıvı su gölü var. Bazıları milyonlarca yıldır kapalı kaldı.",
+      "twist": "Bu gezegende kimsenin girmediği odalar var."
+    }
+  },
+  "achievements": {
+    "firstDrop": { "name": "İLK DAMLA", "desc": "Evrim seviyesi 1'e ulaş" },
+    "evolving": { "name": "EVRİMLEŞİYOR", "desc": "Evrim seviyesi 3'e ulaş" },
+    "classified": { "name": "SINIFLANDIRILDI", "desc": "CLASSIFICATION FAILED'a ulaş" },
+    "reset": { "name": "SIFIRLA", "desc": "İlk prestijin" },
+    "loopContinues": { "name": "DÖNGÜ SÜRÜYOR", "desc": "5 prestij" },
+    "eternal": { "name": "EBEDÎ", "desc": "25 prestij" },
+    "bossHunter": { "name": "BOSS AVCISI", "desc": "Tek bir runda 50 boss öldür" },
+    "bossMaster": { "name": "BOSS USTASI", "desc": "Toplam 500 boss öldür" },
+    "megaSlayer": { "name": "MEGA KATİL", "desc": "Tier 25 bir bossu yen" },
+    "knowledgeBegins": { "name": "BİLGİ BAŞLIYOR", "desc": "İlk fact'ini topla" },
+    "polymath": { "name": "POLİMAT", "desc": "30 fact topla" },
+    "omniscient": { "name": "HER ŞEYİ BİLEN", "desc": "60 fact'in hepsini topla" },
+    "cosmosCalls": { "name": "KOZMOS ÇAĞIRIYOR", "desc": "Kozmos kategorisini tamamla" },
+    "shardHoarder": { "name": "KIRIK İSTİFLEYİCİSİ", "desc": "Aynı anda 100 kırığa sahip ol" },
+    "skillForest": { "name": "YETENEK ORMANI", "desc": "12 yetenek düğümüne sahip ol" },
+    "comboLord": { "name": "COMBO LORDU", "desc": "Combo ×10'a ulaş" },
+    "speedrunner": { "name": "HIZLI KOŞAN", "desc": "20 dakikadan az sürede evrim 6'ya ulaş" },
+    "patientOne": { "name": "SABIRLI", "desc": "Toplam 24 saat oyun süresi" },
+    "voidResponds": { "name": "BOŞLUK YANIT VERİYOR", "desc": "Void Burst'ü 50 kez kullan" },
+    "unclassifiable": { "name": "SINIFLANDIRILAMAZ", "desc": "Diğer tüm başarımları aç" }
+  },
+  "progression": {
+    "title": "İLERLEME",
+    "comingNext": "Sırada",
+    "current": "Şu anki ★",
+    "tier3": { "name": "★3 — POST-FAILED", "desc": "Yeni bir 8. evrim formu açılır." },
+    "tier5": { "name": "★5 — ELİT BOSS'LAR", "desc": "Elit varyantlar 1.5× HP ve garantili kırık drop ile çıkar." },
+    "tier10": { "name": "★10 — TEKİLLİK KRİSTALLERİ", "desc": "Elit boss'lar ✦ düşürebilir. Küçük bir dükkan açılır." },
+    "tier15": { "name": "★15 — KODEKS ARTEFAKTLARI", "desc": "Bir fact kategorisini tamamlamak kalıcı +%5 bonus verir." },
+    "tier25": { "name": "★25 — MEGA-PRESTİJ", "desc": "Kırıkları + ağacı Cosmic Ascension Points için sıfırla." }
+  },
+  "shop": {
+    "title": "tekillik dükkanı",
+    "tapBoost": { "name": "kalıcı +%10 dokunma", "desc": "dokunma gücünü sonsuza dek artırır" },
+    "flowBoost": { "name": "kalıcı +%10 akış", "desc": "pasif akışı sonsuza dek artırır" },
+    "shardBoost": { "name": "kalıcı +%10 kırık", "desc": "kırık kazancını sonsuza dek artırır" }
+  },
+  "levels8": {
+    "postFailed": { "name": "POST-FAILED", "desc": "sistem pes ettikten sonra bile devam edersin" }
+  },
+  "elite": {
+    "warden": "derin boşluğun bekçisi",
+    "crystalScribe": "kristal yazıcı",
+    "lastEcho": "son yankı",
+    "fractalKing": "fraktal kral",
+    "hollowAxiom": "boş aksiyom",
+    "weightlessJudge": "ağırlıksız yargıç",
+    "broadcastSpecter": "yayın hayaleti",
+    "siphonOfStars": "yıldız emici",
+    "thresholdGuardian": "eşik koruyucusu",
+    "nullEntity": "null varlık"
+  },
+  "levels": {
+    "drop": { "name": "DAMLA", "desc": "sonsuza dek düşen tek bir damla" },
+    "bigDrop": { "name": "BÜYÜK DAMLA", "desc": "damla fazla beslendi" },
+    "fiveBottleHuman": { "name": "5-DAMACANA İNSAN", "desc": "beş kapalı damacanadan oluşan bir kişi" },
+    "galactic": { "name": "GALAKTİK TÜKETİCİ", "desc": "yörüngeler arası içiyorsun" },
+    "transcendent": { "name": "AŞKIN TÜKETİCİ", "desc": "susuzluk artık biyolojik değil" },
+    "voidConsumer": { "name": "BOŞLUK TÜKETİCİSİ", "desc": "yıldızların arasındaki boşluktan içiyorsun" },
+    "classificationFailed": { "name": "CLASSIFICATION FAILED", "desc": "sistemin sana koyacak bir kategorisi yok" },
+    "postFailed": { "name": "POST-FAILED", "desc": "sistem pes ettikten sonra bile devam edersin" }
+  },
+  "bosses": {
+    "faucetGhost": "musluk hayaleti",
+    "droughtSpirit": "kuraklık ruhu",
+    "fifthBottleEntity": "beşinci damacana varlığı",
+    "custodianEmptyBottle": "boş damacananın bekçisi",
+    "fridgeShaman": "buzdolabı şamanı",
+    "wellDjinn": "kuyu cini",
+    "oceanEnvoy": "okyanus elçisi",
+    "icebergJudge": "buzdağı hakimi",
+    "ancientBottleElder": "kadim damacana büyüğü",
+    "chlorineDwarf": "klor cücesi",
+    "flowKing": "akış kralı",
+    "antiqueDamacanaLord": "antika damacana lordu",
+    "voidDrinker": "boşluk içicisi",
+    "transcendentBoss": "aşkın boss",
+    "classificationError": "sınıflandırma hatası",
+    "leakingMoon": "sızdıran ay",
+    "saturdayFoamBeast": "cumartesi köpük canavarı",
+    "unstableDrip": "kararsız damla",
+    "bossOfBosses": "boss'ların boss'u",
+    "unnamedLiquid": "isimsiz sıvı"
+  },
+  "upgrades": {
+    "bigSip": { "name": "büyük yudum" },
+    "cosmicSip": { "name": "kozmik yudum" },
+    "voidLip": { "name": "boşluk dudağı" },
+    "axiomKiss": { "name": "aksiyom öpücüğü" },
+    "faucet": { "name": "musluk" },
+    "damacanaPump": { "name": "damacana pompası" },
+    "cosmicPipe": { "name": "kozmik boru" },
+    "voidFlow": { "name": "boşluk akışı" },
+    "flowEngine": { "name": "akış motoru" }
+  },
+  "tree": {
+    "offense": {
+      "title": "SALDIRI",
+      "sharpDrop": { "name": "keskin damla", "desc": "+%25 dokunma gücü" },
+      "cosmicFang": { "name": "kozmik diş", "desc": "+%50 dokunma gücü" },
+      "critDrop": { "name": "kritik damla", "desc": "%10 şans ×5 kritik" },
+      "bossKiller": { "name": "boss avcısı", "desc": "+%100 boss hasarı" },
+      "voidBurst": { "name": "boşluk patlaması", "desc": "aktif: büyük boss vuruşu" },
+      "voidClaw": { "name": "boşluk pençesi", "desc": "dokunma ×3, kritik ×10" }
+    },
+    "flow": {
+      "title": "AKIŞ",
+      "wideFaucet": { "name": "geniş musluk", "desc": "+%25 pasif akış" },
+      "flowChannel": { "name": "akış kanalı", "desc": "+%50 pasif akış" },
+      "autoTap": { "name": "oto-dokunma", "desc": "0.5 sessiz dokunma/sn" },
+      "fastPump": { "name": "hızlı pompa", "desc": "+%100 akış, oto-dokunma ×2" },
+      "flood": { "name": "sel", "desc": "aktif: 10sn ×10 akış" },
+      "infiniteFlow": { "name": "sonsuz akış", "desc": "akış ×3, oto-dokunma 2/sn" }
+    },
+    "void": {
+      "title": "BOŞLUK",
+      "shardAttractor": { "name": "kırık çekici", "desc": "+%50 kırık düşme" },
+      "halo": { "name": "hale", "desc": "yavaş dönen bir halka" },
+      "doubleShard": { "name": "çift kırık", "desc": "%25 şans ×2 kırık" },
+      "evolutionShock": { "name": "evrim şoku", "desc": "evrimler ×2 dmc verir" },
+      "crown": { "name": "taç", "desc": "parıldayan parçacık taç" },
+      "guaranteedShards": { "name": "garanti kırık", "desc": "prestij başına +5 kırık" }
+    },
+    "chaos": {
+      "title": "KAOS",
+      "startingGift": { "name": "başlangıç hediyesi", "desc": "her run +100 dmc" },
+      "comboMaster": { "name": "combo ustası", "desc": "combo tavanı 5 → 10" },
+      "luckyTap": { "name": "şanslı dokunma", "desc": "her 10. dokunma ×5" },
+      "eventMagnet": { "name": "olay mıknatısı", "desc": "olaylar ×2 daha sık" },
+      "timeLoop": { "name": "zaman döngüsü", "desc": "aktif: son 15sn’yi tekrarla" },
+      "chaosCore": { "name": "kaos çekirdeği", "desc": "%10 bedava upgrade" }
+    }
+  },
+  "events": {
+    "missingGalaxy": { "text": "GELEN MESAJ: bir galaksi kayıp" },
+    "voidChecking": { "text": "boşluk seni yokluyor" },
+    "realityUpdate": { "text": "GERÇEKLİK GÜNCELLEMESİ 2.4.7 — yükleniyor… tamam" },
+    "asteroidRating": { "text": "bir asteroit sana 4.7/5 verdi" },
+    "oceanSilent": { "text": "okyanus yanıt vermeyi kesti" },
+    "cosmicGroupChat": { "text": "kozmik grup sohbetine eklendin" },
+    "starFollow": { "text": "bir yıldız seni geri takip etti" },
+    "moonBuffering": { "text": "ay yükleniyor…" },
+    "physicsBreak": { "text": "fizik mola veriyor" },
+    "reflectionThumbs": { "text": "aynadaki yansıman sana başparmak gösterdi" },
+    "universeCalling": {
+      "text": "evren arıyor. açar mısın?",
+      "answer": "aç",
+      "decline": "reddet"
+    },
+    "blackHoleDeal": {
+      "text": "bir kara delik anlaşma teklif ediyor",
+      "take": "kabul et",
+      "refuse": "reddet"
+    },
+    "unidentifiedSwap": {
+      "text": "tanımsız bir varlık yer değiştirmek istiyor",
+      "swap": "değiş",
+      "stay": "kal"
+    },
+    "gravitySubscription": {
+      "text": "yerçekimi aboneliğin 5 saniye içinde bitiyor",
+      "renew": "yenile",
+      "lapse": "bıraksın bitsin"
+    },
+    "starComedy": {
+      "text": "bir yıldız komedi yapıyor. güler misin?",
+      "laugh": "gül",
+      "silent": "sessiz kal"
+    },
+    "voidAudit": {
+      "text": "boşluk seni denetliyor",
+      "cooperate": "iş birliği yap",
+      "flee": "kaç"
+    },
+    "alternateMerge": {
+      "text": "alternatif bir versiyonun seninle birleşmek istiyor",
+      "merge": "birleş",
+      "reject": "reddet"
+    },
+    "simulationFeedback": {
+      "text": "simülasyon geri bildirim istiyor",
+      "fiveStars": "5 yıldız",
+      "oneStar": "1 yıldız"
+    },
+    "planetDisappear": {
+      "text": "ACİL DURUM: harekete geçmezsen bir gezegen yok olacak",
+      "act": "harekete geç",
+      "ignore": "boş ver"
+    },
+    "oneWorldLost": {
+      "text": "evren arıyor. açmazsan bir dünya kaybolacak",
+      "answer": "aç",
+      "ignore": "boş ver"
+    },
+    "systemBreach": {
+      "text": "sistem ihlali tespit edildi — karantina öneriliyor",
+      "quarantine": "karantinaya al",
+      "ignore": "boş ver"
+    },
+    "onlyRunningProcess": {
+      "text": "çalışan tek süreç sensin. devam edilsin mi?",
+      "continue": "devam",
+      "halt": "durdur"
+    }
+  }
+}
