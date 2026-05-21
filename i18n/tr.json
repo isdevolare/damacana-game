@@ -10,6 +10,8 @@
     "skillTree": "yetenek ağacı",
     "settings": "ayarlar",
     "profileStats": "profil / istatistikler",
+    "research": "laboratuvar",
+    "buildTree": "yapı ağacı",
     "master": "ana ses",
     "music": "müzik",
     "sfx": "efekt",
@@ -59,35 +61,60 @@
     "currentMission": "Aktif görev",
     "completed": "GÖREV TAMAMLANDI",
     "unlocked": "Açıldı",
+    "lockedRequirement": "{chapter} final boss T{tier}’u yen",
     "earth": {
       "name": "Dünya",
       "desc": "Tek bir damladan gezegen ölçeğinde sıvı çekirdeğe yoğunlaş.",
-      "objective": "Dünya formunu dengele ve dünya aşaması boss'unu yen.",
+      "objective": "Dünya seviyeleri 1-10’u temizle ve dünya aşaması boss T10’u yen.",
       "complete": "Dünya'nın sıvı sinyali dengelendi. Rotada kırmızı gezegen açıldı."
     },
     "mars": {
       "name": "Mars",
       "desc": "İnce atmosfer, demir tozu ve basınçsız akışa dayan.",
-      "objective": "Mars basıncına uyum sağla ve kızıl gezegen muhafızını kır.",
+      "objective": "Mars seviyeleri 11-25’i temizle ve kızıl gezegen muhafızı T25’i kır.",
       "complete": "Mars teslim oldu. Halkalı dev artık menzilde."
     },
     "saturn": {
       "name": "Satürn",
       "desc": "Sıvı enerjiyi halkalar, buz ve yörünge enkazı arasından şekillendir.",
-      "objective": "Halka alanını geç ve Satürn'ün final muhafızını yen.",
+      "objective": "Satürn seviyeleri 26-45’i geç ve halka muhafızı T45’i yen.",
       "complete": "Satürn'ün halkaları akışınla hizalandı. Uranüs açıldı."
     },
     "uranus": {
       "name": "Uranüs",
       "desc": "Soğuk atmosfer basıncını daha derin kozmik akışa dönüştür.",
-      "objective": "Eğik buz devinde ustalaş ve savunma alanını çökert.",
+      "objective": "Uranüs seviyeleri 46-70’te ustalaş ve savunma alanı T70’i çökert.",
       "complete": "Uranüs tamamlandı. Neptün'ün derin mavi çekimi çağırıyor."
     },
     "neptune": {
       "name": "Neptün",
       "desc": "Rota yıldızlara ve anomalilere açılmadan önce fırtına eşiğine gir.",
-      "objective": "Neptün'ün final boss'unu yenerek gezegen rotasını bitir.",
+      "objective": "Neptün seviyeleri 71-100’de final boss T100’ü yenerek Gezegen Arkı’nı bitir.",
       "complete": "İlk gezegen rotası tamamlandı. Yıldız bölümleri bu MVP'nin ötesinde kalıyor."
+    }
+  },
+  "arcs": {
+    "currentArc": "Aktif ark",
+    "afterNeptune": "Neptün’den sonra",
+    "planet": { "name": "Gezegen Arkı", "label": "ARK 1 — Gezegen Arkı" },
+    "star": { "name": "ARK 2 — Yıldız Arkı" },
+    "galaxy": { "name": "ARK 3 — Galaksi Arkı" },
+    "blackHole": { "name": "ARK 4 — Kara Delik Arkı" },
+    "anomaly": { "name": "ARK 5 — Anomali Arkı" },
+    "placeholders": {
+      "redDwarf": "Kızıl Cüce",
+      "whiteDwarf": "Beyaz Cüce",
+      "giantStar": "Dev Yıldız",
+      "supernova": "Süpernova",
+      "milkyWay": "Samanyolu",
+      "andromeda": "Andromeda",
+      "collidingGalaxy": "Çarpışan Galaksi",
+      "stellarBlackHole": "Yıldızsal Kara Delik",
+      "supermassiveBlackHole": "Süper Kütleli Kara Delik",
+      "singularity": "Tekillik",
+      "voidSea": "Boşluk Denizi",
+      "realityFracture": "Gerçeklik Kırığı",
+      "classificationFailed": "Sınıflandırma Başarısız"
     }
   },
   "offline": {
@@ -113,6 +140,11 @@
     "bossAttackWarning": "Darbe geliyor",
     "bossSummoning": "Minyon çağırıyor",
     "weakPointExposed": "Zayıf nokta açık",
+    "phaseLabel": "Faz {phase}/{total}",
+    "finalPhase": "Final faz",
+    "phaseClear": "Faz temizlendi",
+    "missionClear": "Görev temizlendi",
+    "bossDrop": "Boss düşümü",
     "hp": "HP",
     "wave": "dalga",
     "orbitDamage": "yörünge",
@@ -137,6 +169,106 @@
       "orbitSlash": { "name": "Yörünge Kesimi", "desc": "Dönen halka hasarı" },
       "coreHeal": { "name": "Çekirdek İyileştirme", "desc": "Çekirdek HP'sini yeniler" }
     }
+  },
+  "research": {
+    "title": "LABORATUVAR",
+    "idle": "aktif araştırma yok",
+    "oneActive": "bir araştırma aktif",
+    "duration": "süre",
+    "cost": "bedel",
+    "bonus": "bonus",
+    "start": "başlat",
+    "claim": "al",
+    "close": "kapat",
+    "remaining": "{time} kaldı",
+    "completedNotice": "Araştırma tamamlandı: {name}",
+    "categories": {
+      "combat": "savaş",
+      "flow": "akış",
+      "offline": "çevrimdışı",
+      "void": "boşluk / prestij"
+    },
+    "status": {
+      "locked": "kilitli",
+      "available": "hazır",
+      "researching": "araştırılıyor",
+      "completed": "tamamlandı",
+      "claimed": "alındı"
+    },
+    "requirements": {
+      "offline": "Pasif üretim veya Dünya görevi tamamlanmalı.",
+      "void": "İlk prestij veya ilk kırık gerekli."
+    },
+    "items": {
+      "stableCore1": { "name": "Kararlı Çekirdek I", "desc": "Sıvı çekirdek kabuğunu dengele.", "bonus": "+%5 maksimum HP" },
+      "comboMemory1": { "name": "Combo Hafızası I", "desc": "Darbe ritmini çekirdekte sakla.", "bonus": "-%5 combo düşüşü" },
+      "manaChannel1": { "name": "Mana Kanalı I", "desc": "Daha temiz bir mana rotası aç.", "bonus": "+%5 mana yenilenmesi" },
+      "efficientFlow1": { "name": "Verimli Akış I", "desc": "Pasif akıştaki kaybı azalt.", "bonus": "+%5 pasif üretim" },
+      "rewardCurrent1": { "name": "Ödül Akıntısı I", "desc": "Kırılmalardan daha fazla madde çek.", "bonus": "+%5 ödül" },
+      "orbitCalibration1": { "name": "Yörünge Kalibrasyonu I", "desc": "Pasif yörünge darbesini ayarla.", "bonus": "+%5 yörünge hasarı" },
+      "nightReservoir1": { "name": "Gece Rezervuarı I", "desc": "Uzaktayken daha fazla basınç tut.", "bonus": "+30dk çevrimdışı sınırı" },
+      "silentEngine1": { "name": "Sessiz Motor I", "desc": "Çekirdek motorunu çevrimdışında sıcak tut.", "bonus": "+%10 çevrimdışı verim" },
+      "longShift1": { "name": "Uzun Vardiya I", "desc": "Gözetimsiz üretim deposunu genişlet.", "bonus": "+1sa çevrimdışı sınırı" },
+      "voidAnalysis1": { "name": "Boşluk Analizi I", "desc": "Prestij kalıntısını haritala.", "bonus": "+%5 prestij kazancı" },
+      "fractureDetector1": { "name": "Kırık Dedektörü I", "desc": "Kırık taşıyan çatlakları erken algıla.", "bonus": "+%5 kırık şansı" },
+      "permanentTrace1": { "name": "Kalıcı İz I", "desc": "Sıfırlama sonrası üretim izi bırak.", "bonus": "+%5 prestij sonrası üretim" }
+    }
+  },
+  "buildTree": {
+    "title": "YAPI AĞACI",
+    "subtitle": "savaş kimliğini seç",
+    "status": {
+      "locked": "kilitli",
+      "available": "hazır",
+      "owned": "alındı"
+    },
+    "branches": {
+      "combo": { "name": "Combo Yapısı", "identity": "Baskı, zayıf noktalar ve uzun zincirler." },
+      "tank": { "name": "Tank / Çekirdek Yapısı", "identity": "Daha dayanıklı çekirdek ve daha güvenli çöküş yenilenmesi." },
+      "orbit": { "name": "Yörünge Yapısı", "identity": "Pasif halkalar, alan temizleme ve yörünge kontrolü." },
+      "void": { "name": "Boşluk Yapısı", "identity": "Daha çok anomali ve kırık, daha dengesiz risk." },
+      "flow": { "name": "Akış Yapısı", "identity": "Pasif akış, çevrimdışı kazanç, mana ve bekleme ritmi." }
+    },
+    "nodes": {
+      "comboPrimer": { "name": "Combo Başlatıcı", "desc": "Tıklamalar zincir baskısını daha hızlı kurar.", "bonus": "+%8 combo kazanımı" },
+      "heldRhythm": { "name": "Tutulan Ritim", "desc": "Zincir vuruşlar arasında daha yavaş düşer.", "bonus": "-%8 combo düşüşü" },
+      "ruptureFocus": { "name": "Kırılma Odağı", "desc": "Zayıf nokta kırılmaları daha sert vurur.", "bonus": "+%12 zayıf nokta hasarı" },
+      "impactMemory": { "name": "Darbe Hafızası", "desc": "Hasar almak zincir ivmesini daha az siler.", "bonus": "+%20 combo korunumu" },
+      "chainConductor": { "name": "Zincir İletkeni", "desc": "Zincir baskısı daha hızlı yükselir ve daha uzun kalır.", "bonus": "+%12 kazanım, -%5 düşüş" },
+      "criticalCascade": { "name": "Kritik Kaskad", "desc": "Kırılmalar boss zırhına daha derin işler.", "bonus": "+%18 zayıf nokta hasarı" },
+      "denseCore": { "name": "Yoğun Çekirdek", "desc": "Sıvı çekirdek kabuğunu yoğunlaştır.", "bonus": "+%8 maksimum HP" },
+      "mineralShell": { "name": "Mineral Kabuk", "desc": "Sert bir katman gelen darbeleri emer.", "bonus": "+2 zırh" },
+      "slowBleed": { "name": "Yavaş Sızıntı", "desc": "Çekirdek savaş içinde kendini yeniden kurar.", "bonus": "+%15 HP yenilenmesi" },
+      "pulseInsulation": { "name": "Darbe Yalıtımı", "desc": "Boss darbeleri gücünün bir kısmını kaybeder.", "bonus": "+%4 hasar azaltma" },
+      "recoveryField": { "name": "Yenilenme Alanı", "desc": "Çöküş sonrası koruma daha uzun sürer.", "bonus": "+0.9sn koruma" },
+      "planetaryCore": { "name": "Gezegensel Çekirdek", "desc": "Çekirdek gezegen ölçeğinde yoğunluk kazanır.", "bonus": "+%12 HP, +3 zırh" },
+      "orbitEdge": { "name": "Yörünge Kenarı", "desc": "Pasif yörünge darbeleri daha derin keser.", "bonus": "+%8 yörünge hasarı" },
+      "wideSlash": { "name": "Geniş Kesim", "desc": "Yörünge Kesimi daha geniş halka vurur.", "bonus": "+%10 kesim yarıçapı" },
+      "clearanceWave": { "name": "Temizleme Dalgası", "desc": "Alan patlamaları yoğun dalgaları daha iyi temizler.", "bonus": "+%10 alan hasarı" },
+      "gravityDrag": { "name": "Yerçekimi Sürüklemesi", "desc": "Düşmanlar yörünge alanı yakınında yavaşlar.", "bonus": "+%8 yörünge yavaşlatması" },
+      "calibratedRing": { "name": "Kalibre Halka", "desc": "Pasif halka daha keskin bir kenar tutar.", "bonus": "+%12 yörünge hasarı" },
+      "debrisStorm": { "name": "Enkaz Fırtınası", "desc": "Yörünge Kesimi temizleyici bir fırtınaya büyür.", "bonus": "+%15 yarıçap, +%12 alan" },
+      "voidReceiver": { "name": "Boşluk Alıcısı", "desc": "Anomaliler arenayı daha sık bulur.", "bonus": "+%8 anomali sıklığı" },
+      "fractureLuck": { "name": "Kırık Şansı", "desc": "Kırık taşıyan çatlakları çekmek kolaylaşır.", "bonus": "+%8 kırık kazanımı" },
+      "unstableHarvest": { "name": "Dengesiz Hasat", "desc": "Ödüller artar, ama düşman baskısı yükselir.", "bonus": "+%8 ödül, +%4 saldırganlık" },
+      "corruptedLens": { "name": "Bozulmuş Mercek", "desc": "Boşluk rotası daha dengesiz sinyal görür.", "bonus": "+%10 anomali, +%4 saldırganlık" },
+      "shardMagnetism": { "name": "Kırık Manyetizması", "desc": "Boşluk kırıkları çekirdeğe daha yakın akar.", "bonus": "+%12 kırık kazanımı" },
+      "riskEngine": { "name": "Risk Motoru", "desc": "Dengesiz savaş daha tehlikeli ama daha verimli olur.", "bonus": "+%14 ödül, +%6 saldırganlık" },
+      "quietPump": { "name": "Sessiz Pompa", "desc": "Pasif akış daha verimli çalışır.", "bonus": "+%8 pasif üretim" },
+      "nightShift": { "name": "Gece Vardiyası", "desc": "Çevrimdışı rezervuarlar daha az basınç kaybeder.", "bonus": "+%8 çevrimdışı verim" },
+      "cleanChannel": { "name": "Temiz Kanal", "desc": "Mana daha temiz bir rotadan geri döner.", "bonus": "+%8 mana yenilenmesi" },
+      "coolantLoop": { "name": "Soğutma Döngüsü", "desc": "Yetenekler ısıyı daha hızlı boşaltır.", "bonus": "-%5 yetenek bekleme" },
+      "pressurePipeline": { "name": "Basınç Hattı", "desc": "Pasif motor daha güçlü basınç tutar.", "bonus": "+%12 pasif üretim" },
+      "deepReservoir": { "name": "Derin Rezervuar", "desc": "Akış yapısı daha derin rezervler saklar.", "bonus": "+%12 çevrimdışı, +%8 mana" }
+    }
+  },
+  "bossDrops": {
+    "coreSurge": { "name": "Çekirdek Taşkını", "desc": "+%30 hasar · 20sn" },
+    "manaFlood": { "name": "Mana Seli", "desc": "+%50 mana yenilenmesi · 20sn" },
+    "shieldFragment": { "name": "Kalkan Parçası", "desc": "gelen hasar azalır · 12sn" },
+    "comboStabilizer": { "name": "Combo Sabitleyici", "desc": "combo daha yavaş düşer · 25sn" },
+    "orbitCharge": { "name": "Yörünge Yükü", "desc": "+%40 yörünge hasarı · 20sn" },
+    "shardSpark": { "name": "Kırık Kıvılcımı", "desc": "+1 boşluk kırığı" }
   },
   "facts": {
     "cosmos_ageUniverse": {
@@ -594,18 +726,41 @@
     },
     "effects": {
       "tap": "tık gücü",
+      "tapSummary": "tık hasarı artar",
       "flow": "akış",
+      "flowSummary": "pasif akış artar",
       "reward": "ödül artışı",
+      "rewardSummary": "ödüller artar",
       "comboGain": "combo artışı",
+      "comboGainSummary": "combo daha hızlı dolar",
       "enemySpeed": "düşman hızı",
+      "enemySpeedSummary": "düşmanlar hızlanır",
       "enemyDamage": "düşman hasarı",
+      "enemyDamageSummary": "gelen hasar artar",
       "shield": "kalkan",
+      "shieldSummary": "gelen hasarı azaltır",
       "bossSlow": "boss yavaş",
+      "bossSlowSummary": "boss daha yavaş saldırır",
       "bossRage": "boss öfkesi",
+      "bossRageSummary": "boss hasarı artar",
       "weakPoint": "zayıf noktalar",
+      "weakPointSummary": "zayıf pencere uzar",
       "orbitDamage": "yörünge hasarı",
+      "orbitDamageSummary": "pasif halka hasarı artar",
       "shardChance": "kırık sinyali",
-      "waveSurge": "dalga artışı"
+      "shardChanceSummary": "kırık şansı artar",
+      "waveSurge": "dalga artışı",
+      "waveSurgeSummary": "ek düşman dalgası",
+      "bossDrop_coreSurge": "çekirdek taşkını",
+      "bossDrop_coreSurgeSummary": "hasar +%30",
+      "bossDrop_manaFlood": "mana seli",
+      "bossDrop_manaFloodSummary": "mana yenilenmesi +%50",
+      "bossDrop_shieldFragment": "kalkan parçası",
+      "bossDrop_shieldFragmentSummary": "gelen hasarı azaltır",
+      "bossDrop_comboStabilizer": "combo sabitleyici",
+      "bossDrop_comboStabilizerSummary": "combo daha yavaş düşer",
+      "bossDrop_orbitCharge": "yörünge yükü",
+      "bossDrop_orbitChargeSummary": "pasif halka hasarı +%40"
     },
     "blackHoleThreat": { "title": "KARA DELİK TEHDİDİ", "text": "Basınç arenaya doğru çekiliyor.", "ignore": "yok say", "ignorePreview": "+2 düşman dalgası\n+%30 ödül · 20sn", "respond": "yanıt ver", "respondPreview": "-20 mana\n+500 çekirdek" },
     "orbitFailure": { "title": "YÖRÜNGE HATASI", "text": "Gezegen yörüngesi kararsız.", "stabilize": "sabitle", "stabilizePreview": "Boss yavaşlar · 10sn", "release": "sal", "releasePreview": "+%40 combo artışı · 15sn\n+%20 düşman hasarı" },

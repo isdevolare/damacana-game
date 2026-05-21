@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useGame } from '@/lib/store';
 import { UPGRADES, upgradeCost } from '@/lib/config/upgrades';
 import { fmt, clsx } from '@/lib/util';
@@ -12,14 +13,36 @@ export function UpgradePanel() {
   const levelIdx = useGame((s) => s.levelIdx);
   const buy = useGame((s) => s.buyUpgrade);
   const sfxEnabled = useGame((s) => !s.audio.muted);
+  const [collapsed, setCollapsed] = useState(false);
   const t = useTranslations('upgrades');
   const ui = useTranslations('ui');
 
   const tap = UPGRADES.filter((u) => u.kind === 'tap');
   const auto = UPGRADES.filter((u) => u.kind === 'auto');
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const query = window.matchMedia('(max-width: 640px)');
+    const update = () => setCollapsed(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+
   return (
-    <div className="grid max-h-[16dvh] grid-cols-2 gap-2 overflow-y-auto px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] sm:max-h-[23vh] sm:gap-3 sm:px-3 sm:pb-3">
+    <div className="px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] sm:px-3 sm:pb-3">
+      <button
+        type="button"
+        onClick={() => setCollapsed((v) => !v)}
+        className="mb-1 flex w-full items-center justify-between rounded-md border border-white/10 bg-black/50 px-2 py-1.5 font-space text-[10px] uppercase tracking-widest text-white/65 sm:hidden"
+      >
+        <span>{ui('buy')}</span>
+        <span className="text-cyan">{collapsed ? '+' : '-'}</span>
+      </button>
+      <div className={clsx(
+        'grid max-h-[15dvh] grid-cols-2 gap-2 overflow-y-auto overscroll-contain sm:max-h-[23vh] sm:gap-3',
+        collapsed && 'hidden sm:grid',
+      )}>
       <div>
         <div className="text-[10px] font-space tracking-widest text-cyan/80 mb-1">
           {ui('tap')}
@@ -107,6 +130,7 @@ export function UpgradePanel() {
             );
           })}
         </div>
+      </div>
       </div>
     </div>
   );

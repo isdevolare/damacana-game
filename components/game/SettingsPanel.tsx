@@ -11,6 +11,8 @@ export function SettingsPanel({ locale }: { locale: string }) {
   const show = useGame((s) => s.showSettings);
   const setShow = useGame((s) => s.setShowSettings);
   const setShowProfile = useGame((s) => s.setShowProfile);
+  const setShowResearch = useGame((s) => s.setShowResearch);
+  const setShowBuildTree = useGame((s) => s.setShowBuildTree);
   const audioSettings = useGame((s) => s.audio);
   const set = useGame((s) => s.setAudioSetting);
   const reset = useGame((s) => s.reset);
@@ -53,9 +55,27 @@ export function SettingsPanel({ locale }: { locale: string }) {
                 setShow(false);
                 setShowProfile(true);
               }}
-              className="mb-4 w-full rounded-md border border-cyan/35 bg-cyan/10 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-cyan"
+              className="mb-2 w-full rounded-md border border-cyan/35 bg-cyan/10 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-cyan"
             >
               {t('profileStats')}
+            </button>
+            <button
+              onClick={() => {
+                setShow(false);
+                setShowResearch(true);
+              }}
+              className="mb-2 w-full rounded-md border border-purple/35 bg-purple/10 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-purple"
+            >
+              {t('research')}
+            </button>
+            <button
+              onClick={() => {
+                setShow(false);
+                setShowBuildTree(true);
+              }}
+              className="mb-4 w-full rounded-md border border-gold/35 bg-gold/10 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-gold"
+            >
+              {t('buildTree')}
             </button>
 
             <div className="space-y-3">

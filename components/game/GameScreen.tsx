@@ -24,6 +24,9 @@ import { ShopModal } from './ShopModal';
 import { ChapterCompleteModal } from './ChapterCompleteModal';
 import { OfflineReturnModal } from './OfflineReturnModal';
 import { ProfileStatsModal } from './ProfileStatsModal';
+import { ResearchLabModal } from './ResearchLabModal';
+import { ResearchToast } from './ResearchToast';
+import { BuildTreeModal } from './BuildTreeModal';
 import { useScreenShake } from '@/lib/hooks/useScreenShake';
 import { useGameLoop } from '@/lib/hooks/useGameLoop';
 import { useAchievements } from '@/lib/hooks/useAchievements';
@@ -37,7 +40,7 @@ export function GameScreen({ locale }: { locale: string }) {
     <>
       <Background />
       <div
-        className="relative z-10 mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-hidden"
+        className="relative z-10 mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-x-hidden overflow-y-hidden"
         style={{ minHeight: '100dvh', transform: `translate(${offset.x}px, ${offset.y}px)` }}
       >
         <TopBar />
@@ -60,9 +63,12 @@ export function GameScreen({ locale }: { locale: string }) {
       <AchievementsModal />
       <ProgressionPanel />
       <ProfileStatsModal />
+      <ResearchLabModal />
+      <BuildTreeModal />
       <ShopModal />
       <ChapterCompleteModal />
       <OfflineReturnModal />
+      <ResearchToast />
       <AchievementToast />
       <SettingsPanel locale={locale} />
       <StartOverlay />

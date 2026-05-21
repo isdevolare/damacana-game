@@ -1,4 +1,5 @@
 import { BALANCE } from './balance';
+import { bossPhaseHpMultiplier, bossPhaseRewardMultiplier } from './bossMissions';
 
 export const BOSS_NAME_KEYS = [
   'faucetGhost',
@@ -31,12 +32,12 @@ export function bossNameKey(tier: number): BossNameKey {
 
 export function bossHp(tier: number, levelIdx: number): number {
   const { hpBase, hpScale, hpLevelMult } = BALANCE.boss;
-  return Math.floor(hpBase * Math.pow(hpScale, tier - 1) * (1 + levelIdx * hpLevelMult));
+  return Math.floor(hpBase * Math.pow(hpScale, tier - 1) * (1 + levelIdx * hpLevelMult) * bossPhaseHpMultiplier(tier));
 }
 
 export function bossReward(tier: number, levelIdx: number): number {
   const { rewardBase, rewardScale, hpLevelMult } = BALANCE.boss;
-  return Math.floor(rewardBase * Math.pow(rewardScale, tier - 1) * (1 + levelIdx * hpLevelMult));
+  return Math.floor(rewardBase * Math.pow(rewardScale, tier - 1) * (1 + levelIdx * hpLevelMult) * bossPhaseRewardMultiplier(tier));
 }
 
 export function isMegaBoss(tier: number): boolean {

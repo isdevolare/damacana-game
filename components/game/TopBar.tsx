@@ -14,6 +14,7 @@ export function TopBar() {
   const setShowProgression = useGame((s) => s.setShowProgression);
   const totalPrestiges = useGame((s) => s.totalPrestiges);
   const completedChapters = useGame((s) => s.completedChapters);
+  const boss = useGame((s) => s.boss);
   const collectedFacts = useGame((s) => s.collectedFacts);
   const shards = useGame((s) => s.shards);
   const totalPlayMs = useGame((s) => s.totalPlayMs);
@@ -23,9 +24,10 @@ export function TopBar() {
   const lv = levels[Math.min(levelIdx, levels.length - 1)];
   const chapter = currentChapter(completedChapters);
   const showAdvanced = totalPlayMs >= 5 * 60 * 1000 || shards > 0 || totalPrestiges > 0;
+  const chapterLevel = Math.min(Math.max(boss.tier - chapter.levelStart + 1, 1), chapter.levelEnd - chapter.levelStart + 1);
 
   return (
-    <div className="flex items-start justify-between gap-1.5 px-2 pt-2.5 sm:gap-2 sm:px-3 sm:pt-3">
+    <div className="flex min-w-0 items-start justify-between gap-1.5 px-2 pt-2 sm:gap-2 sm:px-3 sm:pt-3">
       <div className="min-w-0 flex-1">
         <div className="truncate text-[8px] font-space uppercase tracking-[0.2em] text-white/50 sm:text-[9px] sm:tracking-[0.28em]">
           {t('chapters.chapter')} {chapter.order} · {chapter.planetGlyph} {t(`chapters.${chapter.id}.name` as any)}
@@ -34,11 +36,11 @@ export function TopBar() {
           {t(`levels.${lv.key}.name` as any)}
         </div>
         <div className="mt-0.5 truncate text-[7px] font-space uppercase tracking-wider text-cyan/60 sm:text-[8px] sm:tracking-widest">
-          {t('chapters.level')} {Math.max(1, levelIdx - chapter.levelStart + 1)}/{chapter.levelEnd - chapter.levelStart + 1} · {t('chapters.finalBoss')} T{chapter.finalBossTier}
+          {t('arcs.planet.name')} · {t('chapters.level')} {chapterLevel}/{chapter.levelEnd - chapter.levelStart + 1} · {t('chapters.finalBoss')} T{chapter.finalBossTier}
           {totalPrestiges > 0 && <span className="ml-2 text-pink">★{totalPrestiges}</span>}
         </div>
       </div>
-      <div className="flex shrink-0 gap-1 sm:gap-1.5">
+      <div className="flex shrink-0 flex-wrap justify-end gap-1 sm:gap-1.5">
         <button
           onClick={() => setShowProgression(true)}
           className="h-8 w-8 rounded-md border border-cyan/50 bg-cyan/10 text-sm text-cyan sm:h-9 sm:w-9 sm:text-base"

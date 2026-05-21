@@ -11,6 +11,8 @@ import { AbsurdEvent, AnomalyEffectType, EventReward, pickRandomEvent } from './
 import { CATEGORIES, categoryComplete, factById, pickFactForLevel, pickRandomBonusFact } from './config/facts';
 import { ELITE_NAME_KEYS, KNOWLEDGE_BULB_TIMING, OFFLINE_PROGRESS, SHOP_ITEMS, shouldBeElite } from './config/progression';
 import { ChapterId, firstCompletableChapter, nextChapter } from './config/chapters';
+import { bossPhaseInfo } from './config/bossMissions';
+import { BossDropId, rollBossDrop } from './config/bossDrops';
 import {
   BASE_COMBAT_STATS,
   COMBAT,
@@ -20,12 +22,25 @@ import {
   EMPTY_COMBAT_STAT_BONUSES,
   combatAbilityById,
 } from './config/combat';
+import {
+  EMPTY_RESEARCH_BONUSES,
+  ResearchBonusSummary,
+  researchById,
+  summarizeResearchBonuses,
+} from './config/research';
+import {
+  BuildBonusSummary,
+  EMPTY_BUILD_BONUSES,
+  buildNodeById,
+  previousBuildNode,
+  summarizeBuildBonuses,
+} from './config/buildTree';
 
 export interface Buff {
   id: string;
   expiresAt: number;
   mult: number;
-  type: 'tap' | 'flow' | AnomalyEffectType;
+  type: 'tap' | 'flow' | 'manaRegen' | 'comboDecay' | AnomalyEffectType;
   labelKey?: string;
 }
 
@@ -45,6 +60,17 @@ export interface CombatHitOptions {
   forceCrit?: boolean;
   passive?: boolean;
   silent?: boolean;
+}
+
+export interface BossPhaseToast {
+  id: number;
+  chapterId: ChapterId;
+  phase: number;
+  totalPhases: number;
+  finalPhase: boolean;
+  dropId: BossDropId | null;
+  shardGain: number;
+  expiresAt: number;
 }
 
 interface Persisted {
@@ -83,6 +109,14 @@ interface Persisted {
   playerMana: number;
   combatStatBonuses: CombatStatBonuses;
   combatAbilityCooldowns: Record<string, number>;
+  completedResearchIds: string[];
+  claimedResearchIds: string[];
+  activeResearchId: string | null;
+  activeResearchStartAt: number;
+  activeResearchEndAt: number;
+  researchBonuses: ResearchBonusSummary;
+  ownedBuildNodeIds: string[];
+  buildBonuses: BuildBonusSummary;
   shop: { tapBoost: number; flowBoost: number; shardBoost: number };
   // audio settings
   audio: { master: number; music: number; sfx: number; muted: boolean };
@@ -103,6 +137,8 @@ export interface GameState extends Persisted {
   showProgression: boolean;
   showShop: boolean;
   showProfile: boolean;
+  showResearch: boolean;
+  showBuildTree: boolean;
   currentEvent: AbsurdEvent | null;
   floatingNumbers: Array<{ id: number; value: number; x: number; y: number; crit?: boolean }>;
   shake: { intensity: 'small' | 'medium' | 'hard'; at: number } | null;
@@ -116,6 +152,8 @@ export interface GameState extends Persisted {
   achievementToast: string | null;
   showChapterComplete: { chapterId: ChapterId; nextChapterId: ChapterId | null } | null;
   offlineReward: { awayMs: number; gained: number } | null;
+  researchCompletedNotice: string | null;
+  bossPhaseToast: BossPhaseToast | null;
 
   // actions
   tapDamacana: (clientX?: number, clientY?: number, options?: CombatHitOptions) => void;
@@ -138,9 +176,17 @@ export interface GameState extends Persisted {
   setShowProgression: (v: boolean) => void;
   setShowShop: (v: boolean) => void;
   setShowProfile: (v: boolean) => void;
+  setShowResearch: (v: boolean) => void;
+  setShowBuildTree: (v: boolean) => void;
   dismissEvolution: () => void;
   dismissChapterComplete: () => void;
   dismissOfflineReward: () => void;
+  startResearch: (id: string) => void;
+  claimResearch: (id: string) => void;
+  refreshResearchProgress: () => void;
+  dismissResearchNotice: () => void;
+  dismissBossPhaseToast: () => void;
+  buyBuildNode: (id: string) => void;
   claimOfflineProgress: () => void;
   triggerEvent: () => void;
   resolveEventChoice: (key: string) => void;
@@ -204,6 +250,8 @@ function derivedPerTap(state: Persisted): number {
   }
   mult *= 1 + state.shop.tapBoost * 0.1;
   mult *= 1 + codexBonuses(state).tap;
+  mult *= 1 + (state.totalPrestiges > 0 ? researchBonuses(state).postPrestigeProductionPct : 0);
+  mult *= 1 + buildBonuses(state).unstableRewardPct;
   const now = Date.now();
   for (const b of state.activeBuffs) {
     if (b.type === 'tap' && b.expiresAt > now) mult *= b.mult;
@@ -226,6 +274,9 @@ function derivedPerSec(state: Persisted): number {
   }
   mult *= 1 + state.shop.flowBoost * 0.1;
   mult *= 1 + codexBonuses(state).flow;
+  mult *= 1 + researchBonuses(state).passiveProductionPct;
+  mult *= 1 + (state.totalPrestiges > 0 ? researchBonuses(state).postPrestigeProductionPct : 0);
+  mult *= 1 + buildBonuses(state).passiveProductionPct;
   const now = Date.now();
   for (const b of state.activeBuffs) {
     if (b.type === 'flow' && b.expiresAt > now) mult *= b.mult;
@@ -252,7 +303,54 @@ function activeBuffMax(state: Persisted, type: Buff['type']): number {
 }
 
 function shardGainMult(state: Persisted): number {
-  return (1 + state.shop.shardBoost * 0.1) * (1 + codexBonuses(state).shard);
+  return (1 + state.shop.shardBoost * 0.1) * (1 + codexBonuses(state).shard) * (1 + buildBonuses(state).shardGainPct);
+}
+
+function researchBonuses(state: Persisted): ResearchBonusSummary {
+  return state.researchBonuses ?? summarizeResearchBonuses(state.claimedResearchIds ?? []);
+}
+
+function buildBonuses(state: Persisted): BuildBonusSummary {
+  return state.buildBonuses ?? summarizeBuildBonuses(state.ownedBuildNodeIds ?? []);
+}
+
+function researchRewardMult(state: Persisted): number {
+  return 1 + researchBonuses(state).rewardMultiplierPct;
+}
+
+function researchShardChanceMult(state: Persisted): number {
+  return 1 + researchBonuses(state).shardChancePct;
+}
+
+function researchRequirementMet(state: Persisted, id: string): boolean {
+  const research = researchById(id);
+  if (!research) return false;
+  const req = research.requirement;
+  if (req.type === 'none') return true;
+  if (req.type === 'prestigeOrShard') return state.totalPrestiges > 0 || state.shards > 0;
+  const passive = derivedPerSec(state);
+  return passive >= req.min || Boolean(req.fallbackChapter && state.completedChapters.includes(req.fallbackChapter));
+}
+
+function researchCostMet(state: Persisted, id: string): boolean {
+  const research = researchById(id);
+  if (!research) return false;
+  if (research.cost.currency === 'shards') return state.shards >= research.cost.amount;
+  return state.damacana >= research.cost.amount;
+}
+
+function buildCostMet(state: Persisted, id: string): boolean {
+  const node = buildNodeById(id);
+  if (!node) return false;
+  if (node.cost.currency === 'shards') return state.shards >= node.cost.amount;
+  return state.damacana >= node.cost.amount;
+}
+
+function buildRequirementMet(state: Persisted, id: string): boolean {
+  const node = buildNodeById(id);
+  if (!node) return false;
+  const prev = previousBuildNode(node);
+  return !prev || (state.ownedBuildNodeIds ?? []).includes(prev.id);
 }
 
 function derivedAutoTapRate(state: Persisted): number {
@@ -270,15 +368,20 @@ function derivedAutoTapRate(state: Persisted): number {
 
 function derivedCombatStats(state: Persisted): CombatStats {
   const bonuses = state.combatStatBonuses ?? EMPTY_COMBAT_STAT_BONUSES;
+  const research = researchBonuses(state);
+  const build = buildBonuses(state);
   const levelHp = state.bestLevel * COMBAT.playerHpPerLevel;
   const levelMana = state.bestLevel * COMBAT.playerManaPerLevel;
+  const baseHp = BASE_COMBAT_STATS.maxHp + levelHp + bonuses.maxHp;
+  const baseManaRegen = BASE_COMBAT_STATS.manaRegen + bonuses.manaRegen;
+  const baseHpRegen = BASE_COMBAT_STATS.hpRegen + bonuses.hpRegen;
   return {
-    maxHp: BASE_COMBAT_STATS.maxHp + levelHp + bonuses.maxHp,
+    maxHp: baseHp * (1 + research.maxHpPct + build.maxHpPct),
     maxMana: BASE_COMBAT_STATS.maxMana + levelMana + bonuses.maxMana,
-    hpRegen: BASE_COMBAT_STATS.hpRegen + bonuses.hpRegen,
-    manaRegen: BASE_COMBAT_STATS.manaRegen + bonuses.manaRegen,
-    armor: BASE_COMBAT_STATS.armor + bonuses.armor,
-    damageReduction: Math.min(0.75, BASE_COMBAT_STATS.damageReduction + bonuses.damageReduction),
+    hpRegen: baseHpRegen * (1 + build.hpRegenPct),
+    manaRegen: baseManaRegen * (1 + research.manaRegenPct + build.manaRegenPct) * activeBuffMult(state, 'manaRegen'),
+    armor: BASE_COMBAT_STATS.armor + bonuses.armor + build.armor,
+    damageReduction: Math.min(0.75, BASE_COMBAT_STATS.damageReduction + bonuses.damageReduction + build.damageReductionPct),
   };
 }
 
@@ -387,6 +490,23 @@ function randomKnowledgeDelayMs() {
   return Math.floor(minMs + Math.random() * (maxMs - minMs));
 }
 
+function randomKnowledgeBulbPoint(): { x: number; y: number } {
+  const mobile = typeof window !== 'undefined'
+    ? window.matchMedia('(max-width: 640px), (pointer: coarse)').matches
+    : false;
+  const bounds = mobile
+    ? { minX: 24, maxX: 76, minY: 34, maxY: 58 }
+    : { minX: 18, maxX: 82, minY: 34, maxY: 66 };
+  for (let i = 0; i < 12; i++) {
+    const x = bounds.minX + Math.random() * (bounds.maxX - bounds.minX);
+    const y = bounds.minY + Math.random() * (bounds.maxY - bounds.minY);
+    const bossDist = Math.hypot(x - 50, y - 24);
+    const playerDist = Math.hypot(x - 50, y - 70);
+    if (bossDist > 18 && playerDist > 18) return { x, y };
+  }
+  return mobile ? { x: 34 + Math.random() * 32, y: 42 + Math.random() * 12 } : { x: 30 + Math.random() * 40, y: 42 + Math.random() * 16 };
+}
+
 function completeChapterPatch(
   state: Persisted,
   defeatedBossTier: number,
@@ -402,6 +522,45 @@ function completeChapterPatch(
 }
 
 let floatingIdCounter = 1;
+let bossPhaseToastCounter = 1;
+
+function bossDefeatDropPatch(
+  state: Persisted,
+  defeatedTier: number,
+  now: number,
+): { activeBuffs: Buff[]; shardGain: number; toast: BossPhaseToast } {
+  const info = bossPhaseInfo(defeatedTier);
+  const drop = rollBossDrop(info.finalPhase);
+  let activeBuffs = state.activeBuffs.filter((buff) => buff.expiresAt > now);
+  let shardGain = 0;
+  if (drop?.buffType && drop.durationMs && drop.mult) {
+    activeBuffs = [
+      ...activeBuffs.filter((buff) => buff.id !== `boss_drop_${drop.id}`),
+      {
+        id: `boss_drop_${drop.id}`,
+        expiresAt: now + drop.durationMs,
+        mult: drop.mult,
+        type: drop.buffType,
+        labelKey: `bossDrop_${drop.id}`,
+      },
+    ];
+  }
+  if (drop?.shardGain) shardGain += drop.shardGain;
+  return {
+    activeBuffs,
+    shardGain,
+    toast: {
+      id: bossPhaseToastCounter++,
+      chapterId: info.chapter.id,
+      phase: info.phase,
+      totalPhases: info.totalPhases,
+      finalPhase: info.finalPhase,
+      dropId: drop?.id ?? null,
+      shardGain,
+      expiresAt: now + 3200,
+    },
+  };
+}
 
 const initialState: Persisted = {
   damacana: 0,
@@ -437,6 +596,14 @@ const initialState: Persisted = {
   playerMana: BASE_COMBAT_STATS.maxMana,
   combatStatBonuses: EMPTY_COMBAT_STAT_BONUSES,
   combatAbilityCooldowns: {},
+  completedResearchIds: [],
+  claimedResearchIds: [],
+  activeResearchId: null,
+  activeResearchStartAt: 0,
+  activeResearchEndAt: 0,
+  researchBonuses: EMPTY_RESEARCH_BONUSES,
+  ownedBuildNodeIds: [],
+  buildBonuses: EMPTY_BUILD_BONUSES,
   shop: { tapBoost: 0, flowBoost: 0, shardBoost: 0 },
   audio: { master: 0.7, music: 0.6, sfx: 0.8, muted: false },
   hasStarted: false,
@@ -457,6 +624,8 @@ export const useGame = create<GameState>()(
       showProgression: false,
       showShop: false,
       showProfile: false,
+      showResearch: false,
+      showBuildTree: false,
       currentEvent: null,
       floatingNumbers: [],
       shake: null,
@@ -468,13 +637,15 @@ export const useGame = create<GameState>()(
       achievementToast: null,
       showChapterComplete: null,
       offlineReward: null,
+      researchCompletedNotice: null,
+      bossPhaseToast: null,
 
       tapDamacana: (clientX, clientY, options = {}) => {
         const s = get();
         const now = Date.now();
         let combo = s.combo;
         if (!options.passive) {
-          const step = (BALANCE.combo.step * (options.comboBoost ?? 1) * activeBuffMult(s, 'comboGain')) + (options.comboFlatBonus ?? 0);
+          const step = (BALANCE.combo.step * (options.comboBoost ?? 1) * activeBuffMult(s, 'comboGain') * (1 + buildBonuses(s).comboGainPct)) + (options.comboFlatBonus ?? 0);
           if (now - s.lastTapAt <= BALANCE.combo.window) {
             combo = Math.min(comboMax(s), combo + step);
           } else {
@@ -484,7 +655,7 @@ export const useGame = create<GameState>()(
         const perTap = derivedPerTap(s);
         const roll = tapHasCrit(s);
         const crit = options.forceCrit || roll.crit;
-        const critMult = options.forceCrit ? Math.max(roll.mult, BALANCE.crit.critMult) : roll.mult;
+        const critMult = options.forceCrit ? Math.max(roll.mult, BALANCE.crit.critMult) * (1 + buildBonuses(s).weakPointDamagePct) : roll.mult;
         let multiplier = effectiveComboPower(combo) * (crit ? critMult : 1);
         multiplier *= options.damageMult ?? 1;
         const newTapsCount = options.passive ? s.tapsThisRun : s.tapsThisRun + 1;
@@ -493,7 +664,7 @@ export const useGame = create<GameState>()(
 
         const dmg = Math.max(1, Math.floor(perTap * multiplier));
         const bossDmgMult = s.tree['bossKiller'] ? 2 : 1;
-        const rewardBuff = activeBuffMult(s, 'reward');
+        const rewardBuff = activeBuffMult(s, 'reward') * researchRewardMult(s) * (1 + buildBonuses(s).unstableRewardPct);
         const earn = Math.max(0, Math.floor(dmg * (options.rewardMult ?? 1) * rewardBuff));
 
         let boss = { ...s.boss };
@@ -503,6 +674,8 @@ export const useGame = create<GameState>()(
         let bossKillsRun = s.bossKillsThisRun;
         let bossKillsLife = s.bossKillsLifetime;
         let chapterPatch: ReturnType<typeof completeChapterPatch> = {};
+        let activeBuffs = s.activeBuffs;
+        let bossPhaseToast: BossPhaseToast | null = null;
         boss.hpCur -= Math.floor(dmg * bossDmgMult);
 
         let bestBossTier = s.bestBossTier;
@@ -523,7 +696,7 @@ export const useGame = create<GameState>()(
             let shardGain = 1;
             if (s.tree['doubleShard'] && Math.random() < 0.25) shardGain *= 2;
             shardsDelta += shardGain;
-          } else if (Math.random() < shardDropChance(boss.tier) * dropMult * activeBuffMult(s, 'shardChance')) {
+          } else if (Math.random() < shardDropChance(boss.tier) * dropMult * activeBuffMult(s, 'shardChance') * researchShardChanceMult(s)) {
             let shardGain = 1;
             if (s.tree['doubleShard'] && Math.random() < 0.25) shardGain *= 2;
             shardsDelta += shardGain;
@@ -532,6 +705,10 @@ export const useGame = create<GameState>()(
           if (boss.isElite && s.totalPrestiges >= 10 && Math.random() < 0.05) {
             crystalsDelta += 1;
           }
+          const dropPatch = bossDefeatDropPatch({ ...s, activeBuffs }, defeatedTier, now);
+          activeBuffs = dropPatch.activeBuffs;
+          shardsDelta += dropPatch.shardGain;
+          bossPhaseToast = dropPatch.toast;
           bossKillsRun += 1;
           bossKillsLife += 1;
           chapterPatch = completeChapterPatch(s, defeatedTier);
@@ -574,6 +751,7 @@ export const useGame = create<GameState>()(
           shards: s.shards + shardsDelta,
           crystals: s.crystals + crystalsDelta,
           boss,
+          activeBuffs,
           combo,
           lastTapAt: options.passive ? s.lastTapAt : now,
           tapsThisRun: newTapsCount,
@@ -586,6 +764,7 @@ export const useGame = create<GameState>()(
           fastestLevel6Ms,
           floatingNumbers: floating,
           recentEarnings,
+          ...(bossPhaseToast ? { bossPhaseToast } : {}),
           ...chapterPatch,
           ...(leveledUp
             ? {
@@ -611,7 +790,7 @@ export const useGame = create<GameState>()(
       tickAuto: (dtMs) => {
         const s = get();
         const now = Date.now();
-        const buffs = s.activeBuffs.filter((b) => b.expiresAt > now);
+        let buffs = s.activeBuffs.filter((b) => b.expiresAt > now);
 
         const ps = derivedPerSec({ ...s, activeBuffs: buffs });
         const passiveGain = (ps * dtMs) / 1000;
@@ -626,6 +805,7 @@ export const useGame = create<GameState>()(
         let bossKillsLife = s.bossKillsLifetime;
         let shakeNeeded: GameState['shake'] = s.shake;
         let chapterPatch: ReturnType<typeof completeChapterPatch> = {};
+        let bossPhaseToast: BossPhaseToast | null = null;
         const eliteUnlocked = s.totalPrestiges >= 5;
 
         if (autoTapRate > 0) {
@@ -639,7 +819,7 @@ export const useGame = create<GameState>()(
             dmgPool -= apply / bossDmgMult;
             if (boss.hpCur <= 0) {
               const defeatedTier = boss.tier;
-              const reward = bossReward(boss.tier, s.levelIdx);
+              const reward = Math.floor(bossReward(boss.tier, s.levelIdx) * researchRewardMult(s));
               dmcDelta += reward;
               const mega = isMegaBoss(boss.tier);
               let dropMult = 1;
@@ -653,12 +833,16 @@ export const useGame = create<GameState>()(
                 let shardGain = 1;
                 if (s.tree['doubleShard'] && Math.random() < 0.25) shardGain *= 2;
                 shardsDelta += shardGain;
-              } else if (Math.random() < shardDropChance(boss.tier) * dropMult * activeBuffMult(s, 'shardChance')) {
+              } else if (Math.random() < shardDropChance(boss.tier) * dropMult * activeBuffMult(s, 'shardChance') * researchShardChanceMult(s)) {
                 let shardGain = 1;
                 if (s.tree['doubleShard'] && Math.random() < 0.25) shardGain *= 2;
                 shardsDelta += shardGain;
               }
               if (boss.isElite && s.totalPrestiges >= 10 && Math.random() < 0.05) crystalsDelta += 1;
+              const dropPatch = bossDefeatDropPatch({ ...s, activeBuffs: buffs }, defeatedTier, now);
+              buffs = dropPatch.activeBuffs;
+              shardsDelta += dropPatch.shardGain;
+              bossPhaseToast = dropPatch.toast;
               bossKillsRun += 1;
               bossKillsLife += 1;
               chapterPatch = completeChapterPatch({ ...s, completedChapters: chapterPatch.completedChapters ?? s.completedChapters }, defeatedTier);
@@ -683,7 +867,7 @@ export const useGame = create<GameState>()(
         ];
 
         let combo = s.combo;
-        if (now - s.lastTapAt > BALANCE.combo.decay) combo = 0;
+        if (now - s.lastTapAt > BALANCE.combo.decay * (1 + researchBonuses(s).comboDecayPct + buildBonuses(s).comboDecayPct) * activeBuffMult({ ...s, activeBuffs: buffs }, 'comboDecay')) combo = 0;
 
         let fastestLevel6Ms = s.fastestLevel6Ms;
         if (leveledUp && newLevelIdx >= 6) {
@@ -707,6 +891,7 @@ export const useGame = create<GameState>()(
           recentEarnings,
           shake: shakeNeeded,
           fastestLevel6Ms,
+          ...(bossPhaseToast ? { bossPhaseToast } : {}),
           ...chapterPatch,
           ...(leveledUp
             ? {
@@ -773,13 +958,20 @@ export const useGame = create<GameState>()(
           let boss = { ...s.boss };
           boss.hpCur -= dmg;
           let dmcDelta = dmc;
+          let shardsDelta = 0;
           let bestBossTier = s.bestBossTier;
           let bossKillsRun = s.bossKillsThisRun;
           let bossKillsLife = s.bossKillsLifetime;
           let chapterPatch: ReturnType<typeof completeChapterPatch> = {};
+          let activeBuffs = s.activeBuffs;
+          let bossPhaseToast: BossPhaseToast | null = null;
           if (boss.hpCur <= 0) {
             const defeatedTier = boss.tier;
             dmcDelta += bossReward(boss.tier, s.levelIdx);
+            const dropPatch = bossDefeatDropPatch({ ...s, activeBuffs }, defeatedTier, now);
+            activeBuffs = dropPatch.activeBuffs;
+            shardsDelta += dropPatch.shardGain;
+            bossPhaseToast = dropPatch.toast;
             bossKillsRun += 1;
             bossKillsLife += 1;
             chapterPatch = completeChapterPatch(s, defeatedTier);
@@ -791,10 +983,13 @@ export const useGame = create<GameState>()(
             boss,
             damacana: s.damacana + dmcDelta,
             totalEarned: s.totalEarned + dmcDelta,
+            shards: s.shards + shardsDelta,
+            activeBuffs,
             bestBossTier,
             bossKillsThisRun: bossKillsRun,
             bossKillsLifetime: bossKillsLife,
             voidBurstUses: s.voidBurstUses + 1,
+            ...(bossPhaseToast ? { bossPhaseToast } : {}),
             ...chapterPatch,
             shake: { intensity: 'hard', at: now },
             activeAbilityCooldowns: { ...s.activeAbilityCooldowns, voidBurst: now + BALANCE.abilities.voidBurst.cooldown },
@@ -828,10 +1023,90 @@ export const useGame = create<GameState>()(
       setShowProgression: (v) => set({ showProgression: v }),
       setShowShop: (v) => set({ showShop: v }),
       setShowProfile: (v) => set({ showProfile: v }),
+      setShowResearch: (v) => set({ showResearch: v }),
+      setShowBuildTree: (v) => set({ showBuildTree: v }),
 
       dismissEvolution: () => set({ showEvolution: null }),
       dismissChapterComplete: () => set({ showChapterComplete: null }),
       dismissOfflineReward: () => set({ offlineReward: null }),
+      dismissResearchNotice: () => set({ researchCompletedNotice: null }),
+      dismissBossPhaseToast: () => set({ bossPhaseToast: null }),
+
+      buyBuildNode: (id) => {
+        const s = get();
+        const node = buildNodeById(id);
+        if (!node) return;
+        if ((s.ownedBuildNodeIds ?? []).includes(id)) return;
+        if (!buildRequirementMet(s, id) || !buildCostMet(s, id)) return;
+        const ownedBuildNodeIds = [...(s.ownedBuildNodeIds ?? []), id];
+        const bonuses = summarizeBuildBonuses(ownedBuildNodeIds);
+        const stats = derivedCombatStats({ ...s, ownedBuildNodeIds, buildBonuses: bonuses });
+        const costPatch = node.cost.currency === 'shards'
+          ? { shards: s.shards - node.cost.amount }
+          : { damacana: s.damacana - node.cost.amount };
+        set({
+          ...costPatch,
+          ownedBuildNodeIds,
+          buildBonuses: bonuses,
+          playerHp: Math.min(stats.maxHp, s.playerHp ?? stats.maxHp),
+          playerMana: Math.min(stats.maxMana, s.playerMana ?? stats.maxMana),
+          shake: { intensity: 'small', at: Date.now() },
+        });
+      },
+
+      refreshResearchProgress: () => {
+        const s = get();
+        if (!s.activeResearchId || !s.activeResearchEndAt) return;
+        if (Date.now() < s.activeResearchEndAt) return;
+        if (s.completedResearchIds.includes(s.activeResearchId)) return;
+        set({
+          completedResearchIds: [...s.completedResearchIds, s.activeResearchId],
+          researchCompletedNotice: s.activeResearchId,
+        });
+      },
+
+      startResearch: (id) => {
+        const s = get();
+        const research = researchById(id);
+        if (!research) return;
+        if (s.activeResearchId) return;
+        if (s.claimedResearchIds.includes(id) || s.completedResearchIds.includes(id)) return;
+        if (!researchRequirementMet(s, id) || !researchCostMet(s, id)) return;
+        const now = Date.now();
+        const costPatch = research.cost.currency === 'shards'
+          ? { shards: s.shards - research.cost.amount }
+          : { damacana: s.damacana - research.cost.amount };
+        set({
+          ...costPatch,
+          activeResearchId: id,
+          activeResearchStartAt: now,
+          activeResearchEndAt: now + research.durationMs,
+          researchCompletedNotice: null,
+        });
+      },
+
+      claimResearch: (id) => {
+        get().refreshResearchProgress();
+        const s = get();
+        if (s.activeResearchId !== id) return;
+        if (!s.completedResearchIds.includes(id) && Date.now() < s.activeResearchEndAt) return;
+        const claimedResearchIds = s.claimedResearchIds.includes(id) ? s.claimedResearchIds : [...s.claimedResearchIds, id];
+        const completedResearchIds = s.completedResearchIds.includes(id) ? s.completedResearchIds : [...s.completedResearchIds, id];
+        const bonuses = summarizeResearchBonuses(claimedResearchIds);
+        const stats = derivedCombatStats({ ...s, claimedResearchIds, researchBonuses: bonuses });
+        set({
+          completedResearchIds,
+          claimedResearchIds,
+          activeResearchId: null,
+          activeResearchStartAt: 0,
+          activeResearchEndAt: 0,
+          researchBonuses: bonuses,
+          researchCompletedNotice: null,
+          playerHp: Math.min(stats.maxHp, s.playerHp ?? stats.maxHp),
+          playerMana: Math.min(stats.maxMana, s.playerMana ?? stats.maxMana),
+          shake: { intensity: 'medium', at: Date.now() },
+        });
+      },
 
       applyCombatDamage: (amount) => {
         const s = get();
@@ -871,11 +1146,12 @@ export const useGame = create<GameState>()(
         const now = Date.now();
         if ((s.combatAbilityCooldowns[id] ?? 0) > now) return false;
         if ((s.playerMana ?? 0) < ability.manaCost) return false;
+        const cooldownMult = Math.max(0.25, 1 - researchBonuses(s).abilityCooldownPct - buildBonuses(s).cooldownReductionPct);
         set({
           playerMana: Math.max(0, (s.playerMana ?? 0) - ability.manaCost),
           combatAbilityCooldowns: {
             ...(s.combatAbilityCooldowns ?? {}),
-            [id]: now + ability.cooldownMs,
+            [id]: now + ability.cooldownMs * cooldownMult,
           },
         });
         return true;
@@ -894,7 +1170,8 @@ export const useGame = create<GameState>()(
 
       reduceCombatCombo: (pct) => {
         const s = get();
-        const next = Math.max(0, s.combo * (1 - pct));
+        const preserve = Math.min(0.8, Math.max(0, buildBonuses(s).damageComboPreservePct));
+        const next = Math.max(0, s.combo * (1 - pct * (1 - preserve)));
         set({
           combo: next,
           lastTapAt: Date.now(),
@@ -909,9 +1186,12 @@ export const useGame = create<GameState>()(
         }
         const now = Date.now();
         const awayMs = Math.max(0, now - s.lastActiveAt);
-        const cappedMs = Math.min(awayMs, s.offlineMaxMs || OFFLINE_PROGRESS.defaultMaxMs);
+        const research = researchBonuses(s);
+        const build = buildBonuses(s);
+        const maxOfflineMs = (s.offlineMaxMs || OFFLINE_PROGRESS.defaultMaxMs) + research.offlineCapMs;
+        const cappedMs = Math.min(awayMs, maxOfflineMs);
         const ps = derivedPerSec(s);
-        const gained = Math.floor((ps * cappedMs) / 1000);
+        const gained = Math.floor(((ps * cappedMs) / 1000) * (1 + research.offlineEfficiencyPct + build.offlineEfficiencyPct));
         if (awayMs < OFFLINE_PROGRESS.minNotifyMs || gained <= 0) {
           set({ lastActiveAt: now });
           return;
@@ -974,7 +1254,7 @@ export const useGame = create<GameState>()(
       prestige: () => {
         const s = get();
         if (s.levelIdx < BALANCE.prestige.requiredLevelIdx) return;
-        let gain = BALANCE.prestige.shardFormula(s.totalEarned);
+        let gain = Math.floor(BALANCE.prestige.shardFormula(s.totalEarned) * (1 + researchBonuses(s).prestigeGainPct));
         if (s.tree['guaranteedShards']) gain += 5;
         set({
           ...initialState,
@@ -1000,6 +1280,14 @@ export const useGame = create<GameState>()(
           playerMana: Math.min(s.playerMana ?? BASE_COMBAT_STATS.maxMana, derivedCombatStats(s).maxMana),
           combatStatBonuses: s.combatStatBonuses ?? EMPTY_COMBAT_STAT_BONUSES,
           combatAbilityCooldowns: s.combatAbilityCooldowns ?? {},
+          completedResearchIds: s.completedResearchIds ?? [],
+          claimedResearchIds: s.claimedResearchIds ?? [],
+          activeResearchId: s.activeResearchId ?? null,
+          activeResearchStartAt: s.activeResearchStartAt ?? 0,
+          activeResearchEndAt: s.activeResearchEndAt ?? 0,
+          researchBonuses: s.researchBonuses ?? summarizeResearchBonuses(s.claimedResearchIds ?? []),
+          ownedBuildNodeIds: s.ownedBuildNodeIds ?? [],
+          buildBonuses: s.buildBonuses ?? summarizeBuildBonuses(s.ownedBuildNodeIds ?? []),
           shop: s.shop,
           audio: s.audio,
           hasStarted: s.hasStarted,
@@ -1018,6 +1306,8 @@ export const useGame = create<GameState>()(
           currentFact: null,
           showChapterComplete: null,
           offlineReward: null,
+          researchCompletedNotice: null,
+          bossPhaseToast: null,
           combo: 1,
           lastTapAt: 0,
         });
@@ -1054,9 +1344,19 @@ export const useGame = create<GameState>()(
           playerMana: BASE_COMBAT_STATS.maxMana,
           combatStatBonuses: EMPTY_COMBAT_STAT_BONUSES,
           combatAbilityCooldowns: {},
+          completedResearchIds: [],
+          claimedResearchIds: [],
+          activeResearchId: null,
+          activeResearchStartAt: 0,
+          activeResearchEndAt: 0,
+          researchBonuses: EMPTY_RESEARCH_BONUSES,
+          ownedBuildNodeIds: [],
+          buildBonuses: EMPTY_BUILD_BONUSES,
           nextKnowledgeBulbAt: 0,
           showChapterComplete: null,
           offlineReward: null,
+          researchCompletedNotice: null,
+          bossPhaseToast: null,
         });
       },
 
@@ -1084,8 +1384,7 @@ export const useGame = create<GameState>()(
           currentBulb: {
             factId: fact.id,
             expiresAt: Date.now() + 20_000,
-            x: 12 + Math.random() * 66,
-            y: 8 + Math.random() * 22,
+            ...randomKnowledgeBulbPoint(),
           },
           lastBulbAt: Date.now(),
           nextKnowledgeBulbAt: Date.now() + randomKnowledgeDelayMs(),
@@ -1105,8 +1404,7 @@ export const useGame = create<GameState>()(
           currentBulb: {
             factId: fact.id,
             expiresAt: Date.now() + 20_000,
-            x: 12 + Math.random() * 66,
-            y: 8 + Math.random() * 22,
+            ...randomKnowledgeBulbPoint(),
           },
           lastBulbAt: Date.now(),
           nextKnowledgeBulbAt: Date.now() + randomKnowledgeDelayMs(),
@@ -1213,6 +1511,14 @@ export const useGame = create<GameState>()(
         playerMana: s.playerMana,
         combatStatBonuses: s.combatStatBonuses,
         combatAbilityCooldowns: s.combatAbilityCooldowns,
+        completedResearchIds: s.completedResearchIds,
+        claimedResearchIds: s.claimedResearchIds,
+        activeResearchId: s.activeResearchId,
+        activeResearchStartAt: s.activeResearchStartAt,
+        activeResearchEndAt: s.activeResearchEndAt,
+        researchBonuses: s.researchBonuses,
+        ownedBuildNodeIds: s.ownedBuildNodeIds,
+        buildBonuses: s.buildBonuses,
         shop: s.shop,
         audio: s.audio,
         hasStarted: s.hasStarted,
@@ -1237,4 +1543,10 @@ export function selectCombatStats(s: GameState) {
 }
 export function selectComboMax(s: GameState) {
   return comboMax(s);
+}
+export function selectResearchBonuses(s: GameState) {
+  return researchBonuses(s);
+}
+export function selectBuildBonuses(s: GameState) {
+  return buildBonuses(s);
 }

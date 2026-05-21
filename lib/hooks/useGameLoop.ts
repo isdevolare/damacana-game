@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useGame } from '@/lib/store';
+import { useGame, selectBuildBonuses } from '@/lib/store';
 import { audio } from '@/lib/audio/AudioEngine';
 import { BALANCE } from '@/lib/config/balance';
 
@@ -11,17 +11,20 @@ export function useGameLoop() {
   const has = useGame((s) => s.hasStarted);
   const levelIdx = useGame((s) => s.levelIdx);
   const tree = useGame((s) => s.tree);
+  const buildBonuses = useGame(selectBuildBonuses);
   const spawnRandomBulb = useGame((s) => s.spawnRandomBulb);
   const scheduleNextKnowledgeBulb = useGame((s) => s.scheduleNextKnowledgeBulb);
   const nextKnowledgeBulbAt = useGame((s) => s.nextKnowledgeBulbAt);
   const currentBulb = useGame((s) => s.currentBulb);
   const claimOfflineProgress = useGame((s) => s.claimOfflineProgress);
+  const refreshResearchProgress = useGame((s) => s.refreshResearchProgress);
   const addPlayTime = useGame((s) => s.addPlayTime);
 
   useEffect(() => {
     if (!has) return;
     claimOfflineProgress();
-  }, [has, claimOfflineProgress]);
+    refreshResearchProgress();
+  }, [has, claimOfflineProgress, refreshResearchProgress]);
 
   // tick loop
   useEffect(() => {
@@ -32,12 +35,13 @@ export function useGameLoop() {
       const dt = now - last;
       last = now;
       tick(dt);
+      refreshResearchProgress();
       addPlayTime(dt);
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [has, tick, addPlayTime]);
+  }, [has, tick, addPlayTime, refreshResearchProgress]);
 
   // event scheduler
   useEffect(() => {
@@ -47,7 +51,8 @@ export function useGameLoop() {
       const magnet = tree['eventMagnet'];
       const min = magnet ? BALANCE.events.magnetIntervalMin : BALANCE.events.baseIntervalMin;
       const max = magnet ? BALANCE.events.magnetIntervalMax : BALANCE.events.baseIntervalMax;
-      const wait = min + Math.random() * (max - min);
+      const frequencyMult = Math.max(0.55, 1 - buildBonuses.anomalyFrequencyPct);
+      const wait = (min + Math.random() * (max - min)) * frequencyMult;
       timer = setTimeout(() => {
         triggerEvent();
         schedule();
@@ -55,7 +60,7 @@ export function useGameLoop() {
     };
     schedule();
     return () => clearTimeout(timer);
-  }, [has, tree, triggerEvent]);
+  }, [has, tree, triggerEvent, buildBonuses.anomalyFrequencyPct]);
 
   // knowledge bulbs use a persisted randomized 5-10 minute schedule.
   useEffect(() => {

@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
-import { useGame, selectCombatStats, selectPerTap } from '@/lib/store';
+import { useGame, selectBuildBonuses, selectCombatStats, selectPerTap, selectResearchBonuses } from '@/lib/store';
 import type { Buff } from '@/lib/store';
 import { currentChapter } from '@/lib/config/chapters';
+import { bossPhaseCombatTuning, bossPhaseInfo } from '@/lib/config/bossMissions';
 import { COMBAT, COMBAT_ABILITIES, CombatAbilityId, combatStyleForChapter } from '@/lib/config/combat';
 import { isMegaBoss } from '@/lib/config/bosses';
 import { audio } from '@/lib/audio/AudioEngine';
@@ -94,6 +95,20 @@ const COMBO_TIERS = [
   { threshold: 1, key: 'ready' },
 ] as const;
 
+const ARENA_PERF = {
+  desktopRenderMs: 24,
+  mobileRenderMs: 42,
+  mobileCollisionMs: 80,
+  desktopEnemyCap: 9,
+  mobileEnemyCap: 6,
+  desktopParticleCap: 42,
+  mobileParticleCap: 22,
+  desktopEffectCap: 4,
+  mobileEffectCap: 3,
+  desktopHpFloatCap: 5,
+  mobileHpFloatCap: 3,
+};
+
 function comboTier(combo: number) {
   return COMBO_TIERS.find((tier) => combo >= tier.threshold) ?? COMBO_TIERS[COMBO_TIERS.length - 1];
 }
@@ -115,6 +130,14 @@ function anomalyMult(buffs: Buff[], type: Buff['type']) {
   ), 1);
 }
 
+function bossArenaPoint(now: number, pressure: number): Vec {
+  const drift = 0.8 + pressure * 1.35;
+  return {
+    x: 50 + Math.sin(now / 2800) * drift,
+    y: 22 + Math.sin(now / 3600 + 0.9) * (0.45 + pressure * 0.75),
+  };
+}
+
 let enemyId = 1;
 let particleId = 1;
 let pulseId = 1;
@@ -129,6 +152,8 @@ export function CombatArena() {
   const completedChapters = useGame((s) => s.completedChapters);
   const perTap = useGame(selectPerTap);
   const combatStats = useGame(selectCombatStats);
+  const researchBonuses = useGame(selectResearchBonuses);
+  const buildBonuses = useGame(selectBuildBonuses);
   const playerHp = useGame((s) => s.playerHp);
   const playerMana = useGame((s) => s.playerMana);
   const abilityCooldowns = useGame((s) => s.combatAbilityCooldowns);
@@ -141,12 +166,15 @@ export function CombatArena() {
   const spendCombatAbility = useGame((s) => s.spendCombatAbility);
   const boostCombatCombo = useGame((s) => s.boostCombatCombo);
   const reduceCombatCombo = useGame((s) => s.reduceCombatCombo);
+  const bossPhaseToast = useGame((s) => s.bossPhaseToast);
+  const dismissBossPhaseToast = useGame((s) => s.dismissBossPhaseToast);
   const sfxEnabled = useGame((s) => !s.audio.muted);
 
   const chapter = currentChapter(completedChapters);
   const style = useMemo(() => combatStyleForChapter(chapter), [chapter]);
   const finalBoss = boss.tier === chapter.finalBossTier;
   const mega = isMegaBoss(boss.tier);
+  const phaseInfo = bossPhaseInfo(boss.tier);
 
   const arenaRef = useRef<HTMLDivElement | null>(null);
   const keysRef = useRef(new Set<string>());
@@ -170,6 +198,9 @@ export function CombatArena() {
   const nextBossWeakAtRef = useRef(Date.now() + 5000);
   const lastComboTierRef = useRef(1);
   const consumedAnomalyBuffsRef = useRef(new Set<string>());
+  const lowDensityRef = useRef(false);
+  const lastRenderRef = useRef(0);
+  const lastCollisionCheckRef = useRef(0);
 
   const [player, setPlayer] = useState(playerRef.current);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
@@ -184,6 +215,7 @@ export function CombatArena() {
   const [collapseUntil, setCollapseUntil] = useState(0);
   const [collapseOverlayUntil, setCollapseOverlayUntil] = useState(0);
   const [entrance, setEntrance] = useState(0);
+  const [lowDensity, setLowDensity] = useState(false);
 
   const perTapRef = useRef(perTap);
   const comboRef = useRef(combo);
@@ -201,6 +233,8 @@ export function CombatArena() {
   const boostCombatComboRef = useRef(boostCombatCombo);
   const reduceCombatComboRef = useRef(reduceCombatCombo);
   const activeBuffsRef = useRef(activeBuffs);
+  const researchBonusesRef = useRef(researchBonuses);
+  const buildBonusesRef = useRef(buildBonuses);
 
   useEffect(() => { perTapRef.current = perTap; }, [perTap]);
   useEffect(() => { comboRef.current = combo; }, [combo]);
@@ -218,6 +252,27 @@ export function CombatArena() {
   useEffect(() => { boostCombatComboRef.current = boostCombatCombo; }, [boostCombatCombo]);
   useEffect(() => { reduceCombatComboRef.current = reduceCombatCombo; }, [reduceCombatCombo]);
   useEffect(() => { activeBuffsRef.current = activeBuffs; }, [activeBuffs]);
+  useEffect(() => { researchBonusesRef.current = researchBonuses; }, [researchBonuses]);
+  useEffect(() => { buildBonusesRef.current = buildBonuses; }, [buildBonuses]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const queries = [
+      window.matchMedia('(max-width: 640px)'),
+      window.matchMedia('(pointer: coarse)'),
+      window.matchMedia('(prefers-reduced-motion: reduce)'),
+    ];
+    const update = () => {
+      const next = queries.some((query) => query.matches);
+      lowDensityRef.current = next;
+      setLowDensity(next);
+    };
+    update();
+    queries.forEach((query) => query.addEventListener('change', update));
+    return () => {
+      queries.forEach((query) => query.removeEventListener('change', update));
+    };
+  }, []);
 
   useEffect(() => {
     lastBossSummonRef.current = Date.now();
@@ -225,29 +280,33 @@ export function CombatArena() {
   }, [boss.tier]);
 
   const emitParticles = useCallback((x: number, y: number, color: string, count: number, power = 1) => {
-    const burst: Particle[] = Array.from({ length: count }).map(() => {
+    const low = lowDensityRef.current;
+    const adjustedCount = Math.max(1, Math.floor(count * (low ? 0.45 : 1)));
+    const burst: Particle[] = Array.from({ length: adjustedCount }).map(() => {
       const angle = Math.random() * Math.PI * 2;
-      const speed = (0.08 + Math.random() * 0.22) * power;
+      const speed = (0.08 + Math.random() * 0.22) * power * (low ? 0.82 : 1);
       return {
         id: particleId++,
         x,
         y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        life: 460 + Math.random() * 360,
-        maxLife: 820,
+        life: low ? 320 + Math.random() * 220 : 460 + Math.random() * 360,
+        maxLife: low ? 560 : 820,
         color,
-        size: 2 + Math.random() * 4,
+        size: low ? 1.5 + Math.random() * 2.5 : 2 + Math.random() * 4,
       };
     });
-    particlesRef.current = [...particlesRef.current.slice(-42), ...burst];
+    const cap = low ? ARENA_PERF.mobileParticleCap : ARENA_PERF.desktopParticleCap;
+    particlesRef.current = [...particlesRef.current.slice(-cap), ...burst].slice(-cap);
     setParticles(particlesRef.current);
   }, []);
 
   const pushHpFloat = useCallback((value: number, x: number, y: number) => {
     const id = hpFloatId++;
+    const cap = lowDensityRef.current ? ARENA_PERF.mobileHpFloatCap : ARENA_PERF.desktopHpFloatCap;
     setHpFloats((items) => [
-      ...items.slice(-5),
+      ...items.slice(-(cap - 1)),
       { id, value, x, y, bornAt: Date.now() },
     ]);
     setTimeout(() => {
@@ -284,7 +343,7 @@ export function CombatArena() {
         hpCur: Math.min(currentBoss.hpMax, currentBoss.hpCur + currentBoss.hpMax * healPct),
       };
       bossRef.current = healedBoss;
-      invulnerableUntilRef.current = now + COMBAT.collapseRecoveryMs;
+      invulnerableUntilRef.current = now + COMBAT.collapseRecoveryMs + buildBonusesRef.current.collapseRecoveryMs;
       collapseRestoreAtRef.current = now + COMBAT.collapseRestoreDelayMs;
       setCollapseUntil(invulnerableUntilRef.current);
       setCollapseOverlayUntil(now + COMBAT.collapseOverlayMs);
@@ -304,13 +363,17 @@ export function CombatArena() {
   const spawnWave = useCallback((now: number, forcedCount = 0) => {
     const activeChapter = chapterRef.current;
     const activeStyle = styleRef.current;
-    const targetCount = Math.min(7, 2 + activeChapter.order + Math.floor(waveRef.current / 3));
+    const tuning = bossPhaseCombatTuning(bossRef.current.tier, lowDensityRef.current);
+    const perfCap = lowDensityRef.current ? ARENA_PERF.mobileEnemyCap : ARENA_PERF.desktopEnemyCap;
+    const enemyCap = Math.min(perfCap, tuning.maxMinions);
+    const targetCount = Math.min(enemyCap, 2 + activeChapter.order + Math.floor(waveRef.current / 3));
     const needed = Math.max(1, targetCount - enemiesRef.current.length);
-    const count = forcedCount > 0 ? forcedCount : Math.min(needed, 2 + Math.floor(Math.random() * 2));
+    const count = forcedCount > 0 ? Math.min(forcedCount, Math.max(0, enemyCap - enemiesRef.current.length)) : Math.min(needed, 2 + Math.floor(Math.random() * 2));
+    if (count <= 0) return;
     const nextEnemies = [...enemiesRef.current];
     for (let i = 0; i < count; i++) {
       const start = edgeSpawn();
-      const maxHp = Math.max(8, Math.floor(perTapRef.current * (2.8 + activeChapter.order * 1.1) + bossRef.current.tier * 1.6));
+      const maxHp = Math.max(8, Math.floor((perTapRef.current * (2.8 + activeChapter.order * 1.1) + bossRef.current.tier * 1.6) * tuning.enemyHpMult));
       nextEnemies.push({
         id: enemyId++,
         x: start.x,
@@ -318,7 +381,7 @@ export function CombatArena() {
         hp: maxHp,
         maxHp,
         size: 7.5 + activeChapter.order * 0.8 + Math.random() * 2,
-        speed: (5.2 + activeChapter.order * 0.72) * activeStyle.speedMult,
+        speed: (5.2 + activeChapter.order * 0.72) * activeStyle.speedMult * tuning.enemySpeedMult,
         weakUntil: 0,
         nextWeakAt: now + 2800 + Math.random() * 5200,
         lastContactAt: 0,
@@ -447,7 +510,7 @@ export function CombatArena() {
   const addAbilityEffect = useCallback((kind: CombatAbilityId, x: number, y: number, durationMs: number) => {
     const now = Date.now();
     abilityEffectsRef.current = [
-      ...abilityEffectsRef.current.slice(-4),
+      ...abilityEffectsRef.current.slice(-(lowDensityRef.current ? ARENA_PERF.mobileEffectCap - 1 : ARENA_PERF.desktopEffectCap - 1)),
       { id: abilityEffectId++, kind, x, y, bornAt: now, until: now + durationMs },
     ];
     setAbilityEffects(abilityEffectsRef.current);
@@ -458,8 +521,9 @@ export function CombatArena() {
     if (!ability || !spendCombatAbilityRef.current(id)) return;
     const now = Date.now();
     const center = { x: playerRef.current.x, y: playerRef.current.y };
+    const build = buildBonusesRef.current;
     if (id === 'waveBurst') {
-      const damage = Math.max(1, Math.floor(perTapRef.current * (ability.damageMult ?? 1)));
+      const damage = Math.max(1, Math.floor(perTapRef.current * (ability.damageMult ?? 1) * (1 + build.aoeDamagePct)));
       const hits = damageEnemiesInRadius(center, ability.radius, damage, '#5cf6ff');
       if (hits.hitCount > 0) boostCombatComboRef.current(8 + hits.hitCount * 5 + hits.killedCount * 8);
       tapRef.current(undefined, undefined, { damageMult: 0.7, rewardMult: 0.35, passive: true, silent: true });
@@ -505,6 +569,11 @@ export function CombatArena() {
       const now = Date.now();
       const dt = Math.min(42, nowPerf - last);
       last = nowPerf;
+      const lowDensityFrame = lowDensityRef.current;
+      const activePhaseTuning = bossPhaseCombatTuning(bossRef.current.tier, lowDensityFrame);
+      const enemyCap = Math.min(lowDensityFrame ? ARENA_PERF.mobileEnemyCap : ARENA_PERF.desktopEnemyCap, activePhaseTuning.maxMinions);
+      const checkCollision = !lowDensityFrame || now - lastCollisionCheckRef.current >= ARENA_PERF.mobileCollisionMs;
+      if (checkCollision) lastCollisionCheckRef.current = now;
       const activeAnomalies = activeBuffsRef.current.filter((buff) => buff.expiresAt > now);
       for (const buff of activeAnomalies) {
         if (buff.type !== 'waveSurge' || consumedAnomalyBuffsRef.current.has(buff.id)) continue;
@@ -545,6 +614,7 @@ export function CombatArena() {
 
       const activeStyle = styleRef.current;
       const activeChapter = chapterRef.current;
+      const activeBuild = buildBonusesRef.current;
       const updatedEnemies = enemiesRef.current.map((enemy) => {
         let nextWeakAt = enemy.nextWeakAt;
         let weakUntil = enemy.weakUntil;
@@ -555,12 +625,14 @@ export function CombatArena() {
         const toPlayer = { x: p.x - enemy.x, y: p.y - enemy.y };
         const length = Math.hypot(toPlayer.x, toPlayer.y) || 1;
         const wobble = activeChapter.id === 'saturn' ? Math.sin((now + enemy.id * 311) / 520) * 0.75 : 0;
-        const step = enemy.speed * activeStyle.aggression * anomalyMult(activeAnomalies, 'enemySpeed') * (dt / 1000);
+        const orbitSlow = activeBuild.orbitSlowPct > 0 && dist(enemy, p) < 28 ? 1 - Math.min(0.35, activeBuild.orbitSlowPct) : 1;
+        const step = enemy.speed * activeStyle.aggression * anomalyMult(activeAnomalies, 'enemySpeed') * (1 + activeBuild.enemyAggressionPct) * orbitSlow * (dt / 1000);
         const x = clamp(enemy.x + (toPlayer.x / length) * step + wobble * (dt / 1000), 4, 96);
         const y = clamp(enemy.y + (toPlayer.y / length) * step, 8, 96);
         let lastContactAt = enemy.lastContactAt;
         let hitUntil = enemy.hitUntil;
         if (
+          checkCollision &&
           dist({ x, y }, p) < COMBAT.playerContactRadius &&
           now - lastContactAt > COMBAT.contactCooldownMs &&
           now - lastGlobalContactRef.current > COMBAT.globalContactCooldownMs
@@ -574,7 +646,7 @@ export function CombatArena() {
       });
       enemiesRef.current = updatedEnemies;
 
-      if (now - lastSpawnRef.current > COMBAT.enemySpawnDelayMs || updatedEnemies.length === 0) {
+      if (now - lastSpawnRef.current > activePhaseTuning.spawnDelayMs || updatedEnemies.length === 0) {
         lastSpawnRef.current = now;
         spawnWave(now);
       }
@@ -586,7 +658,7 @@ export function CombatArena() {
           .filter((item) => item.d < 30)
           .sort((a, b) => a.d - b.d)[0]?.enemy;
         if (target) {
-          const damage = Math.max(1, Math.floor(perTapRef.current * 0.48 * anomalyMult(activeAnomalies, 'orbitDamage')));
+          const damage = Math.max(1, Math.floor(perTapRef.current * 0.48 * anomalyMult(activeAnomalies, 'orbitDamage') * (1 + researchBonusesRef.current.orbitDamagePct + activeBuild.orbitDamagePct)));
           enemiesRef.current = enemiesRef.current
             .map((enemy) => enemy.id === target.id ? { ...enemy, hp: enemy.hp - damage, hitUntil: now + 90 } : enemy)
             .filter((enemy) => enemy.hp > 0);
@@ -598,8 +670,9 @@ export function CombatArena() {
       const activeOrbit = abilityEffectsRef.current.find((effect) => effect.kind === 'orbitSlash' && now < effect.until);
       if (activeOrbit && now - lastOrbitSlashDamageRef.current > 220) {
         lastOrbitSlashDamageRef.current = now;
-        const damage = Math.max(1, Math.floor(perTapRef.current * 0.28 * anomalyMult(activeAnomalies, 'orbitDamage')));
-        const radius = COMBAT_ABILITIES.find((ability) => ability.id === 'orbitSlash')?.radius ?? 28;
+        const damage = Math.max(1, Math.floor(perTapRef.current * 0.28 * anomalyMult(activeAnomalies, 'orbitDamage') * (1 + researchBonusesRef.current.orbitDamagePct + activeBuild.orbitDamagePct)));
+        const baseRadius = COMBAT_ABILITIES.find((ability) => ability.id === 'orbitSlash')?.radius ?? 28;
+        const radius = baseRadius * (1 + activeBuild.orbitSlashRadiusPct);
         let orbitHits = 0;
         enemiesRef.current = enemiesRef.current
           .map((enemy) => {
@@ -613,7 +686,7 @@ export function CombatArena() {
         tapRef.current(undefined, undefined, { damageMult: 0.08, rewardMult: 0.12, passive: true, silent: true });
       }
 
-      if (now - lastBossPulseRef.current > 3100 * anomalyMult(activeAnomalies, 'bossSlow')) {
+      if (now - lastBossPulseRef.current > activePhaseTuning.pulseIntervalMs * anomalyMult(activeAnomalies, 'bossSlow')) {
         lastBossPulseRef.current = now;
         const fireAt = now + COMBAT.bossPulseWarningMs;
         pulsesRef.current = [...pulsesRef.current, { id: pulseId++, bornAt: now, fireAt, hit: false, canceled: false }];
@@ -624,9 +697,9 @@ export function CombatArena() {
         .map((pulse) => {
           if (pulse.canceled || now < pulse.fireAt) return pulse;
           const radius = ((now - pulse.fireAt) * COMBAT.bossPulseSpeed) / anomalyMult(activeAnomalies, 'bossSlow');
-          const distance = dist({ x: 50, y: 24 }, p);
+          const distance = dist(bossArenaPoint(now, activePhaseTuning.info.progress), p);
           if (!pulse.hit && Math.abs(distance - radius) < COMBAT.bossPulseDamageBand) {
-            damagePlayer(COMBAT.bossPulseDamage * anomalyMult(activeAnomalies, 'bossRage'));
+            damagePlayer(COMBAT.bossPulseDamage * activePhaseTuning.pulseDamageMult * anomalyMult(activeAnomalies, 'bossRage'));
             return { ...pulse, hit: true };
           }
           return pulse;
@@ -640,17 +713,18 @@ export function CombatArena() {
 
       const currentBoss = bossRef.current;
       const bossIsMajor = currentBoss.tier === activeChapter.finalBossTier || isMegaBoss(currentBoss.tier);
-      const summonInterval = (bossIsMajor ? 8800 : 11800) * anomalyMult(activeAnomalies, 'bossSlow');
+      const summonInterval = activePhaseTuning.summonIntervalMs * (bossIsMajor ? 0.82 : 1) * anomalyMult(activeAnomalies, 'bossSlow');
       if (
-        enemiesRef.current.length < 7 &&
+        enemiesRef.current.length < enemyCap &&
         now - lastBossSummonRef.current > summonInterval
       ) {
         lastBossSummonRef.current = now;
-        const summonCount = Math.min(7 - enemiesRef.current.length, bossIsMajor ? 3 : 2);
+        const summonCount = Math.min(enemyCap - enemiesRef.current.length, activePhaseTuning.summonCount + (bossIsMajor ? 1 : 0));
         setBossSummonUntil(now + 1250);
         setBossHitUntil(now + 950);
         spawnWave(now, summonCount);
-        emitParticles(50, 24, activeChapter.accent, bossIsMajor ? 22 : 16, 1.35);
+        const bossPoint = bossArenaPoint(now, activePhaseTuning.info.progress);
+        emitParticles(bossPoint.x, bossPoint.y, activeChapter.accent, bossIsMajor ? 22 : 16, 1.35);
         useGame.setState({ shake: { intensity: 'small', at: now } });
       }
 
@@ -661,18 +735,22 @@ export function CombatArena() {
           y: particle.y + particle.vy * dt,
           life: particle.life - dt,
         }))
-        .filter((particle) => particle.life > 0);
+        .filter((particle) => particle.life > 0 && particle.x > -6 && particle.x < 106 && particle.y > -6 && particle.y < 106);
 
       abilityEffectsRef.current = abilityEffectsRef.current
         .map((effect) => effect.kind === 'orbitSlash' ? { ...effect, x: p.x, y: p.y } : effect)
         .filter((effect) => effect.until > now);
 
       playerRef.current = p;
-      setPlayer(p);
-      setEnemies(enemiesRef.current);
-      setPulses(pulsesRef.current);
-      setParticles(particlesRef.current);
-      setAbilityEffects(abilityEffectsRef.current);
+      const renderInterval = lowDensityFrame ? ARENA_PERF.mobileRenderMs : ARENA_PERF.desktopRenderMs;
+      if (nowPerf - lastRenderRef.current >= renderInterval) {
+        lastRenderRef.current = nowPerf;
+        setPlayer(p);
+        setEnemies(enemiesRef.current);
+        setPulses(pulsesRef.current);
+        setParticles(particlesRef.current);
+        setAbilityEffects(abilityEffectsRef.current);
+      }
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
@@ -684,6 +762,13 @@ export function CombatArena() {
     const id = setTimeout(() => setComboFlash(null), 720);
     return () => clearTimeout(id);
   }, [comboFlash]);
+
+  useEffect(() => {
+    if (!bossPhaseToast) return;
+    const delay = Math.max(600, bossPhaseToast.expiresAt - Date.now());
+    const id = setTimeout(() => dismissBossPhaseToast(), delay);
+    return () => clearTimeout(id);
+  }, [bossPhaseToast, dismissBossPhaseToast]);
 
   useEffect(() => {
     const tier = comboTier(combo);
@@ -704,6 +789,7 @@ export function CombatArena() {
   const playerHpPct = (Math.min(playerHp ?? combatStats.maxHp, combatStats.maxHp) / combatStats.maxHp) * 100;
   const playerManaPct = (Math.min(playerMana ?? 0, combatStats.maxMana) / combatStats.maxMana) * 100;
   const renderNow = Date.now();
+  const renderBossPoint = bossArenaPoint(renderNow, phaseInfo.progress);
   const playerHit = renderNow <= player.hitUntil;
   const collapseActive = renderNow <= collapseUntil;
   const collapseOverlayActive = renderNow <= collapseOverlayUntil;
@@ -713,6 +799,7 @@ export function CombatArena() {
   const bossSummoning = renderNow <= bossSummonUntil;
   const bossWarningActive = pulses.some((pulse) => !pulse.canceled && renderNow < pulse.fireAt);
   const showBossTarget = bossWeakActive || bossWarningActive || bossSummoning || bossHitActive;
+  const activeBossPhaseToast = bossPhaseToast && bossPhaseToast.expiresAt > renderNow ? bossPhaseToast : null;
   const bossStatusLabel = bossWarningActive
     ? t('combat.bossAttackWarning')
     : bossWeakActive
@@ -720,10 +807,16 @@ export function CombatArena() {
       : bossSummoning
         ? t('combat.bossSummoning')
         : t('combat.bossTarget');
+  const bossSize = lowDensity ? (finalBoss || mega ? 112 : 92) : (finalBoss || mega ? 128 : 104);
+  const playerGlow = lowDensity ? 0.62 : 1;
+  const renderedPulses = lowDensity ? pulses.slice(-1) : pulses;
+  const renderedParticles = lowDensity ? particles.slice(-ARENA_PERF.mobileParticleCap) : particles;
+  const renderedHpFloats = lowDensity ? hpFloats.slice(-ARENA_PERF.mobileHpFloatCap) : hpFloats;
 
   return (
     <div
       ref={arenaRef}
+      data-combat-arena
       tabIndex={0}
       onPointerDown={(e) => {
         dragRef.current = true;
@@ -735,11 +828,11 @@ export function CombatArena() {
       }}
       onPointerUp={() => { dragRef.current = false; }}
       onPointerCancel={() => { dragRef.current = false; }}
-      className="relative mx-2 mt-1.5 flex-1 overflow-hidden rounded-lg border border-cyan/25 bg-black/35 shadow-[0_0_34px_rgba(92,246,255,0.12)] outline-none sm:mx-3 sm:mt-2"
+      className="relative mx-2 mt-1.5 flex-1 overflow-hidden rounded-lg border border-cyan/25 bg-black/35 shadow-[0_0_22px_rgba(92,246,255,0.1)] outline-none sm:mx-3 sm:mt-2 sm:shadow-[0_0_34px_rgba(92,246,255,0.12)]"
       style={{
-        minHeight: 'clamp(310px, calc(100dvh - 300px), 420px)',
+        minHeight: 'clamp(280px, calc(100dvh - 270px), 420px)',
         touchAction: 'none',
-        background: `radial-gradient(circle at 50% 25%, ${style.arenaGlow}, rgba(0,0,0,0.08) 35%, rgba(0,0,0,0.48) 100%)`,
+        background: `radial-gradient(circle at 50% 25%, ${style.arenaGlow}, rgba(0,0,0,0.08) 34%, rgba(0,0,0,0.48) 100%)`,
       }}
       aria-label="combat arena"
     >
@@ -753,7 +846,7 @@ export function CombatArena() {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between text-[9px] font-space uppercase tracking-widest text-white/60">
-              <span>{finalBoss ? t('combat.chapterBoss') : t('combat.boss')}</span>
+              <span style={{ color: chapter.accent }}>{t(`chapters.${chapter.id}.name` as any)} · {phaseInfo.finalPhase ? t('combat.finalPhase') : t('combat.phaseLabel', { phase: phaseInfo.phase, total: phaseInfo.totalPhases })}</span>
               <span className="text-white/70">T{boss.tier}</span>
             </div>
             <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/10">
@@ -818,6 +911,34 @@ export function CombatArena() {
         </motion.div>
       )}
 
+      {activeBossPhaseToast && (
+        <motion.div
+          key={activeBossPhaseToast.id}
+          initial={{ opacity: 0, y: -8, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0 }}
+          className="pointer-events-none absolute left-1/2 top-[14%] z-50 w-[min(88%,300px)] -translate-x-1/2 rounded-lg border border-gold/35 bg-black/78 px-3 py-2 text-center shadow-[0_0_22px_rgba(255,209,102,0.18)]"
+        >
+          <div className="font-space text-[8px] uppercase tracking-[0.24em] text-gold/80">
+            {activeBossPhaseToast.finalPhase ? t('combat.missionClear') : t('combat.phaseClear')}
+          </div>
+          <div className="mt-0.5 font-vt text-base leading-none text-white">
+            {t('combat.phaseLabel', { phase: activeBossPhaseToast.phase, total: activeBossPhaseToast.totalPhases })}
+          </div>
+          {activeBossPhaseToast.dropId && (
+            <>
+              <div className="mt-1 font-space text-[9px] uppercase tracking-wider text-cyan">
+                {t('combat.bossDrop')}: {t(`bossDrops.${activeBossPhaseToast.dropId}.name` as any)}
+                {activeBossPhaseToast.shardGain > 0 ? ` +${activeBossPhaseToast.shardGain} ${t('ui.shards')}` : ''}
+              </div>
+              <div className="mt-0.5 font-space text-[8px] uppercase tracking-wider text-white/55">
+                {t(`bossDrops.${activeBossPhaseToast.dropId}.desc` as any)}
+              </div>
+            </>
+          )}
+        </motion.div>
+      )}
+
       <motion.div
         key={`boss-entrance-${entrance}`}
         initial={{ opacity: 0.85, scale: 0.2 }}
@@ -825,8 +946,10 @@ export function CombatArena() {
         transition={{ duration: 0.7, ease: 'easeOut' }}
         className="pointer-events-none absolute left-1/2 top-[22%] z-[9] aspect-square w-[132px] -translate-x-1/2 -translate-y-1/2 rounded-full border"
         style={{
+          left: `${renderBossPoint.x}%`,
+          top: `${renderBossPoint.y}%`,
           borderColor: chapter.accent,
-          boxShadow: `0 0 32px ${chapter.glow}`,
+          boxShadow: lowDensity ? undefined : `0 0 32px ${chapter.glow}`,
         }}
       />
 
@@ -843,15 +966,17 @@ export function CombatArena() {
         onPointerDown={strikeBoss}
         className="absolute left-1/2 top-[22%] z-[25] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border bg-black/60"
         style={{
-          width: finalBoss || mega ? 128 : 104,
-          height: finalBoss || mega ? 128 : 104,
+          left: `${renderBossPoint.x}%`,
+          top: `${renderBossPoint.y}%`,
+          width: bossSize,
+          height: bossSize,
           borderColor: bossWeakActive ? '#ffd166' : bossWarningActive ? '#ff3d6e' : finalBoss ? chapter.accent : mega ? '#ffd166' : '#ff3d6e',
           color: finalBoss ? chapter.accent : '#ff3d6e',
           boxShadow: bossWeakActive
-            ? '0 0 62px rgba(255,209,102,0.64), inset 0 0 24px rgba(255,209,102,0.2)'
+            ? lowDensity ? '0 0 28px rgba(255,209,102,0.42)' : '0 0 62px rgba(255,209,102,0.64), inset 0 0 24px rgba(255,209,102,0.2)'
             : bossWarningActive
-              ? '0 0 64px rgba(255,61,110,0.58), inset 0 0 24px rgba(255,61,110,0.18)'
-              : `0 0 ${finalBoss ? 52 : 34}px ${finalBoss ? chapter.glow : 'rgba(255,61,110,0.42)'}`,
+              ? lowDensity ? '0 0 30px rgba(255,61,110,0.42)' : '0 0 64px rgba(255,61,110,0.58), inset 0 0 24px rgba(255,61,110,0.18)'
+              : lowDensity ? `0 0 ${finalBoss ? 26 : 20}px ${finalBoss ? chapter.glow : 'rgba(255,61,110,0.32)'}` : `0 0 ${finalBoss ? 52 : 34}px ${finalBoss ? chapter.glow : 'rgba(255,61,110,0.42)'}`,
         }}
         aria-label="boss entity"
       >
@@ -867,11 +992,11 @@ export function CombatArena() {
                 : 'radial-gradient(circle, rgba(255,255,255,0.05), transparent 68%)',
           }}
         />
-        {bossHitActive && (
+        {bossHitActive && !lowDensity && (
           <div className="absolute -inset-2 rounded-full border border-white/40 bg-white/5 shadow-[0_0_26px_rgba(255,255,255,0.24)]" />
         )}
         {bossSummoning && (
-          <div className="absolute -inset-4 rounded-full border border-dashed border-cyan/50 animate-spinslow shadow-[0_0_28px_rgba(92,246,255,0.24)]" />
+          <div className="absolute -inset-4 rounded-full border border-dashed border-cyan/50 sm:animate-spinslow sm:shadow-[0_0_28px_rgba(92,246,255,0.24)]" />
         )}
         {bossWeakActive && (
           <>
@@ -884,7 +1009,7 @@ export function CombatArena() {
         <div className="font-vt text-4xl">{chapter.planetGlyph}</div>
       </motion.button>
 
-      {pulses.map((pulse) => {
+      {renderedPulses.map((pulse) => {
         const warning = renderNow < pulse.fireAt;
         const age = warning ? renderNow - pulse.bornAt : renderNow - pulse.fireAt;
         const radius = warning ? 11 + (age / COMBAT.bossPulseWarningMs) * 7 : age * COMBAT.bossPulseSpeed;
@@ -894,6 +1019,8 @@ export function CombatArena() {
             key={pulse.id}
             className="pointer-events-none absolute left-1/2 top-[24%] z-[8] -translate-x-1/2 -translate-y-1/2 rounded-full border"
             style={{
+              left: `${renderBossPoint.x}%`,
+              top: `${renderBossPoint.y}%`,
               width: `${radius * 2}%`,
               aspectRatio: '1 / 1',
               opacity,
@@ -901,10 +1028,10 @@ export function CombatArena() {
               borderStyle: warning ? 'dashed' : 'solid',
               borderWidth: warning ? 2 : 3,
               background: warning ? 'rgba(255,209,102,0.04)' : 'rgba(255,61,110,0.045)',
-              boxShadow: pulse.canceled ? '0 0 18px rgba(92,246,255,0.28)' : warning ? '0 0 30px rgba(255,209,102,0.48)' : '0 0 32px rgba(255,61,110,0.42)',
+              boxShadow: lowDensity ? undefined : pulse.canceled ? '0 0 18px rgba(92,246,255,0.28)' : warning ? '0 0 30px rgba(255,209,102,0.48)' : '0 0 32px rgba(255,61,110,0.42)',
             }}
           >
-            {warning && (
+            {warning && !lowDensity && (
               <div className="absolute inset-[14%] rounded-full border border-gold/35" />
             )}
           </div>
@@ -912,8 +1039,8 @@ export function CombatArena() {
       })}
 
       {enemies.map((enemy) => {
-        const weak = Date.now() <= enemy.weakUntil;
-        const hit = Date.now() <= enemy.hitUntil;
+        const weak = renderNow <= enemy.weakUntil;
+        const hit = renderNow <= enemy.hitUntil;
         return (
           <button
             key={enemy.id}
@@ -925,7 +1052,7 @@ export function CombatArena() {
               width: `${enemy.size * 2}px`,
               height: `${enemy.size * 2}px`,
               borderColor: weak ? style.weak : style.enemy,
-              boxShadow: `0 0 ${hit ? 26 : 16}px ${weak ? style.weak : style.enemyGlow}`,
+              boxShadow: lowDensity ? `0 0 ${hit ? 14 : 8}px ${weak ? style.weak : style.enemyGlow}` : `0 0 ${hit ? 26 : 16}px ${weak ? style.weak : style.enemyGlow}`,
               transform: `translate(-50%, -50%) scale(${hit ? 1.16 : 1})`,
             }}
             aria-label="enemy"
@@ -949,13 +1076,13 @@ export function CombatArena() {
           borderColor: playerHit ? '#ff3d6e' : collapseActive ? '#5cf6ff' : chapter.accent,
           background: playerHit ? 'rgba(255,61,110,0.24)' : collapseActive ? 'rgba(92,246,255,0.18)' : 'rgba(2,16,24,0.82)',
           boxShadow: playerHit
-            ? '0 0 36px rgba(255,61,110,0.9), 0 0 70px rgba(255,61,110,0.24)'
+            ? `0 0 ${36 * playerGlow}px rgba(255,61,110,0.78)`
             : collapseActive
-              ? '0 0 42px rgba(92,246,255,0.82), 0 0 82px rgba(92,246,255,0.24)'
-              : `0 0 ${18 + intensity * 30}px ${combo >= 15 ? `rgba(255,92,232,${0.42 + intensity * 0.28})` : chapter.glow}`,
+              ? `0 0 ${42 * playerGlow}px rgba(92,246,255,0.72)`
+              : `0 0 ${(18 + intensity * 30) * playerGlow}px ${combo >= 15 ? `rgba(255,92,232,${0.34 + intensity * 0.2})` : chapter.glow}`,
         }}
       >
-        {playerHit && (
+        {playerHit && !lowDensity && (
           <div className="absolute -inset-3 rounded-full border border-danger/45 bg-danger/10 shadow-[0_0_22px_rgba(255,61,110,0.38)]" />
         )}
         {collapseActive && (
@@ -971,7 +1098,7 @@ export function CombatArena() {
         )}
       </div>
 
-      {particles.map((particle) => (
+      {renderedParticles.map((particle) => (
         <div
           key={particle.id}
           className="pointer-events-none absolute z-40 rounded-full"
@@ -982,16 +1109,17 @@ export function CombatArena() {
             height: particle.size,
             background: particle.color,
             opacity: Math.max(0, particle.life / particle.maxLife),
-            boxShadow: `0 0 12px ${particle.color}`,
+            boxShadow: lowDensity ? undefined : `0 0 12px ${particle.color}`,
           }}
         />
       ))}
 
       {abilityEffects.map((effect) => {
-        const age = Date.now() - effect.bornAt;
+        const age = renderNow - effect.bornAt;
         const duration = Math.max(1, effect.until - effect.bornAt);
         const progress = Math.min(1, age / duration);
         const color = effect.kind === 'coreHeal' ? '#5cf6ff' : effect.kind === 'orbitSlash' ? '#ff5ce8' : '#5cf6ff';
+        const orbitEffectSize = 112 * (1 + buildBonuses.orbitSlashRadiusPct);
         return (
           <div
             key={effect.id}
@@ -999,12 +1127,12 @@ export function CombatArena() {
             style={{
               left: `${effect.x}%`,
               top: `${effect.y}%`,
-              width: effect.kind === 'waveBurst' ? `${34 + progress * 170}px` : effect.kind === 'coreHeal' ? `${60 + progress * 58}px` : 112,
-              height: effect.kind === 'waveBurst' ? `${34 + progress * 170}px` : effect.kind === 'coreHeal' ? `${60 + progress * 58}px` : 112,
+              width: effect.kind === 'waveBurst' ? `${34 + progress * 170}px` : effect.kind === 'coreHeal' ? `${60 + progress * 58}px` : orbitEffectSize,
+              height: effect.kind === 'waveBurst' ? `${34 + progress * 170}px` : effect.kind === 'coreHeal' ? `${60 + progress * 58}px` : orbitEffectSize,
               borderColor: color,
               borderStyle: effect.kind === 'orbitSlash' ? 'dashed' : 'solid',
               opacity: effect.kind === 'orbitSlash' ? 0.48 : Math.max(0, 1 - progress),
-              boxShadow: effect.kind === 'orbitSlash' ? `0 0 16px ${color}` : `0 0 24px ${color}`,
+              boxShadow: lowDensity ? undefined : effect.kind === 'orbitSlash' ? `0 0 16px ${color}` : `0 0 24px ${color}`,
               transform: `translate(-50%, -50%) rotate(${age * 0.42}deg)`,
             }}
           >
@@ -1015,7 +1143,7 @@ export function CombatArena() {
         );
       })}
 
-      {hpFloats.map((item) => {
+      {renderedHpFloats.map((item) => {
         const age = Date.now() - item.bornAt;
         return (
           <div

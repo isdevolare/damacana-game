@@ -10,6 +10,8 @@
     "skillTree": "skill tree",
     "settings": "settings",
     "profileStats": "profile / stats",
+    "research": "research lab",
+    "buildTree": "build tree",
     "master": "master",
     "music": "music",
     "sfx": "sfx",
@@ -59,35 +61,60 @@
     "currentMission": "Current mission",
     "completed": "MISSION COMPLETE",
     "unlocked": "Unlocked",
+    "lockedRequirement": "Defeat {chapter} final boss T{tier}",
     "earth": {
       "name": "Earth",
       "desc": "Condense from a lone droplet into a world-scale liquid core.",
-      "objective": "Stabilize the Earth form and defeat the world-stage boss.",
+      "objective": "Clear Earth levels 1-10 and defeat the world-stage boss T10.",
       "complete": "Earth's liquid signal is stable. A red planet has opened on the route."
     },
     "mars": {
       "name": "Mars",
       "desc": "Survive thin atmosphere, iron dust, and pressure-starved flow.",
-      "objective": "Adapt to Mars pressure and break the red planet guardian.",
+      "objective": "Clear Mars levels 11-25 and break the red planet guardian T25.",
       "complete": "Mars has yielded. The ringed giant is now within reach."
     },
     "saturn": {
       "name": "Saturn",
       "desc": "Shape liquid energy through rings, ice, and orbital debris.",
-      "objective": "Cross the ring field and defeat Saturn's final guardian.",
+      "objective": "Cross Saturn levels 26-45 and defeat the ring guardian T45.",
       "complete": "Saturn's rings have aligned with your current. Uranus is unlocked."
     },
     "uranus": {
       "name": "Uranus",
       "desc": "Turn cold atmospheric pressure into deeper cosmic flow.",
-      "objective": "Master the tilted ice giant and collapse its defense field.",
+      "objective": "Master Uranus levels 46-70 and collapse its defense field T70.",
       "complete": "Uranus is complete. Neptune's deep blue gravity is calling."
     },
     "neptune": {
       "name": "Neptune",
       "desc": "Enter the storm edge before the route expands toward stars and anomalies.",
-      "objective": "End the planetary route by defeating Neptune's final boss.",
+      "objective": "End the Planet Arc across levels 71-100 by defeating Neptune's final boss T100.",
       "complete": "The first planetary route is complete. Stellar chapters remain beyond this MVP."
+    }
+  },
+  "arcs": {
+    "currentArc": "Current arc",
+    "afterNeptune": "Coming after Neptune",
+    "planet": { "name": "Planet Arc", "label": "ARC 1 — Planet Arc" },
+    "star": { "name": "ARC 2 — Star Arc" },
+    "galaxy": { "name": "ARC 3 — Galaxy Arc" },
+    "blackHole": { "name": "ARC 4 — Black Hole Arc" },
+    "anomaly": { "name": "ARC 5 — Anomaly Arc" },
+    "placeholders": {
+      "redDwarf": "Red Dwarf",
+      "whiteDwarf": "White Dwarf",
+      "giantStar": "Giant Star",
+      "supernova": "Supernova",
+      "milkyWay": "Milky Way",
+      "andromeda": "Andromeda",
+      "collidingGalaxy": "Colliding Galaxy",
+      "stellarBlackHole": "Stellar Black Hole",
+      "supermassiveBlackHole": "Supermassive Black Hole",
+      "singularity": "Singularity",
+      "voidSea": "Void Sea",
+      "realityFracture": "Reality Fracture",
+      "classificationFailed": "Classification Failed"
     }
   },
   "offline": {
@@ -113,6 +140,11 @@
     "bossAttackWarning": "Pulse incoming",
     "bossSummoning": "Summoning minions",
     "weakPointExposed": "Weak point exposed",
+    "phaseLabel": "Phase {phase}/{total}",
+    "finalPhase": "Final phase",
+    "phaseClear": "Phase clear",
+    "missionClear": "Mission clear",
+    "bossDrop": "Boss drop",
     "hp": "HP",
     "wave": "wave",
     "orbitDamage": "orbit",
@@ -137,6 +169,106 @@
       "orbitSlash": { "name": "Orbit Slash", "desc": "Orbiting ring damage" },
       "coreHeal": { "name": "Core Heal", "desc": "Restore core HP" }
     }
+  },
+  "research": {
+    "title": "RESEARCH LAB",
+    "idle": "no active research",
+    "oneActive": "one research active",
+    "duration": "duration",
+    "cost": "cost",
+    "bonus": "bonus",
+    "start": "start",
+    "claim": "claim",
+    "close": "close",
+    "remaining": "{time} left",
+    "completedNotice": "Research completed: {name}",
+    "categories": {
+      "combat": "combat",
+      "flow": "flow",
+      "offline": "offline",
+      "void": "void / prestige"
+    },
+    "status": {
+      "locked": "locked",
+      "available": "available",
+      "researching": "researching",
+      "completed": "completed",
+      "claimed": "claimed"
+    },
+    "requirements": {
+      "offline": "Requires passive production or Earth mission completed.",
+      "void": "Requires first prestige or first shard."
+    },
+    "items": {
+      "stableCore1": { "name": "Stable Core I", "desc": "Stabilize the liquid core shell.", "bonus": "+5% max HP" },
+      "comboMemory1": { "name": "Combo Memory I", "desc": "Store impact rhythm in the core.", "bonus": "-5% combo decay" },
+      "manaChannel1": { "name": "Mana Channel I", "desc": "Cut a cleaner mana route.", "bonus": "+5% mana regen" },
+      "efficientFlow1": { "name": "Efficient Flow I", "desc": "Reduce waste in passive flow.", "bonus": "+5% passive" },
+      "rewardCurrent1": { "name": "Reward Current I", "desc": "Pull more material from ruptures.", "bonus": "+5% rewards" },
+      "orbitCalibration1": { "name": "Orbit Calibration I", "desc": "Tune the passive orbit strike.", "bonus": "+5% orbit damage" },
+      "nightReservoir1": { "name": "Night Reservoir I", "desc": "Hold more pressure while away.", "bonus": "+30m offline cap" },
+      "silentEngine1": { "name": "Silent Engine I", "desc": "Keep the core engine warm offline.", "bonus": "+10% offline efficiency" },
+      "longShift1": { "name": "Long Shift I", "desc": "Extend unattended production storage.", "bonus": "+1h offline cap" },
+      "voidAnalysis1": { "name": "Void Analysis I", "desc": "Map prestige residue.", "bonus": "+5% prestige gain" },
+      "fractureDetector1": { "name": "Fracture Detector I", "desc": "Detect shard-bearing cracks earlier.", "bonus": "+5% shard chance" },
+      "permanentTrace1": { "name": "Permanent Trace I", "desc": "Leave a production trace after reset.", "bonus": "+5% post-prestige production" }
+    }
+  },
+  "buildTree": {
+    "title": "BUILD TREE",
+    "subtitle": "choose a combat identity",
+    "status": {
+      "locked": "locked",
+      "available": "available",
+      "owned": "owned"
+    },
+    "branches": {
+      "combo": { "name": "Combo Build", "identity": "Pressure, weak points, and long chains." },
+      "tank": { "name": "Tank / Core Build", "identity": "Higher core durability and safer collapse recovery." },
+      "orbit": { "name": "Orbit Build", "identity": "Passive rings, AoE clears, and orbit control." },
+      "void": { "name": "Void Build", "identity": "More anomalies and shards with unstable risk." },
+      "flow": { "name": "Flow Build", "identity": "Idle flow, offline gain, mana, and cooldown rhythm." }
+    },
+    "nodes": {
+      "comboPrimer": { "name": "Combo Primer", "desc": "Clicks build chain pressure faster.", "bonus": "+8% combo gain" },
+      "heldRhythm": { "name": "Held Rhythm", "desc": "The chain drains slower between hits.", "bonus": "-8% combo decay" },
+      "ruptureFocus": { "name": "Rupture Focus", "desc": "Weak point ruptures hit harder.", "bonus": "+12% weak point damage" },
+      "impactMemory": { "name": "Impact Memory", "desc": "Taking damage preserves more chain momentum.", "bonus": "+20% combo preserved" },
+      "chainConductor": { "name": "Chain Conductor", "desc": "Chain pressure rises and holds longer.", "bonus": "+12% gain, -5% decay" },
+      "criticalCascade": { "name": "Critical Cascade", "desc": "Ruptures cascade through boss armor.", "bonus": "+18% weak point damage" },
+      "denseCore": { "name": "Dense Core", "desc": "Condense the liquid core shell.", "bonus": "+8% max HP" },
+      "mineralShell": { "name": "Mineral Shell", "desc": "A harder layer absorbs incoming hits.", "bonus": "+2 armor" },
+      "slowBleed": { "name": "Slow Bleed", "desc": "The core re-forms during combat.", "bonus": "+15% HP regen" },
+      "pulseInsulation": { "name": "Pulse Insulation", "desc": "Boss pulses lose some force.", "bonus": "+4% damage reduction" },
+      "recoveryField": { "name": "Recovery Field", "desc": "Collapse recovery lasts longer.", "bonus": "+0.9s recovery shield" },
+      "planetaryCore": { "name": "Planetary Core", "desc": "The core takes on planet-scale density.", "bonus": "+12% HP, +3 armor" },
+      "orbitEdge": { "name": "Orbit Edge", "desc": "Passive orbit strikes cut deeper.", "bonus": "+8% orbit damage" },
+      "wideSlash": { "name": "Wide Slash", "desc": "Orbit Slash reaches a wider ring.", "bonus": "+10% slash radius" },
+      "clearanceWave": { "name": "Clearance Wave", "desc": "Area bursts clear dense waves better.", "bonus": "+10% AoE damage" },
+      "gravityDrag": { "name": "Gravity Drag", "desc": "Enemies slow near the orbit field.", "bonus": "+8% orbit slow" },
+      "calibratedRing": { "name": "Calibrated Ring", "desc": "The passive ring keeps a sharper edge.", "bonus": "+12% orbit damage" },
+      "debrisStorm": { "name": "Debris Storm", "desc": "Orbit Slash grows into a clearing storm.", "bonus": "+15% radius, +12% AoE" },
+      "voidReceiver": { "name": "Void Receiver", "desc": "Anomalies find the arena more often.", "bonus": "+8% anomaly frequency" },
+      "fractureLuck": { "name": "Fracture Luck", "desc": "Shard-bearing fractures are easier to pull.", "bonus": "+8% shard gain" },
+      "unstableHarvest": { "name": "Unstable Harvest", "desc": "Rewards rise, but enemies press harder.", "bonus": "+8% rewards, +4% aggression" },
+      "corruptedLens": { "name": "Corrupted Lens", "desc": "The void route sees more unstable signals.", "bonus": "+10% anomalies, +4% aggression" },
+      "shardMagnetism": { "name": "Shard Magnetism", "desc": "Void shards drift closer to the core.", "bonus": "+12% shard gain" },
+      "riskEngine": { "name": "Risk Engine", "desc": "Unstable combat produces more at higher danger.", "bonus": "+14% rewards, +6% aggression" },
+      "quietPump": { "name": "Quiet Pump", "desc": "Passive flow runs more efficiently.", "bonus": "+8% passive production" },
+      "nightShift": { "name": "Night Shift", "desc": "Offline reservoirs waste less pressure.", "bonus": "+8% offline efficiency" },
+      "cleanChannel": { "name": "Clean Channel", "desc": "Mana returns through a cleaner route.", "bonus": "+8% mana regen" },
+      "coolantLoop": { "name": "Coolant Loop", "desc": "Abilities vent heat faster.", "bonus": "-5% ability cooldown" },
+      "pressurePipeline": { "name": "Pressure Pipeline", "desc": "The idle engine keeps stronger pressure.", "bonus": "+12% passive production" },
+      "deepReservoir": { "name": "Deep Reservoir", "desc": "The flow build stores deeper reserves.", "bonus": "+12% offline, +8% mana" }
+    }
+  },
+  "bossDrops": {
+    "coreSurge": { "name": "Core Surge", "desc": "+30% damage · 20s" },
+    "manaFlood": { "name": "Mana Flood", "desc": "+50% mana regen · 20s" },
+    "shieldFragment": { "name": "Shield Fragment", "desc": "incoming damage reduced · 12s" },
+    "comboStabilizer": { "name": "Combo Stabilizer", "desc": "combo decay slower · 25s" },
+    "orbitCharge": { "name": "Orbit Charge", "desc": "+40% orbit damage · 20s" },
+    "shardSpark": { "name": "Shard Spark", "desc": "+1 void shard" }
   },
   "facts": {
     "cosmos_ageUniverse": {
@@ -594,18 +726,41 @@
     },
     "effects": {
       "tap": "tap surge",
+      "tapSummary": "tap damage up",
       "flow": "flow surge",
+      "flowSummary": "passive flow up",
       "reward": "reward surge",
+      "rewardSummary": "rewards increased",
       "comboGain": "combo gain",
+      "comboGainSummary": "combo builds faster",
       "enemySpeed": "enemy speed",
+      "enemySpeedSummary": "enemies move faster",
       "enemyDamage": "enemy damage",
+      "enemyDamageSummary": "incoming damage up",
       "shield": "shield",
+      "shieldSummary": "reduces incoming damage",
       "bossSlow": "boss slow",
+      "bossSlowSummary": "boss attacks slower",
       "bossRage": "boss rage",
+      "bossRageSummary": "boss damage up",
       "weakPoint": "weak points",
+      "weakPointSummary": "weak windows last longer",
       "orbitDamage": "orbit damage",
+      "orbitDamageSummary": "passive ring damage up",
       "shardChance": "shard signal",
-      "waveSurge": "wave surge"
+      "shardChanceSummary": "shard chance up",
+      "waveSurge": "wave surge",
+      "waveSurgeSummary": "extra enemy waves",
+      "bossDrop_coreSurge": "core surge",
+      "bossDrop_coreSurgeSummary": "damage +30%",
+      "bossDrop_manaFlood": "mana flood",
+      "bossDrop_manaFloodSummary": "mana regen +50%",
+      "bossDrop_shieldFragment": "shield fragment",
+      "bossDrop_shieldFragmentSummary": "reduces incoming damage",
+      "bossDrop_comboStabilizer": "combo stabilizer",
+      "bossDrop_comboStabilizerSummary": "combo decay slower",
+      "bossDrop_orbitCharge": "orbit charge",
+      "bossDrop_orbitChargeSummary": "passive ring damage +40%"
     },
     "blackHoleThreat": { "title": "BLACK HOLE THREAT", "text": "Pressure is being pulled into the arena.", "ignore": "ignore", "ignorePreview": "+2 enemy waves\n+30% rewards · 20s", "respond": "respond", "respondPreview": "-20 mana\n+500 core" },
     "orbitFailure": { "title": "ORBIT FAILURE", "text": "The planet orbit is unstable.", "stabilize": "stabilize", "stabilizePreview": "Boss slows · 10s", "release": "release", "releasePreview": "+40% combo gain · 15s\n+20% enemy damage" },

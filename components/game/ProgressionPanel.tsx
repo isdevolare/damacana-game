@@ -4,14 +4,14 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from '@/lib/store';
 import { useTranslations } from 'next-intl';
 import { TIERS, nextTier } from '@/lib/config/progression';
-import { CHAPTERS, currentChapter } from '@/lib/config/chapters';
+import { CHAPTERS, FUTURE_ARCS, currentChapter } from '@/lib/config/chapters';
+import { bossPhaseInfo } from '@/lib/config/bossMissions';
 
 export function ProgressionPanel() {
   const show = useGame((s) => s.showProgression);
   const setShow = useGame((s) => s.setShowProgression);
   const setShowShop = useGame((s) => s.setShowShop);
   const prestiges = useGame((s) => s.totalPrestiges);
-  const levelIdx = useGame((s) => s.levelIdx);
   const boss = useGame((s) => s.boss);
   const completedChapters = useGame((s) => s.completedChapters);
   const t = useTranslations();
@@ -19,6 +19,7 @@ export function ProgressionPanel() {
   const next = nextTier(prestiges);
   const current = currentChapter(completedChapters);
   const completedSet = new Set(completedChapters);
+  const phaseInfo = bossPhaseInfo(boss.tier);
 
   return (
     <AnimatePresence>
@@ -42,7 +43,7 @@ export function ProgressionPanel() {
                 </button>
               </div>
               <div className="text-[10px] font-space text-white/60 mb-3">
-                {t('chapters.currentMission')}: <span style={{ color: current.accent }}>{t(`chapters.${current.id}.name` as any)}</span>
+                {t('chapters.currentMission')}: <span style={{ color: current.accent }}>{t('arcs.planet.name')} / {t(`chapters.${current.id}.name` as any)}</span>
               </div>
 
               <div className="mb-3 rounded-md border border-cyan/40 bg-cyan/10 p-3">
@@ -55,23 +56,27 @@ export function ProgressionPanel() {
                   </div>
                   <div>
                     <div className="text-[9px] font-space tracking-widest text-cyan/80 uppercase">
-                      {t('chapters.objective')}
+                      {t('arcs.currentArc')}: {t('arcs.planet.name')}
                     </div>
                     <div className="font-space text-xs text-white mt-0.5">
                       {t(`chapters.${current.id}.objective` as any)}
                     </div>
                     <div className="font-space text-[9px] text-white/55 mt-1">
-                      {t('chapters.level')} {Math.min(Math.max(levelIdx - current.levelStart + 1, 1), current.levelEnd - current.levelStart + 1)}/{current.levelEnd - current.levelStart + 1} · {t('chapters.bossTier')} T{boss.tier}/{current.finalBossTier}
+                      {t('chapters.levels')} {current.levelStart}-{current.levelEnd} · {t('combat.phaseLabel', { phase: phaseInfo.phase, total: phaseInfo.totalPhases })} · {t('chapters.bossTier')} T{boss.tier}/{current.finalBossTier}
                     </div>
                   </div>
                 </div>
               </div>
 
+              <div className="mb-2 font-space text-[9px] uppercase tracking-widest text-white/45">
+                {t('arcs.planet.label')}
+              </div>
               <div className="flex flex-col gap-2">
                 {CHAPTERS.map((chapter) => {
                   const done = completedSet.has(chapter.id);
                   const active = chapter.id === current.id && !done;
-                  const locked = chapter.order > 1 && !completedSet.has(CHAPTERS[chapter.order - 2].id);
+                  const previous = CHAPTERS[chapter.order - 2] ?? null;
+                  const locked = Boolean(previous && !completedSet.has(previous.id));
                   return (
                     <div
                       key={chapter.id}
@@ -92,11 +97,47 @@ export function ProgressionPanel() {
                         {t(`chapters.${chapter.id}.desc` as any)}
                       </div>
                       <div className="font-space text-[9px] text-white/45 mt-1">
-                        {t('chapters.levels')} {chapter.levelStart + 1}-{chapter.levelEnd + 1} · {t('chapters.finalBoss')} T{chapter.finalBossTier}
+                        {t('chapters.levels')} {chapter.levelStart}-{chapter.levelEnd} · {t('chapters.finalBoss')} T{chapter.finalBossTier}
                       </div>
+                      {locked && previous && (
+                        <div className="font-space text-[9px] text-danger/75 mt-1">
+                          {t('chapters.lockedRequirement', {
+                            chapter: t(`chapters.${previous.id}.name` as any),
+                            tier: previous.finalBossTier,
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
+              </div>
+
+              <div className="mt-4 rounded-md border border-purple/25 bg-purple/5 p-3">
+                <div className="font-space text-[9px] uppercase tracking-widest text-purple/80">
+                  {t('arcs.afterNeptune')}
+                </div>
+                <div className="mt-2 flex flex-col gap-2">
+                  {FUTURE_ARCS.map((arc) => (
+                    <div key={arc.id} className="rounded-md border border-white/10 bg-white/[0.025] p-2 opacity-70">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="font-space text-[11px] uppercase tracking-wider text-white/80">
+                          {t(`arcs.${arc.i18nKey}.name` as any)}
+                        </div>
+                        <div className="font-space text-[9px] text-white/45">🔒</div>
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-1.5">
+                        {arc.chapters.map((chapter) => (
+                          <span
+                            key={chapter.id}
+                            className="rounded border border-white/10 bg-black/35 px-1.5 py-0.5 font-space text-[9px] text-white/55"
+                          >
+                            {t(`arcs.placeholders.${chapter.i18nKey}` as any)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="mt-4 border-t border-white/10 pt-3">
