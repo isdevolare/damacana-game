@@ -4,6 +4,7 @@ import { Background } from './Background';
 import { TopBar } from './TopBar';
 import { Counter } from './Counter';
 import { CombatArena } from './CombatArena';
+import { AnomalyEffectsHud } from './AnomalyEffectsHud';
 import { UpgradePanel } from './UpgradePanel';
 import { EvolutionOverlay } from './EvolutionOverlay';
 import { PrestigeOverlay } from './PrestigeOverlay';
@@ -36,11 +37,12 @@ export function GameScreen({ locale }: { locale: string }) {
     <>
       <Background />
       <div
-        className="relative z-10 mx-auto max-w-md min-h-screen flex flex-col"
-        style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}
+        className="relative z-10 mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-hidden"
+        style={{ minHeight: '100dvh', transform: `translate(${offset.x}px, ${offset.y}px)` }}
       >
         <TopBar />
         <Counter />
+        <AnomalyEffectsHud />
         <div className="relative flex-1 flex flex-col">
           <CombatArena />
         </div>

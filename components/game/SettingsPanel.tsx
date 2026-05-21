@@ -10,6 +10,7 @@ import { locales } from '@/i18n/config';
 export function SettingsPanel({ locale }: { locale: string }) {
   const show = useGame((s) => s.showSettings);
   const setShow = useGame((s) => s.setShowSettings);
+  const setShowProfile = useGame((s) => s.setShowProfile);
   const audioSettings = useGame((s) => s.audio);
   const set = useGame((s) => s.setAudioSetting);
   const reset = useGame((s) => s.reset);
@@ -46,6 +47,16 @@ export function SettingsPanel({ locale }: { locale: string }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="font-major text-lg text-purple mb-4">{t('settings')}</div>
+
+            <button
+              onClick={() => {
+                setShow(false);
+                setShowProfile(true);
+              }}
+              className="mb-4 w-full rounded-md border border-cyan/35 bg-cyan/10 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-cyan"
+            >
+              {t('profileStats')}
+            </button>
 
             <div className="space-y-3">
               <label className="block">

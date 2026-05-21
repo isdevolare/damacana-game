@@ -19,7 +19,7 @@ export function UpgradePanel() {
   const auto = UPGRADES.filter((u) => u.kind === 'auto');
 
   return (
-    <div className="px-3 pb-3 grid max-h-[23vh] grid-cols-2 gap-3 overflow-y-auto">
+    <div className="grid max-h-[16dvh] grid-cols-2 gap-2 overflow-y-auto px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] sm:max-h-[23vh] sm:gap-3 sm:px-3 sm:pb-3">
       <div>
         <div className="text-[10px] font-space tracking-widest text-cyan/80 mb-1">
           {ui('tap')}
@@ -39,7 +39,7 @@ export function UpgradePanel() {
                   if (sfxEnabled) audio.sfxUpgrade();
                 }}
                 className={clsx(
-                  'text-left rounded-md border px-2 py-1.5 transition-all',
+                  'text-left rounded-md border px-2 py-1 transition-all sm:py-1.5',
                   locked
                     ? 'border-white/10 bg-white/[0.02] opacity-40'
                     : can
@@ -47,13 +47,13 @@ export function UpgradePanel() {
                     : 'border-white/15 bg-white/[0.04] opacity-70',
                 )}
               >
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[11px] font-space uppercase tracking-wider text-white/90">
+                <div className="flex items-baseline justify-between gap-1">
+                  <span className="truncate text-[10px] font-space uppercase tracking-wider text-white/90 sm:text-[11px]">
                     {t(`${u.key}.name`)}
                   </span>
                   <span className="text-[10px] font-vt text-white/60">×{lvl}</span>
                 </div>
-                <div className="text-[9px] font-space text-white/50 mt-0.5">
+                <div className="mt-0.5 hidden text-[9px] font-space text-white/50 sm:block">
                   +{u.amount}/{ui('tap')}
                 </div>
                 <div className="text-[10px] font-vt text-cyan mt-0.5">
@@ -83,7 +83,7 @@ export function UpgradePanel() {
                   if (sfxEnabled) audio.sfxUpgrade();
                 }}
                 className={clsx(
-                  'text-left rounded-md border px-2 py-1.5 transition-all',
+                  'text-left rounded-md border px-2 py-1 transition-all sm:py-1.5',
                   locked
                     ? 'border-white/10 bg-white/[0.02] opacity-40'
                     : can
@@ -91,13 +91,13 @@ export function UpgradePanel() {
                     : 'border-white/15 bg-white/[0.04] opacity-70',
                 )}
               >
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[11px] font-space uppercase tracking-wider text-white/90">
+                <div className="flex items-baseline justify-between gap-1">
+                  <span className="truncate text-[10px] font-space uppercase tracking-wider text-white/90 sm:text-[11px]">
                     {t(`${u.key}.name`)}
                   </span>
                   <span className="text-[10px] font-vt text-white/60">×{lvl}</span>
                 </div>
-                <div className="text-[9px] font-space text-white/50 mt-0.5">
+                <div className="mt-0.5 hidden text-[9px] font-space text-white/50 sm:block">
                   +{u.amount}/{ui('sec')}
                 </div>
                 <div className="text-[10px] font-vt text-purple mt-0.5">

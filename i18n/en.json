@@ -9,6 +9,7 @@
     "shards": "void shards",
     "skillTree": "skill tree",
     "settings": "settings",
+    "profileStats": "profile / stats",
     "master": "master",
     "music": "music",
     "sfx": "sfx",
@@ -108,6 +109,10 @@
   "combat": {
     "boss": "Boss",
     "chapterBoss": "Chapter boss",
+    "bossTarget": "Boss Target",
+    "bossAttackWarning": "Pulse incoming",
+    "bossSummoning": "Summoning minions",
+    "weakPointExposed": "Weak point exposed",
     "hp": "HP",
     "wave": "wave",
     "orbitDamage": "orbit",
@@ -115,7 +120,17 @@
     "cosmicChain": "cosmic chain",
     "criticalRupture": "critical rupture",
     "coreCollapsed": "CORE COLLAPSED",
-    "recovering": "restoring liquid core",
+    "recovering": "Core recovering…",
+    "invulnerable": "Brief invulnerability active.",
+    "comboTiers": {
+      "ready": "Chain Ready",
+      "cosmic": "Cosmic Chain",
+      "unstable": "Unstable Chain",
+      "rupture": "Rupture Chain",
+      "orbitStorm": "Orbit Storm",
+      "realityBreak": "Reality Rupture",
+      "singularFlow": "Singular Flow"
+    },
     "mana": "Mana",
     "abilities": {
       "waveBurst": { "name": "Wave Burst", "desc": "AoE rupture around the core" },
@@ -570,75 +585,53 @@
     }
   },
   "events": {
-    "missingGalaxy": { "text": "INCOMING TRANSMISSION: a galaxy is missing" },
-    "voidChecking": { "text": "the void is checking on you" },
-    "realityUpdate": { "text": "REALITY UPDATE 2.4.7 — installing… done" },
-    "asteroidRating": { "text": "an asteroid has rated you 4.7/5" },
-    "oceanSilent": { "text": "the ocean has stopped responding" },
-    "cosmicGroupChat": { "text": "you've been added to a cosmic group chat" },
-    "starFollow": { "text": "a star is following you back" },
-    "moonBuffering": { "text": "the moon is buffering" },
-    "physicsBreak": { "text": "physics is taking a break" },
-    "reflectionThumbs": { "text": "your reflection sent you a thumbs up" },
-    "universeCalling": {
-      "text": "the universe is calling. answer?",
-      "answer": "answer",
-      "decline": "decline"
+    "rarity": {
+      "common": "common",
+      "rare": "rare",
+      "anomaly": "anomaly",
+      "corrupted": "corrupted",
+      "singularity": "singularity"
     },
-    "blackHoleDeal": {
-      "text": "a black hole offers a deal",
-      "take": "take",
-      "refuse": "refuse"
+    "effects": {
+      "tap": "tap surge",
+      "flow": "flow surge",
+      "reward": "reward surge",
+      "comboGain": "combo gain",
+      "enemySpeed": "enemy speed",
+      "enemyDamage": "enemy damage",
+      "shield": "shield",
+      "bossSlow": "boss slow",
+      "bossRage": "boss rage",
+      "weakPoint": "weak points",
+      "orbitDamage": "orbit damage",
+      "shardChance": "shard signal",
+      "waveSurge": "wave surge"
     },
-    "unidentifiedSwap": {
-      "text": "an unidentified entity wants to swap places",
-      "swap": "swap",
-      "stay": "stay"
-    },
-    "gravitySubscription": {
-      "text": "your subscription to gravity expires in 5 seconds",
-      "renew": "renew",
-      "lapse": "let it lapse"
-    },
-    "starComedy": {
-      "text": "a star is doing comedy. laugh?",
-      "laugh": "laugh",
-      "silent": "stay silent"
-    },
-    "voidAudit": {
-      "text": "you are being audited by the void",
-      "cooperate": "cooperate",
-      "flee": "flee"
-    },
-    "alternateMerge": {
-      "text": "an alternate version of you wants to merge",
-      "merge": "merge",
-      "reject": "reject"
-    },
-    "simulationFeedback": {
-      "text": "the simulation is asking for feedback",
-      "fiveStars": "5 stars",
-      "oneStar": "1 star"
-    },
-    "planetDisappear": {
-      "text": "EMERGENCY: a planet is about to disappear unless you act",
-      "act": "act",
-      "ignore": "ignore"
-    },
-    "oneWorldLost": {
-      "text": "the universe is calling. if you don't answer, one world will be lost",
-      "answer": "answer",
-      "ignore": "ignore"
-    },
-    "systemBreach": {
-      "text": "system breach detected — quarantine recommended",
-      "quarantine": "quarantine",
-      "ignore": "ignore"
-    },
-    "onlyRunningProcess": {
-      "text": "you are the only running process. continue?",
-      "continue": "continue",
-      "halt": "halt"
-    }
+    "blackHoleThreat": { "title": "BLACK HOLE THREAT", "text": "Pressure is being pulled into the arena.", "ignore": "ignore", "ignorePreview": "+2 enemy waves\n+30% rewards · 20s", "respond": "respond", "respondPreview": "-20 mana\n+500 core" },
+    "orbitFailure": { "title": "ORBIT FAILURE", "text": "The planet orbit is unstable.", "stabilize": "stabilize", "stabilizePreview": "Boss slows · 10s", "release": "release", "releasePreview": "+40% combo gain · 15s\n+20% enemy damage" },
+    "voidSignal": { "title": "VOID SIGNAL", "text": "A signal leaks from outside the map.", "accept": "accept", "acceptPreview": "+1 rare wave\n+10% shard chance · 20s", "block": "block", "blockPreview": "Full shield · 8s\n-20% combo gain · 15s" },
+    "solarRain": { "title": "SOLAR RAIN", "text": "Charged light falls through the core.", "drink": "drink", "drinkPreview": "+80 HP\n+25 mana", "overload": "overload", "overloadPreview": "-40 HP\n+60% orbit damage · 16s" },
+    "meteorLattice": { "title": "METEOR LATTICE", "text": "A grid of meteors locks above you.", "harvest": "harvest", "harvestPreview": "+22% rewards · 18s", "shatter": "shatter", "shatterPreview": "+1 enemy wave\n-25% cooldowns" },
+    "pressureBloom": { "title": "PRESSURE BLOOM", "text": "Liquid gravity flowers around the core.", "absorb": "absorb", "absorbPreview": "+45% tap power · 18s", "vent": "vent", "ventPreview": "55% shield · 12s\n-15 mana" },
+    "frozenTelemetry": { "title": "FROZEN TELEMETRY", "text": "Old ice sends boss coordinates.", "decode": "decode", "decodePreview": "+45% weak windows · 20s", "burn": "burn", "burnPreview": "+35 mana\n+12% enemy speed · 12s" },
+    "gravityShear": { "title": "GRAVITY SHEAR", "text": "The arena tilts under bad gravity.", "brace": "brace", "bracePreview": "65% shield · 12s", "surf": "surf", "surfPreview": "+35% combo gain · 14s\n-35 HP" },
+    "ionStorm": { "title": "ION STORM", "text": "Static cuts through the orbit line.", "ground": "ground", "groundPreview": "Boss slows · 12s", "conduct": "conduct", "conductPreview": "+45% orbit damage · 14s\n+12% enemy damage" },
+    "lunarRift": { "title": "LUNAR RIFT", "text": "A moon crack opens under the arena.", "seal": "seal", "sealPreview": "+120 HP", "widen": "widen", "widenPreview": "+25% rewards · 18s\n+15% enemy speed" },
+    "redDustSurge": { "title": "RED DUST SURGE", "text": "Aggressive dust floods the wave path.", "filter": "filter", "filterPreview": "-18% enemy speed · 16s", "inhale": "inhale", "inhalePreview": "+65% combo gain · 12s\n-60 HP" },
+    "shardComet": { "title": "SHARD COMET", "text": "A broken comet passes close.", "track": "track", "trackPreview": "+18% shard chance · 22s", "break": "break", "breakPreview": "+1 shard\n+2 enemy waves" },
+    "deepCurrent": { "title": "DEEP CURRENT", "text": "A cold current pulls under the planet.", "ride": "ride", "ridePreview": "+80% passive flow · 24s", "dive": "dive", "divePreview": "+45 mana\n+18% boss rage · 16s" },
+    "mirrorPlanet": { "title": "MIRROR PLANET", "text": "A false planet copies your rhythm.", "sync": "sync", "syncPreview": "+50% combo gain · 16s", "crack": "crack", "crackPreview": "+75% tap power · 12s\n+18% enemy damage" },
+    "brokenMagnetosphere": { "title": "BROKEN MAGNETOSPHERE", "text": "The shield layer sparks open.", "repair": "repair", "repairPreview": "70% shield · 18s", "exploit": "exploit", "exploitPreview": "-35% cooldowns\n-25 mana" },
+    "eclipseGate": { "title": "ECLIPSE GATE", "text": "A dark gate covers the boss.", "hold": "hold", "holdPreview": "Boss slows hard · 8s", "enter": "enter", "enterPreview": "+45% rewards · 12s\n+25% boss rage" },
+    "voidTrial": { "title": "VOID TRIAL", "text": "The void demands a clean rupture.", "submit": "submit", "submitPreview": "+80% weak windows · 18s\n-80 HP", "refuse": "refuse", "refusePreview": "Full shield · 6s" },
+    "ringCollapse": { "title": "RING COLLAPSE", "text": "Orbital debris falls inward.", "catch": "catch", "catchPreview": "+110% orbit damage · 10s", "evade": "evade", "evadePreview": "-28% enemy speed · 10s" },
+    "quantumTide": { "title": "QUANTUM TIDE", "text": "The core splits into possible paths.", "split": "split", "splitPreview": "+100% combo gain · 10s\n+25% enemy speed", "anchor": "anchor", "anchorPreview": "+160 HP\n+25 mana" },
+    "darkMatterLease": { "title": "DARK MATTER LEASE", "text": "Power arrives with fine print.", "sign": "sign", "signPreview": "+75% rewards · 10s\n-8% current core", "void": "void", "voidPreview": "-40% cooldowns" },
+    "bossEcho": { "title": "BOSS ECHO", "text": "The boss reflection exposes a fault.", "expose": "expose", "exposePreview": "+120% weak windows · 10s", "anger": "anger", "angerPreview": "-8% boss HP\n+35% boss rage" },
+    "corruptedOrbit": { "title": "CORRUPTED ORBIT", "text": "The current orbit has infected math.", "purge": "purge", "purgePreview": "-45 mana\nFull shield · 10s", "use": "use", "usePreview": "+140% combo gain · 8s\n+35% enemy damage" },
+    "falseVacuum": { "title": "FALSE VACUUM", "text": "The arena floor wants to become nothing.", "collapse": "collapse", "collapsePreview": "+3 enemy waves\n+90% rewards · 12s", "stitch": "stitch", "stitchPreview": "Boss slows heavily · 10s\n-25% combo gain" },
+    "infectedStar": { "title": "INFECTED STAR", "text": "A sick star leaks unstable heat.", "drain": "drain", "drainPreview": "+240 HP\n+30% boss rage · 14s", "ignite": "ignite", "ignitePreview": "+120% tap power · 10s\n-120 HP" },
+    "singularityPinch": { "title": "SINGULARITY PINCH", "text": "The whole arena compresses to a point.", "compress": "compress", "compressPreview": "+200% combo gain · 7s\n+40% enemy speed", "expand": "expand", "expandPreview": "+120% rewards · 8s\n+4 enemy waves" },
+    "eventHorizonCall": { "title": "EVENT HORIZON CALL", "text": "A final signal crosses the line.", "answer": "answer", "answerPreview": "+2 shards\n-180 HP", "silence": "silence", "silencePreview": "Full shield · 12s\n-50% cooldowns" }
   }
 }

@@ -7,7 +7,7 @@ import { LEVELS, activeLevels, levelForTotal } from './config/levels';
 import { UPGRADES, upgradeById, upgradeCost } from './config/upgrades';
 import { bossHp, bossNameKey, bossReward, isMegaBoss, shardDropChance, eliteBossHp } from './config/bosses';
 import { nodeById, previousNode } from './config/skillTree';
-import { AbsurdEvent, EventReward, pickRandomEvent } from './config/events';
+import { AbsurdEvent, AnomalyEffectType, EventReward, pickRandomEvent } from './config/events';
 import { CATEGORIES, categoryComplete, factById, pickFactForLevel, pickRandomBonusFact } from './config/facts';
 import { ELITE_NAME_KEYS, KNOWLEDGE_BULB_TIMING, OFFLINE_PROGRESS, SHOP_ITEMS, shouldBeElite } from './config/progression';
 import { ChapterId, firstCompletableChapter, nextChapter } from './config/chapters';
@@ -25,7 +25,8 @@ export interface Buff {
   id: string;
   expiresAt: number;
   mult: number;
-  type: 'tap' | 'flow';
+  type: 'tap' | 'flow' | AnomalyEffectType;
+  labelKey?: string;
 }
 
 export interface BossState {
@@ -40,6 +41,7 @@ export interface CombatHitOptions {
   damageMult?: number;
   rewardMult?: number;
   comboBoost?: number;
+  comboFlatBonus?: number;
   forceCrit?: boolean;
   passive?: boolean;
   silent?: boolean;
@@ -126,6 +128,8 @@ export interface GameState extends Persisted {
   restoreCombatMana: (amount: number) => void;
   regenCombatResources: (dtMs: number) => void;
   spendCombatAbility: (id: CombatAbilityId) => boolean;
+  boostCombatCombo: (amount: number) => void;
+  reduceCombatCombo: (pct: number) => void;
   setShowTree: (v: boolean) => void;
   setShowPrestige: (v: boolean) => void;
   setShowSettings: (v: boolean) => void;
@@ -229,6 +233,24 @@ function derivedPerSec(state: Persisted): number {
   return Math.floor(base * mult);
 }
 
+function activeBuffMult(state: Persisted, type: Buff['type'], fallback = 1): number {
+  const now = Date.now();
+  let mult = fallback;
+  for (const b of state.activeBuffs) {
+    if (b.type === type && b.expiresAt > now) mult *= b.mult;
+  }
+  return mult;
+}
+
+function activeBuffMax(state: Persisted, type: Buff['type']): number {
+  const now = Date.now();
+  let max = 0;
+  for (const b of state.activeBuffs) {
+    if (b.type === type && b.expiresAt > now) max = Math.max(max, b.mult);
+  }
+  return max;
+}
+
 function shardGainMult(state: Persisted): number {
   return (1 + state.shop.shardBoost * 0.1) * (1 + codexBonuses(state).shard);
 }
@@ -264,6 +286,12 @@ function comboMax(state: Persisted): number {
   return state.tree['comboMaster'] ? BALANCE.combo.masterMax : BALANCE.combo.baseMax;
 }
 
+function effectiveComboPower(combo: number): number {
+  if (combo <= 100) return Math.max(1, combo);
+  if (combo <= 500) return 100 + Math.sqrt(combo - 100) * 5;
+  return Math.min(300, 200 + Math.log10(combo - 400) * 34);
+}
+
 function tapHasCrit(state: Persisted): { crit: boolean; mult: number } {
   let chance = 0;
   if (state.tree['critDrop']) chance += BALANCE.crit.critDropChance;
@@ -274,6 +302,7 @@ function tapHasCrit(state: Persisted): { crit: boolean; mult: number } {
 
 function applyRewardToState(state: Persisted, reward: EventReward): Partial<Persisted> {
   const patch: Partial<Persisted> = {};
+  const now = Date.now();
   switch (reward.type) {
     case 'dmc':
       patch.damacana = Math.max(0, state.damacana + reward.amount);
@@ -284,16 +313,38 @@ function applyRewardToState(state: Persisted, reward: EventReward): Partial<Pers
       break;
     case 'buffTap':
       patch.activeBuffs = [
-        ...state.activeBuffs.filter((b) => b.id !== 'event_tap'),
-        { id: 'event_tap', expiresAt: Date.now() + reward.durationMs, mult: reward.mult, type: 'tap' },
+        ...state.activeBuffs.filter((b) => b.id !== 'event_tap' && b.expiresAt > now),
+        { id: 'event_tap', expiresAt: now + reward.durationMs, mult: reward.mult, type: 'tap', labelKey: 'tap' },
       ];
       break;
     case 'buffFlow':
       patch.activeBuffs = [
-        ...state.activeBuffs.filter((b) => b.id !== 'event_flow'),
-        { id: 'event_flow', expiresAt: Date.now() + reward.durationMs, mult: reward.mult, type: 'flow' },
+        ...state.activeBuffs.filter((b) => b.id !== 'event_flow' && b.expiresAt > now),
+        { id: 'event_flow', expiresAt: now + reward.durationMs, mult: reward.mult, type: 'flow', labelKey: 'flow' },
       ];
       break;
+    case 'buffAnomaly':
+      patch.activeBuffs = [
+        ...state.activeBuffs.filter((b) => b.expiresAt > now),
+        {
+          id: `anomaly_${reward.effect}_${now}_${Math.random().toString(36).slice(2, 7)}`,
+          expiresAt: now + reward.durationMs,
+          mult: reward.mult,
+          type: reward.effect,
+          labelKey: reward.labelKey ?? reward.effect,
+        },
+      ];
+      break;
+    case 'mana': {
+      const stats = derivedCombatStats(state);
+      patch.playerMana = Math.max(0, Math.min(stats.maxMana, (state.playerMana ?? stats.maxMana) + reward.amount));
+      break;
+    }
+    case 'hp': {
+      const stats = derivedCombatStats(state);
+      patch.playerHp = Math.max(1, Math.min(stats.maxHp, (state.playerHp ?? stats.maxHp) + reward.amount));
+      break;
+    }
     case 'pctLoss':
       patch.damacana = Math.floor(state.damacana * (1 - reward.pct));
       break;
@@ -303,9 +354,26 @@ function applyRewardToState(state: Persisted, reward: EventReward): Partial<Pers
     case 'restoreBossHp':
       patch.boss = { ...state.boss, hpCur: state.boss.hpMax };
       break;
+    case 'bossHpPct':
+      patch.boss = {
+        ...state.boss,
+        hpCur: Math.max(1, Math.min(state.boss.hpMax, state.boss.hpCur + state.boss.hpMax * reward.pct)),
+      };
+      break;
     case 'flowLossSeconds': {
       const ps = derivedPerSec(state);
       patch.damacana = Math.max(0, state.damacana - ps * reward.seconds);
+      break;
+    }
+    case 'cooldownReduce': {
+      const reduceCooldowns = (cooldowns: Record<string, number>) => Object.fromEntries(
+        Object.entries(cooldowns).map(([id, readyAt]) => {
+          if (readyAt <= now) return [id, readyAt];
+          return [id, now + (readyAt - now) * (1 - reward.pct)];
+        }),
+      );
+      patch.activeAbilityCooldowns = reduceCooldowns(state.activeAbilityCooldowns);
+      patch.combatAbilityCooldowns = reduceCooldowns(state.combatAbilityCooldowns);
       break;
     }
     case 'nothing':
@@ -406,7 +474,7 @@ export const useGame = create<GameState>()(
         const now = Date.now();
         let combo = s.combo;
         if (!options.passive) {
-          const step = BALANCE.combo.step * (options.comboBoost ?? 1);
+          const step = (BALANCE.combo.step * (options.comboBoost ?? 1) * activeBuffMult(s, 'comboGain')) + (options.comboFlatBonus ?? 0);
           if (now - s.lastTapAt <= BALANCE.combo.window) {
             combo = Math.min(comboMax(s), combo + step);
           } else {
@@ -417,7 +485,7 @@ export const useGame = create<GameState>()(
         const roll = tapHasCrit(s);
         const crit = options.forceCrit || roll.crit;
         const critMult = options.forceCrit ? Math.max(roll.mult, BALANCE.crit.critMult) : roll.mult;
-        let multiplier = combo * (crit ? critMult : 1);
+        let multiplier = effectiveComboPower(combo) * (crit ? critMult : 1);
         multiplier *= options.damageMult ?? 1;
         const newTapsCount = options.passive ? s.tapsThisRun : s.tapsThisRun + 1;
         const lucky = !options.passive && s.tree['luckyTap'] && newTapsCount % BALANCE.luckyTap.interval === 0;
@@ -425,7 +493,8 @@ export const useGame = create<GameState>()(
 
         const dmg = Math.max(1, Math.floor(perTap * multiplier));
         const bossDmgMult = s.tree['bossKiller'] ? 2 : 1;
-        const earn = Math.max(0, Math.floor(dmg * (options.rewardMult ?? 1)));
+        const rewardBuff = activeBuffMult(s, 'reward');
+        const earn = Math.max(0, Math.floor(dmg * (options.rewardMult ?? 1) * rewardBuff));
 
         let boss = { ...s.boss };
         let shardsDelta = 0;
@@ -440,7 +509,7 @@ export const useGame = create<GameState>()(
         const eliteUnlocked = s.totalPrestiges >= 5;
         if (boss.hpCur <= 0) {
           const defeatedTier = boss.tier;
-          const reward = bossReward(boss.tier, s.levelIdx);
+          const reward = Math.floor(bossReward(boss.tier, s.levelIdx) * rewardBuff);
           dmcDelta += reward;
           const mega = isMegaBoss(boss.tier);
           let dropMult = 1;
@@ -454,7 +523,7 @@ export const useGame = create<GameState>()(
             let shardGain = 1;
             if (s.tree['doubleShard'] && Math.random() < 0.25) shardGain *= 2;
             shardsDelta += shardGain;
-          } else if (Math.random() < shardDropChance(boss.tier) * dropMult) {
+          } else if (Math.random() < shardDropChance(boss.tier) * dropMult * activeBuffMult(s, 'shardChance')) {
             let shardGain = 1;
             if (s.tree['doubleShard'] && Math.random() < 0.25) shardGain *= 2;
             shardsDelta += shardGain;
@@ -584,7 +653,7 @@ export const useGame = create<GameState>()(
                 let shardGain = 1;
                 if (s.tree['doubleShard'] && Math.random() < 0.25) shardGain *= 2;
                 shardsDelta += shardGain;
-              } else if (Math.random() < shardDropChance(boss.tier) * dropMult) {
+              } else if (Math.random() < shardDropChance(boss.tier) * dropMult * activeBuffMult(s, 'shardChance')) {
                 let shardGain = 1;
                 if (s.tree['doubleShard'] && Math.random() < 0.25) shardGain *= 2;
                 shardsDelta += shardGain;
@@ -767,7 +836,9 @@ export const useGame = create<GameState>()(
       applyCombatDamage: (amount) => {
         const s = get();
         const stats = derivedCombatStats(s);
-        const reduced = Math.max(1, Math.floor((amount - stats.armor) * (1 - stats.damageReduction)));
+        const shield = Math.min(1, Math.max(0, activeBuffMax(s, 'shield')));
+        const incoming = amount * activeBuffMult(s, 'enemyDamage') * (1 - shield);
+        const reduced = Math.max(0, Math.floor((incoming - stats.armor) * (1 - stats.damageReduction)));
         const hp = Math.max(0, Math.min(s.playerHp ?? stats.maxHp, stats.maxHp) - reduced);
         set({ playerHp: hp });
         return { damage: reduced, hp, collapsed: hp <= 0 };
@@ -810,6 +881,26 @@ export const useGame = create<GameState>()(
         return true;
       },
 
+      boostCombatCombo: (amount) => {
+        const s = get();
+        const now = Date.now();
+        const next = Math.min(comboMax(s), Math.max(0, s.combo) + amount);
+        set({
+          combo: next,
+          bestCombo: Math.max(s.bestCombo, next),
+          lastTapAt: now,
+        });
+      },
+
+      reduceCombatCombo: (pct) => {
+        const s = get();
+        const next = Math.max(0, s.combo * (1 - pct));
+        set({
+          combo: next,
+          lastTapAt: Date.now(),
+        });
+      },
+
       claimOfflineProgress: () => {
         const s = get();
         if (!s.hasStarted) {
@@ -850,21 +941,6 @@ export const useGame = create<GameState>()(
         if (s.currentEvent) return;
         const ev = pickRandomEvent();
         set({ currentEvent: ev });
-        if (ev.kind === 'auto' && ev.autoRewards) {
-          let next = { ...s };
-          for (const r of ev.autoRewards) {
-            const p = applyRewardToState(next, r);
-            next = { ...next, ...p } as Persisted & typeof s;
-          }
-          set({
-            damacana: next.damacana,
-            totalEarned: next.totalEarned,
-            shards: next.shards,
-            activeBuffs: next.activeBuffs,
-            boss: next.boss,
-            perRunPerTapPctBonus: next.perRunPerTapPctBonus,
-          });
-        }
       },
 
       resolveEventChoice: (key) => {
@@ -885,6 +961,10 @@ export const useGame = create<GameState>()(
           activeBuffs: next.activeBuffs,
           boss: next.boss,
           perRunPerTapPctBonus: next.perRunPerTapPctBonus,
+          playerHp: next.playerHp,
+          playerMana: next.playerMana,
+          activeAbilityCooldowns: next.activeAbilityCooldowns,
+          combatAbilityCooldowns: next.combatAbilityCooldowns,
           currentEvent: null,
         });
       },

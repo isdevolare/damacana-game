@@ -29,7 +29,7 @@ export function ActiveAbilityBar() {
   if (owned.length === 0) return null;
 
   return (
-    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-30">
+    <div className="absolute right-2 top-1/2 z-30 hidden -translate-y-1/2 flex-col gap-2 sm:flex">
       {owned.map((a) => {
         const ready = (cd[a.id] ?? 0) <= now;
         const pct = ready ? 100 : Math.max(0, Math.min(100, 100 - (((cd[a.id] ?? 0) - now) / a.cd) * 100));

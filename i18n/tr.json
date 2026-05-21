@@ -9,6 +9,7 @@
     "shards": "boşluk kırıkları",
     "skillTree": "yetenek ağacı",
     "settings": "ayarlar",
+    "profileStats": "profil / istatistikler",
     "master": "ana ses",
     "music": "müzik",
     "sfx": "efekt",
@@ -108,6 +109,10 @@
   "combat": {
     "boss": "Boss",
     "chapterBoss": "Bölüm boss'u",
+    "bossTarget": "Boss Hedefi",
+    "bossAttackWarning": "Darbe geliyor",
+    "bossSummoning": "Minyon çağırıyor",
+    "weakPointExposed": "Zayıf nokta açık",
     "hp": "HP",
     "wave": "dalga",
     "orbitDamage": "yörünge",
@@ -115,7 +120,17 @@
     "cosmicChain": "kozmik zincir",
     "criticalRupture": "kritik kırılma",
     "coreCollapsed": "ÇEKİRDEK ÇÖKTÜ",
-    "recovering": "sıvı çekirdek yenileniyor",
+    "recovering": "Çekirdek yenileniyor…",
+    "invulnerable": "Kısa süre dokunulmazsın.",
+    "comboTiers": {
+      "ready": "Zincir Hazır",
+      "cosmic": "Kozmik Zincir",
+      "unstable": "Dengesiz Zincir",
+      "rupture": "Kırılma Zinciri",
+      "orbitStorm": "Yörünge Fırtınası",
+      "realityBreak": "Gerçeklik Kırılması",
+      "singularFlow": "Tekil Akış"
+    },
     "mana": "Mana",
     "abilities": {
       "waveBurst": { "name": "Dalga Patlaması", "desc": "Çekirdeğin çevresinde alan kırılması" },
@@ -570,75 +585,53 @@
     }
   },
   "events": {
-    "missingGalaxy": { "text": "GELEN MESAJ: bir galaksi kayıp" },
-    "voidChecking": { "text": "boşluk seni yokluyor" },
-    "realityUpdate": { "text": "GERÇEKLİK GÜNCELLEMESİ 2.4.7 — yükleniyor… tamam" },
-    "asteroidRating": { "text": "bir asteroit sana 4.7/5 verdi" },
-    "oceanSilent": { "text": "okyanus yanıt vermeyi kesti" },
-    "cosmicGroupChat": { "text": "kozmik grup sohbetine eklendin" },
-    "starFollow": { "text": "bir yıldız seni geri takip etti" },
-    "moonBuffering": { "text": "ay yükleniyor…" },
-    "physicsBreak": { "text": "fizik mola veriyor" },
-    "reflectionThumbs": { "text": "aynadaki yansıman sana başparmak gösterdi" },
-    "universeCalling": {
-      "text": "evren arıyor. açar mısın?",
-      "answer": "aç",
-      "decline": "reddet"
+    "rarity": {
+      "common": "yaygın",
+      "rare": "nadir",
+      "anomaly": "anomali",
+      "corrupted": "bozuk",
+      "singularity": "tekillik"
     },
-    "blackHoleDeal": {
-      "text": "bir kara delik anlaşma teklif ediyor",
-      "take": "kabul et",
-      "refuse": "reddet"
+    "effects": {
+      "tap": "tık gücü",
+      "flow": "akış",
+      "reward": "ödül artışı",
+      "comboGain": "combo artışı",
+      "enemySpeed": "düşman hızı",
+      "enemyDamage": "düşman hasarı",
+      "shield": "kalkan",
+      "bossSlow": "boss yavaş",
+      "bossRage": "boss öfkesi",
+      "weakPoint": "zayıf noktalar",
+      "orbitDamage": "yörünge hasarı",
+      "shardChance": "kırık sinyali",
+      "waveSurge": "dalga artışı"
     },
-    "unidentifiedSwap": {
-      "text": "tanımsız bir varlık yer değiştirmek istiyor",
-      "swap": "değiş",
-      "stay": "kal"
-    },
-    "gravitySubscription": {
-      "text": "yerçekimi aboneliğin 5 saniye içinde bitiyor",
-      "renew": "yenile",
-      "lapse": "bıraksın bitsin"
-    },
-    "starComedy": {
-      "text": "bir yıldız komedi yapıyor. güler misin?",
-      "laugh": "gül",
-      "silent": "sessiz kal"
-    },
-    "voidAudit": {
-      "text": "boşluk seni denetliyor",
-      "cooperate": "iş birliği yap",
-      "flee": "kaç"
-    },
-    "alternateMerge": {
-      "text": "alternatif bir versiyonun seninle birleşmek istiyor",
-      "merge": "birleş",
-      "reject": "reddet"
-    },
-    "simulationFeedback": {
-      "text": "simülasyon geri bildirim istiyor",
-      "fiveStars": "5 yıldız",
-      "oneStar": "1 yıldız"
-    },
-    "planetDisappear": {
-      "text": "ACİL DURUM: harekete geçmezsen bir gezegen yok olacak",
-      "act": "harekete geç",
-      "ignore": "boş ver"
-    },
-    "oneWorldLost": {
-      "text": "evren arıyor. açmazsan bir dünya kaybolacak",
-      "answer": "aç",
-      "ignore": "boş ver"
-    },
-    "systemBreach": {
-      "text": "sistem ihlali tespit edildi — karantina öneriliyor",
-      "quarantine": "karantinaya al",
-      "ignore": "boş ver"
-    },
-    "onlyRunningProcess": {
-      "text": "çalışan tek süreç sensin. devam edilsin mi?",
-      "continue": "devam",
-      "halt": "durdur"
-    }
+    "blackHoleThreat": { "title": "KARA DELİK TEHDİDİ", "text": "Basınç arenaya doğru çekiliyor.", "ignore": "yok say", "ignorePreview": "+2 düşman dalgası\n+%30 ödül · 20sn", "respond": "yanıt ver", "respondPreview": "-20 mana\n+500 çekirdek" },
+    "orbitFailure": { "title": "YÖRÜNGE HATASI", "text": "Gezegen yörüngesi kararsız.", "stabilize": "sabitle", "stabilizePreview": "Boss yavaşlar · 10sn", "release": "sal", "releasePreview": "+%40 combo artışı · 15sn\n+%20 düşman hasarı" },
+    "voidSignal": { "title": "BOŞLUK SİNYALİ", "text": "Harita dışından sinyal sızıyor.", "accept": "kabul et", "acceptPreview": "+1 nadir dalga\n+%10 kırık şansı · 20sn", "block": "engelle", "blockPreview": "Tam kalkan · 8sn\n-%20 combo artışı · 15sn" },
+    "solarRain": { "title": "GÜNEŞ YAĞMURU", "text": "Yüklü ışık çekirdeğe düşüyor.", "drink": "iç", "drinkPreview": "+80 HP\n+25 mana", "overload": "aşırı yükle", "overloadPreview": "-40 HP\n+%60 yörünge hasarı · 16sn" },
+    "meteorLattice": { "title": "METEOR KAFESİ", "text": "Meteor ağı üstüne kilitlendi.", "harvest": "topla", "harvestPreview": "+%22 ödül · 18sn", "shatter": "parçala", "shatterPreview": "+1 düşman dalgası\n-%25 bekleme süresi" },
+    "pressureBloom": { "title": "BASINÇ ÇİÇEĞİ", "text": "Sıvı çekim çekirdeğin çevresinde açıyor.", "absorb": "em", "absorbPreview": "+%45 tık gücü · 18sn", "vent": "boşalt", "ventPreview": "%55 kalkan · 12sn\n-15 mana" },
+    "frozenTelemetry": { "title": "DONMUŞ TELEMETRİ", "text": "Eski buz boss koordinatı gönderiyor.", "decode": "çöz", "decodePreview": "+%45 zayıf pencere · 20sn", "burn": "yak", "burnPreview": "+35 mana\n+%12 düşman hızı · 12sn" },
+    "gravityShear": { "title": "YERÇEKİMİ KESİĞİ", "text": "Arena bozuk çekimle eğiliyor.", "brace": "dayan", "bracePreview": "%65 kalkan · 12sn", "surf": "üstünde kay", "surfPreview": "+%35 combo artışı · 14sn\n-35 HP" },
+    "ionStorm": { "title": "İYON FIRTINASI", "text": "Statik yörünge hattını kesiyor.", "ground": "toprakla", "groundPreview": "Boss yavaşlar · 12sn", "conduct": "ilet", "conductPreview": "+%45 yörünge hasarı · 14sn\n+%12 düşman hasarı" },
+    "lunarRift": { "title": "AY YARILMASI", "text": "Arenanın altında ay çatlağı açılıyor.", "seal": "mühürle", "sealPreview": "+120 HP", "widen": "genişlet", "widenPreview": "+%25 ödül · 18sn\n+%15 düşman hızı" },
+    "redDustSurge": { "title": "KIZIL TOZ DALGASI", "text": "Saldırgan toz dalga yolunu dolduruyor.", "filter": "filtrele", "filterPreview": "-%18 düşman hızı · 16sn", "inhale": "içine çek", "inhalePreview": "+%65 combo artışı · 12sn\n-60 HP" },
+    "shardComet": { "title": "KIRIK KUYRUKLUYILDIZ", "text": "Parçalanmış kuyrukluyıldız yakından geçiyor.", "track": "izle", "trackPreview": "+%18 kırık şansı · 22sn", "break": "kır", "breakPreview": "+1 kırık\n+2 düşman dalgası" },
+    "deepCurrent": { "title": "DERİN AKINTI", "text": "Soğuk akıntı gezegenin altından çekiyor.", "ride": "bin", "ridePreview": "+%80 pasif akış · 24sn", "dive": "dal", "divePreview": "+45 mana\n+%18 boss öfkesi · 16sn" },
+    "mirrorPlanet": { "title": "AYNA GEZEGEN", "text": "Sahte gezegen ritmini kopyalıyor.", "sync": "eşitle", "syncPreview": "+%50 combo artışı · 16sn", "crack": "çatlat", "crackPreview": "+%75 tık gücü · 12sn\n+%18 düşman hasarı" },
+    "brokenMagnetosphere": { "title": "KIRIK MANYETOSFER", "text": "Kalkan katmanı kıvılcımla açılıyor.", "repair": "onar", "repairPreview": "%70 kalkan · 18sn", "exploit": "sömür", "exploitPreview": "-%35 bekleme süresi\n-25 mana" },
+    "eclipseGate": { "title": "TUTULMA KAPISI", "text": "Karanlık kapı boss'u örtüyor.", "hold": "tut", "holdPreview": "Boss ağır yavaşlar · 8sn", "enter": "gir", "enterPreview": "+%45 ödül · 12sn\n+%25 boss öfkesi" },
+    "voidTrial": { "title": "BOŞLUK SINAVI", "text": "Boşluk temiz kırılma istiyor.", "submit": "boyun eğ", "submitPreview": "+%80 zayıf pencere · 18sn\n-80 HP", "refuse": "reddet", "refusePreview": "Tam kalkan · 6sn" },
+    "ringCollapse": { "title": "HALKA ÇÖKÜŞÜ", "text": "Yörünge enkazı içeri düşüyor.", "catch": "yakala", "catchPreview": "+%110 yörünge hasarı · 10sn", "evade": "kaçın", "evadePreview": "-%28 düşman hızı · 10sn" },
+    "quantumTide": { "title": "KUANTUM GELGİTİ", "text": "Çekirdek olası yollara ayrılıyor.", "split": "böl", "splitPreview": "+%100 combo artışı · 10sn\n+%25 düşman hızı", "anchor": "çapala", "anchorPreview": "+160 HP\n+25 mana" },
+    "darkMatterLease": { "title": "KARANLIK MADDE SÖZLEŞMESİ", "text": "Güç küçük yazıyla geliyor.", "sign": "imzala", "signPreview": "+%75 ödül · 10sn\n-%8 mevcut çekirdek", "void": "geçersiz kıl", "voidPreview": "-%40 bekleme süresi" },
+    "bossEcho": { "title": "BOSS YANKISI", "text": "Boss yansıması çatlak gösteriyor.", "expose": "açığa çıkar", "exposePreview": "+%120 zayıf pencere · 10sn", "anger": "öfkelendir", "angerPreview": "-%8 boss HP\n+%35 boss öfkesi" },
+    "corruptedOrbit": { "title": "BOZUK YÖRÜNGE", "text": "Yörüngenin matematiği enfekte.", "purge": "temizle", "purgePreview": "-45 mana\nTam kalkan · 10sn", "use": "kullan", "usePreview": "+%140 combo artışı · 8sn\n+%35 düşman hasarı" },
+    "falseVacuum": { "title": "SAHTE VAKUM", "text": "Arena zemini hiçliğe dönmek istiyor.", "collapse": "çöktür", "collapsePreview": "+3 düşman dalgası\n+%90 ödül · 12sn", "stitch": "dik", "stitchPreview": "Boss çok yavaşlar · 10sn\n-%25 combo artışı" },
+    "infectedStar": { "title": "ENFEKTE YILDIZ", "text": "Hasta yıldız dengesiz ısı sızdırıyor.", "drain": "em", "drainPreview": "+240 HP\n+%30 boss öfkesi · 14sn", "ignite": "yak", "ignitePreview": "+%120 tık gücü · 10sn\n-120 HP" },
+    "singularityPinch": { "title": "TEKİLLİK SIKIŞMASI", "text": "Tüm arena tek noktaya sıkışıyor.", "compress": "sıkıştır", "compressPreview": "+%200 combo artışı · 7sn\n+%40 düşman hızı", "expand": "genişlet", "expandPreview": "+%120 ödül · 8sn\n+4 düşman dalgası" },
+    "eventHorizonCall": { "title": "OLAY UFUK ÇAĞRISI", "text": "Son sinyal çizgiyi geçiyor.", "answer": "yanıtla", "answerPreview": "+2 kırık\n-180 HP", "silence": "sustur", "silencePreview": "Tam kalkan · 12sn\n-%50 bekleme süresi" }
   }
 }

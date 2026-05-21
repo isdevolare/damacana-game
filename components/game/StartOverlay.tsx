@@ -17,9 +17,9 @@ export function StartOverlay() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm"
+      className="fixed inset-y-0 left-0 z-[60] flex w-screen flex-col items-center justify-center bg-black/95 backdrop-blur-sm"
     >
-      <div className="font-major text-3xl text-purple drop-shadow-[0_0_18px_rgba(184,122,255,0.7)]">
+      <div className="max-w-[92vw] break-words text-center font-major text-2xl text-purple drop-shadow-[0_0_18px_rgba(184,122,255,0.7)] sm:text-3xl">
         damacana.exe
       </div>
       <div className="font-space text-[10px] tracking-[0.4em] text-white/50 mt-2">
@@ -30,7 +30,7 @@ export function StartOverlay() {
           await audio.start(levelIdx, settings);
           start();
         }}
-        className="mt-10 px-6 py-3 font-space tracking-[0.3em] uppercase text-xs border border-purple/60 bg-purple/15 text-purple rounded-md hover:bg-purple/25 animate-pulse2"
+        className="mt-10 max-w-[88vw] rounded-md border border-purple/60 bg-purple/15 px-5 py-3 font-space text-[11px] uppercase tracking-[0.24em] text-purple animate-pulse2 hover:bg-purple/25 sm:px-6 sm:text-xs sm:tracking-[0.3em]"
       >
         {t('tapToStart')}
       </button>
