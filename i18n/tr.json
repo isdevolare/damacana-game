@@ -21,8 +21,45 @@
     "close": "kapat",
     "later": "sonra",
     "prestigeNow": "prestij",
-    "prestigeTitle": "sınıflandırma başarısız",
+    "prestigeTitle": "Kozmik Yükseliş",
+    "prestigeSubtitle": "Bu koşuyu sıfırla, kalıcı güç kazan.",
     "prestigeDesc": "sistem artık ne olduğunu adlandıramıyor. her şeyi boşluğa geri katla ve daha güçlü yeniden başla.",
+    "prestigeKicker": "isteğe bağlı prestij",
+    "prestigePurpose": "Kalıcı güç istediğinde bu koşuyu sıfırla. İlk gezegene dönersin ama kırıklar ve uzun vadeli sistemler sonraki döngüyü güçlendirir.",
+    "prestigeDecisionSummary": "Prestij isteğe bağlıdır. Devam edersen mevcut koşun sürer. Prestij yaparsan bu koşu sıfırlanır ve kalıcı güç kazanırsın.",
+    "prestigeContinueRun": "Bu koşuya devam et",
+    "prestigeResetForPower": "Sıfırla ve kalıcı güç al",
+    "prestigeYouLose": "kaybedersin",
+    "prestigeYouKeep": "korursun",
+    "prestigeGain": "kalıcı kazanç",
+    "prestigeGainDesc": "Kırıkları yapı ve prestij sistemlerinde uzun vadeli güç için harca.",
+    "prestigeGainTooltip": "Bu kazanç kalıcıdır ve koşu sıfırlandıktan sonra da kalır.",
+    "prestigeResetCost": "sıfırlama bedeli",
+    "prestigeFutureHooks": "gelecek kancaları",
+    "prestigeFutureHooksDesc": "kalıntı kalıcılığı, yükseliş katmanları ve tekillik sistemleri sonraya ayrıldı.",
+    "prestigeLose": {
+      "currency": "mevcut damacana",
+      "chapter": "bölüm ve boss fazı ilerlemesi",
+      "combat": "geçici savaş durumu",
+      "buffs": "geçici buff ve anomali etkileri"
+    },
+    "prestigeKeep": {
+      "research": "araştırma ilerlemesi ve bonusları",
+      "buildTree": "sahip olunan yapı ağacı düğümleri",
+      "discoveries": "keşfedilen düşmanlar, olaylar, kodeks ve başarımlar",
+      "prestige": "kırıklar, prestij sayısı ve prestij bonusları",
+      "future": "gelecek kalıntı ve artefakt kalıcılığı"
+    },
+    "prestigeBonus": {
+      "production": "üretim",
+      "rewards": "ödüller",
+      "hp": "maks HP",
+      "mana": "maks mana",
+      "combo": "combo koruma",
+      "orbit": "yörünge",
+      "cooldowns": "bekleme",
+      "current": "mevcut döngü"
+    },
     "resetAll": "tüm ilerlemeyi sıfırla",
     "tapToStart": "başlamak için dokun",
     "codex": "bilgi kodeksi",
@@ -140,11 +177,23 @@
     "bossAttackWarning": "Darbe geliyor",
     "bossSummoning": "Minyon çağırıyor",
     "weakPointExposed": "Zayıf nokta açık",
+    "bossRage": "ÖFKE",
+    "bossShield": "Kalkan penceresi",
+    "orbitSweep": "Yörünge süpürmesi",
+    "corruptedPulse": "Bozuk darbe",
+    "bossThemes": {
+      "earth": "Çekirdek Muhafızı",
+      "mars": "Kızıl Savaş Çekirdeği",
+      "saturn": "Yörünge Halkası Çekirdeği",
+      "uranus": "Soğuk Anomali Çekirdeği",
+      "neptune": "Derin Boşluk Çekirdeği"
+    },
     "phaseLabel": "Faz {phase}/{total}",
     "finalPhase": "Final faz",
     "phaseClear": "Faz temizlendi",
     "missionClear": "Görev temizlendi",
     "bossDrop": "Boss düşümü",
+    "newThreat": "Yeni tehdit algılandı",
     "hp": "HP",
     "wave": "dalga",
     "orbitDamage": "yörünge",
@@ -269,6 +318,16 @@
     "comboStabilizer": { "name": "Combo Sabitleyici", "desc": "combo daha yavaş düşer · 25sn" },
     "orbitCharge": { "name": "Yörünge Yükü", "desc": "+%40 yörünge hasarı · 20sn" },
     "shardSpark": { "name": "Kırık Kıvılcımı", "desc": "+1 boşluk kırığı" }
+  },
+  "enemyVariants": {
+    "basic": { "name": "Basit Halka" },
+    "rush": { "name": "Hızlı Halka" },
+    "tank": { "name": "Tank Halka" },
+    "splitter": { "name": "Bölünen Halka" },
+    "shield": { "name": "Kalkan Halka" },
+    "manaLeech": { "name": "Mana Sömürücü" },
+    "orbitJammer": { "name": "Yörünge Bozucu" },
+    "anomaly": { "name": "Anomali Halkası" }
   },
   "facts": {
     "cosmos_ageUniverse": {
@@ -760,7 +819,9 @@
       "bossDrop_comboStabilizer": "combo sabitleyici",
       "bossDrop_comboStabilizerSummary": "combo daha yavaş düşer",
       "bossDrop_orbitCharge": "yörünge yükü",
-      "bossDrop_orbitChargeSummary": "pasif halka hasarı +%40"
+      "bossDrop_orbitChargeSummary": "pasif halka hasarı +%40",
+      "manaLeech": "mana sömürüsü",
+      "manaLeechSummary": "mana yenilenmesi azalır"
     },
     "blackHoleThreat": { "title": "KARA DELİK TEHDİDİ", "text": "Basınç arenaya doğru çekiliyor.", "ignore": "yok say", "ignorePreview": "+2 düşman dalgası\n+%30 ödül · 20sn", "respond": "yanıt ver", "respondPreview": "-20 mana\n+500 çekirdek" },
     "orbitFailure": { "title": "YÖRÜNGE HATASI", "text": "Gezegen yörüngesi kararsız.", "stabilize": "sabitle", "stabilizePreview": "Boss yavaşlar · 10sn", "release": "sal", "releasePreview": "+%40 combo artışı · 15sn\n+%20 düşman hasarı" },

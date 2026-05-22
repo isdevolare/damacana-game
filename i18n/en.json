@@ -21,8 +21,45 @@
     "close": "close",
     "later": "later",
     "prestigeNow": "prestige",
-    "prestigeTitle": "classification failed",
+    "prestigeTitle": "Cosmic Ascension",
+    "prestigeSubtitle": "Reset this run and gain permanent power.",
     "prestigeDesc": "the system can no longer name what you are. fold it all back into the void and begin again, more potent than before.",
+    "prestigeKicker": "optional prestige",
+    "prestigePurpose": "Reset this run when you want permanent strength. You return to the first planet, but shards and long-term systems make the next cycle stronger.",
+    "prestigeDecisionSummary": "Prestige is optional. Continue keeps this run. Prestige resets this run and grants permanent power.",
+    "prestigeContinueRun": "Continue this run",
+    "prestigeResetForPower": "Reset for permanent power",
+    "prestigeYouLose": "you lose",
+    "prestigeYouKeep": "you keep",
+    "prestigeGain": "permanent gain",
+    "prestigeGainDesc": "Spend shards in build and prestige systems for long-term power.",
+    "prestigeGainTooltip": "This gain is permanent and remains after the run resets.",
+    "prestigeResetCost": "reset cost",
+    "prestigeFutureHooks": "future hooks",
+    "prestigeFutureHooksDesc": "relic persistence, ascension layers, and singularity systems are reserved for later.",
+    "prestigeLose": {
+      "currency": "current damacana",
+      "chapter": "chapter and boss phase progress",
+      "combat": "temporary combat state",
+      "buffs": "temporary buffs and anomaly effects"
+    },
+    "prestigeKeep": {
+      "research": "research progress and bonuses",
+      "buildTree": "owned build tree nodes",
+      "discoveries": "discovered enemies, events, codex, and achievements",
+      "prestige": "shards, prestige count, and prestige bonuses",
+      "future": "future relic and artifact persistence"
+    },
+    "prestigeBonus": {
+      "production": "production",
+      "rewards": "rewards",
+      "hp": "max HP",
+      "mana": "max mana",
+      "combo": "combo saved",
+      "orbit": "orbit",
+      "cooldowns": "cooldowns",
+      "current": "current cycle"
+    },
     "resetAll": "reset all progress",
     "tapToStart": "tap to start",
     "codex": "knowledge codex",
@@ -140,11 +177,23 @@
     "bossAttackWarning": "Pulse incoming",
     "bossSummoning": "Summoning minions",
     "weakPointExposed": "Weak point exposed",
+    "bossRage": "RAGE",
+    "bossShield": "Shield window",
+    "orbitSweep": "Orbit sweep",
+    "corruptedPulse": "Corrupted pulse",
+    "bossThemes": {
+      "earth": "Core Guardian",
+      "mars": "Red War Core",
+      "saturn": "Orbital Ring Core",
+      "uranus": "Cold Anomaly Core",
+      "neptune": "Deep Void Core"
+    },
     "phaseLabel": "Phase {phase}/{total}",
     "finalPhase": "Final phase",
     "phaseClear": "Phase clear",
     "missionClear": "Mission clear",
     "bossDrop": "Boss drop",
+    "newThreat": "New threat detected",
     "hp": "HP",
     "wave": "wave",
     "orbitDamage": "orbit",
@@ -269,6 +318,16 @@
     "comboStabilizer": { "name": "Combo Stabilizer", "desc": "combo decay slower · 25s" },
     "orbitCharge": { "name": "Orbit Charge", "desc": "+40% orbit damage · 20s" },
     "shardSpark": { "name": "Shard Spark", "desc": "+1 void shard" }
+  },
+  "enemyVariants": {
+    "basic": { "name": "Basic Ring" },
+    "rush": { "name": "Rush Ring" },
+    "tank": { "name": "Tank Ring" },
+    "splitter": { "name": "Splitter Ring" },
+    "shield": { "name": "Shield Ring" },
+    "manaLeech": { "name": "Mana Leech" },
+    "orbitJammer": { "name": "Orbit Jammer" },
+    "anomaly": { "name": "Anomaly Ring" }
   },
   "facts": {
     "cosmos_ageUniverse": {
@@ -760,7 +819,9 @@
       "bossDrop_comboStabilizer": "combo stabilizer",
       "bossDrop_comboStabilizerSummary": "combo decay slower",
       "bossDrop_orbitCharge": "orbit charge",
-      "bossDrop_orbitChargeSummary": "passive ring damage +40%"
+      "bossDrop_orbitChargeSummary": "passive ring damage +40%",
+      "manaLeech": "mana leech",
+      "manaLeechSummary": "mana regen reduced"
     },
     "blackHoleThreat": { "title": "BLACK HOLE THREAT", "text": "Pressure is being pulled into the arena.", "ignore": "ignore", "ignorePreview": "+2 enemy waves\n+30% rewards · 20s", "respond": "respond", "respondPreview": "-20 mana\n+500 core" },
     "orbitFailure": { "title": "ORBIT FAILURE", "text": "The planet orbit is unstable.", "stabilize": "stabilize", "stabilizePreview": "Boss slows · 10s", "release": "release", "releasePreview": "+40% combo gain · 15s\n+20% enemy damage" },

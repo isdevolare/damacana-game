@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { BALANCE } from './config/balance';
+import { prestigePermanentBonuses, prestigeShardGain } from './config/prestige';
 import { LEVELS, activeLevels, levelForTotal } from './config/levels';
 import { UPGRADES, upgradeById, upgradeCost } from './config/upgrades';
 import { bossHp, bossNameKey, bossReward, isMegaBoss, shardDropChance, eliteBossHp } from './config/bosses';
@@ -13,6 +14,7 @@ import { ELITE_NAME_KEYS, KNOWLEDGE_BULB_TIMING, OFFLINE_PROGRESS, SHOP_ITEMS, s
 import { ChapterId, firstCompletableChapter, nextChapter } from './config/chapters';
 import { bossPhaseInfo } from './config/bossMissions';
 import { BossDropId, rollBossDrop } from './config/bossDrops';
+import { EnemyVariantId } from './config/enemyVariants';
 import {
   BASE_COMBAT_STATS,
   COMBAT,
@@ -91,6 +93,7 @@ interface Persisted {
   crystals: number;
   tree: Record<string, boolean>;
   totalPrestiges: number;
+  prestigePromptDismissedRunAt: number;
   bestLevel: number;
   bestBossTier: number;
   collectedFacts: string[];
@@ -103,6 +106,7 @@ interface Persisted {
   offlineMaxMs: number;
   voidBurstUses: number;
   completedChapters: ChapterId[];
+  discoveredEnemyTypeIds: EnemyVariantId[];
   knowledgeBulbsCollected: number;
   nextKnowledgeBulbAt: number;
   playerHp: number;
@@ -154,6 +158,7 @@ export interface GameState extends Persisted {
   offlineReward: { awayMs: number; gained: number } | null;
   researchCompletedNotice: string | null;
   bossPhaseToast: BossPhaseToast | null;
+  enemyDiscoveryToast: EnemyVariantId | null;
 
   // actions
   tapDamacana: (clientX?: number, clientY?: number, options?: CombatHitOptions) => void;
@@ -186,6 +191,8 @@ export interface GameState extends Persisted {
   refreshResearchProgress: () => void;
   dismissResearchNotice: () => void;
   dismissBossPhaseToast: () => void;
+  discoverEnemyType: (id: EnemyVariantId) => void;
+  dismissEnemyDiscoveryToast: () => void;
   buyBuildNode: (id: string) => void;
   claimOfflineProgress: () => void;
   triggerEvent: () => void;
@@ -250,6 +257,7 @@ function derivedPerTap(state: Persisted): number {
   }
   mult *= 1 + state.shop.tapBoost * 0.1;
   mult *= 1 + codexBonuses(state).tap;
+  mult *= 1 + prestigePermanentBonuses(state.totalPrestiges).globalProductionPct;
   mult *= 1 + (state.totalPrestiges > 0 ? researchBonuses(state).postPrestigeProductionPct : 0);
   mult *= 1 + buildBonuses(state).unstableRewardPct;
   const now = Date.now();
@@ -274,6 +282,7 @@ function derivedPerSec(state: Persisted): number {
   }
   mult *= 1 + state.shop.flowBoost * 0.1;
   mult *= 1 + codexBonuses(state).flow;
+  mult *= 1 + prestigePermanentBonuses(state.totalPrestiges).globalProductionPct;
   mult *= 1 + researchBonuses(state).passiveProductionPct;
   mult *= 1 + (state.totalPrestiges > 0 ? researchBonuses(state).postPrestigeProductionPct : 0);
   mult *= 1 + buildBonuses(state).passiveProductionPct;
@@ -315,7 +324,7 @@ function buildBonuses(state: Persisted): BuildBonusSummary {
 }
 
 function researchRewardMult(state: Persisted): number {
-  return 1 + researchBonuses(state).rewardMultiplierPct;
+  return 1 + researchBonuses(state).rewardMultiplierPct + prestigePermanentBonuses(state.totalPrestiges).rewardGainPct;
 }
 
 function researchShardChanceMult(state: Persisted): number {
@@ -370,16 +379,17 @@ function derivedCombatStats(state: Persisted): CombatStats {
   const bonuses = state.combatStatBonuses ?? EMPTY_COMBAT_STAT_BONUSES;
   const research = researchBonuses(state);
   const build = buildBonuses(state);
+  const prestige = prestigePermanentBonuses(state.totalPrestiges);
   const levelHp = state.bestLevel * COMBAT.playerHpPerLevel;
   const levelMana = state.bestLevel * COMBAT.playerManaPerLevel;
   const baseHp = BASE_COMBAT_STATS.maxHp + levelHp + bonuses.maxHp;
   const baseManaRegen = BASE_COMBAT_STATS.manaRegen + bonuses.manaRegen;
   const baseHpRegen = BASE_COMBAT_STATS.hpRegen + bonuses.hpRegen;
   return {
-    maxHp: baseHp * (1 + research.maxHpPct + build.maxHpPct),
-    maxMana: BASE_COMBAT_STATS.maxMana + levelMana + bonuses.maxMana,
+    maxHp: baseHp * (1 + research.maxHpPct + build.maxHpPct + prestige.maxHpPct),
+    maxMana: (BASE_COMBAT_STATS.maxMana + levelMana + bonuses.maxMana) * (1 + prestige.maxManaPct),
     hpRegen: baseHpRegen * (1 + build.hpRegenPct),
-    manaRegen: baseManaRegen * (1 + research.manaRegenPct + build.manaRegenPct) * activeBuffMult(state, 'manaRegen'),
+    manaRegen: baseManaRegen * (1 + research.manaRegenPct + build.manaRegenPct + prestige.manaRegenPct) * activeBuffMult(state, 'manaRegen'),
     armor: BASE_COMBAT_STATS.armor + bonuses.armor + build.armor,
     damageReduction: Math.min(0.75, BASE_COMBAT_STATS.damageReduction + bonuses.damageReduction + build.damageReductionPct),
   };
@@ -578,6 +588,7 @@ const initialState: Persisted = {
   crystals: 0,
   tree: {},
   totalPrestiges: 0,
+  prestigePromptDismissedRunAt: 0,
   bestLevel: 0,
   bestBossTier: 1,
   collectedFacts: [],
@@ -590,6 +601,7 @@ const initialState: Persisted = {
   offlineMaxMs: OFFLINE_PROGRESS.defaultMaxMs,
   voidBurstUses: 0,
   completedChapters: [],
+  discoveredEnemyTypeIds: ['basic'],
   knowledgeBulbsCollected: 0,
   nextKnowledgeBulbAt: 0,
   playerHp: BASE_COMBAT_STATS.maxHp,
@@ -639,6 +651,7 @@ export const useGame = create<GameState>()(
       offlineReward: null,
       researchCompletedNotice: null,
       bossPhaseToast: null,
+      enemyDiscoveryToast: null,
 
       tapDamacana: (clientX, clientY, options = {}) => {
         const s = get();
@@ -782,7 +795,12 @@ export const useGame = create<GameState>()(
         }
 
         const maxLevel = activeLevels(get().totalPrestiges).length - 1;
-        if (newLevelIdx >= maxLevel && newLevelIdx >= BALANCE.prestige.requiredLevelIdx && !get().showPrestige) {
+        if (
+          newLevelIdx >= maxLevel &&
+          newLevelIdx >= BALANCE.prestige.requiredLevelIdx &&
+          !get().showPrestige &&
+          get().prestigePromptDismissedRunAt !== get().runStartAt
+        ) {
           set({ showPrestige: true });
         }
       },
@@ -908,7 +926,13 @@ export const useGame = create<GameState>()(
         }
 
         const maxLevel = arr.length - 1;
-        if (newLevelIdx >= maxLevel && newLevelIdx >= BALANCE.prestige.requiredLevelIdx && !get().showPrestige && !get().showEvolution) {
+        if (
+          newLevelIdx >= maxLevel &&
+          newLevelIdx >= BALANCE.prestige.requiredLevelIdx &&
+          !get().showPrestige &&
+          !get().showEvolution &&
+          get().prestigePromptDismissedRunAt !== get().runStartAt
+        ) {
           set({ showPrestige: true });
         }
       },
@@ -1016,7 +1040,10 @@ export const useGame = create<GameState>()(
       },
 
       setShowTree: (v) => set({ showTree: v }),
-      setShowPrestige: (v) => set({ showPrestige: v }),
+      setShowPrestige: (v) => set((state) => ({
+        showPrestige: v,
+        ...(v ? {} : { prestigePromptDismissedRunAt: state.runStartAt }),
+      })),
       setShowSettings: (v) => set({ showSettings: v }),
       setShowCodex: (v) => set({ showCodex: v }),
       setShowAchievements: (v) => set({ showAchievements: v }),
@@ -1031,6 +1058,15 @@ export const useGame = create<GameState>()(
       dismissOfflineReward: () => set({ offlineReward: null }),
       dismissResearchNotice: () => set({ researchCompletedNotice: null }),
       dismissBossPhaseToast: () => set({ bossPhaseToast: null }),
+      discoverEnemyType: (id) => {
+        const s = get();
+        if ((s.discoveredEnemyTypeIds ?? []).includes(id)) return;
+        set({
+          discoveredEnemyTypeIds: [...(s.discoveredEnemyTypeIds ?? []), id],
+          enemyDiscoveryToast: id === 'basic' ? null : id,
+        });
+      },
+      dismissEnemyDiscoveryToast: () => set({ enemyDiscoveryToast: null }),
 
       buyBuildNode: (id) => {
         const s = get();
@@ -1146,7 +1182,7 @@ export const useGame = create<GameState>()(
         const now = Date.now();
         if ((s.combatAbilityCooldowns[id] ?? 0) > now) return false;
         if ((s.playerMana ?? 0) < ability.manaCost) return false;
-        const cooldownMult = Math.max(0.25, 1 - researchBonuses(s).abilityCooldownPct - buildBonuses(s).cooldownReductionPct);
+        const cooldownMult = Math.max(0.25, 1 - researchBonuses(s).abilityCooldownPct - buildBonuses(s).cooldownReductionPct - prestigePermanentBonuses(s.totalPrestiges).cooldownReductionPct);
         set({
           playerMana: Math.max(0, (s.playerMana ?? 0) - ability.manaCost),
           combatAbilityCooldowns: {
@@ -1170,7 +1206,7 @@ export const useGame = create<GameState>()(
 
       reduceCombatCombo: (pct) => {
         const s = get();
-        const preserve = Math.min(0.8, Math.max(0, buildBonuses(s).damageComboPreservePct));
+        const preserve = Math.min(0.8, Math.max(0, buildBonuses(s).damageComboPreservePct + prestigePermanentBonuses(s.totalPrestiges).comboRetentionPct));
         const next = Math.max(0, s.combo * (1 - pct * (1 - preserve)));
         set({
           combo: next,
@@ -1254,14 +1290,15 @@ export const useGame = create<GameState>()(
       prestige: () => {
         const s = get();
         if (s.levelIdx < BALANCE.prestige.requiredLevelIdx) return;
-        let gain = Math.floor(BALANCE.prestige.shardFormula(s.totalEarned) * (1 + researchBonuses(s).prestigeGainPct));
-        if (s.tree['guaranteedShards']) gain += 5;
+        const gain = prestigeShardGain(s.totalEarned, s.totalPrestiges, researchBonuses(s).prestigeGainPct, Boolean(s.tree['guaranteedShards']));
+        const now = Date.now();
         set({
           ...initialState,
           shards: s.shards + gain,
           crystals: s.crystals,
           tree: s.tree,
           totalPrestiges: s.totalPrestiges + 1,
+          prestigePromptDismissedRunAt: 0,
           bestLevel: s.bestLevel,
           bestBossTier: s.bestBossTier,
           collectedFacts: s.collectedFacts,
@@ -1270,12 +1307,13 @@ export const useGame = create<GameState>()(
           bestCombo: s.bestCombo,
           fastestLevel6Ms: s.fastestLevel6Ms,
           totalPlayMs: s.totalPlayMs,
-          lastActiveAt: Date.now(),
+          lastActiveAt: now,
           offlineMaxMs: s.offlineMaxMs || OFFLINE_PROGRESS.defaultMaxMs,
           voidBurstUses: s.voidBurstUses,
-          completedChapters: s.completedChapters,
+          completedChapters: [],
+          discoveredEnemyTypeIds: s.discoveredEnemyTypeIds ?? ['basic'],
           knowledgeBulbsCollected: s.knowledgeBulbsCollected,
-          nextKnowledgeBulbAt: Date.now() + randomKnowledgeDelayMs(),
+          nextKnowledgeBulbAt: now + randomKnowledgeDelayMs(),
           playerHp: Math.min(s.playerHp ?? BASE_COMBAT_STATS.maxHp, derivedCombatStats(s).maxHp),
           playerMana: Math.min(s.playerMana ?? BASE_COMBAT_STATS.maxMana, derivedCombatStats(s).maxMana),
           combatStatBonuses: s.combatStatBonuses ?? EMPTY_COMBAT_STAT_BONUSES,
@@ -1293,10 +1331,10 @@ export const useGame = create<GameState>()(
           hasStarted: s.hasStarted,
           damacana: s.tree['startingGift'] ? 100 : 0,
           boss: freshBoss(1, 0, false),
-          runStartAt: Date.now(),
+          runStartAt: now,
           showPrestige: false,
           showEvolution: null,
-          shake: { intensity: 'hard', at: Date.now() },
+          shake: { intensity: 'hard', at: now },
           floatingNumbers: [],
           recentEarnings: [],
           currentEvent: null,
@@ -1308,6 +1346,7 @@ export const useGame = create<GameState>()(
           offlineReward: null,
           researchCompletedNotice: null,
           bossPhaseToast: null,
+          enemyDiscoveryToast: null,
           combo: 1,
           lastTapAt: 0,
         });
@@ -1357,6 +1396,8 @@ export const useGame = create<GameState>()(
           offlineReward: null,
           researchCompletedNotice: null,
           bossPhaseToast: null,
+          discoveredEnemyTypeIds: ['basic'],
+          enemyDiscoveryToast: null,
         });
       },
 
@@ -1493,6 +1534,7 @@ export const useGame = create<GameState>()(
         crystals: s.crystals,
         tree: s.tree,
         totalPrestiges: s.totalPrestiges,
+        prestigePromptDismissedRunAt: s.prestigePromptDismissedRunAt,
         bestLevel: s.bestLevel,
         bestBossTier: s.bestBossTier,
         collectedFacts: s.collectedFacts,
@@ -1505,6 +1547,7 @@ export const useGame = create<GameState>()(
         offlineMaxMs: s.offlineMaxMs,
         voidBurstUses: s.voidBurstUses,
         completedChapters: s.completedChapters,
+        discoveredEnemyTypeIds: s.discoveredEnemyTypeIds,
         knowledgeBulbsCollected: s.knowledgeBulbsCollected,
         nextKnowledgeBulbAt: s.nextKnowledgeBulbAt,
         playerHp: s.playerHp,
