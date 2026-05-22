@@ -727,6 +727,12 @@
     "unnamedLiquid": "outer dark anomaly"
   },
   "upgrades": {
+    "rarity": {
+      "common": "common",
+      "rare": "rare",
+      "epic": "epic",
+      "legendary": "legendary"
+    },
     "bigSip": { "name": "big sip" },
     "cosmicSip": { "name": "cosmic sip" },
     "voidLip": { "name": "void lip" },

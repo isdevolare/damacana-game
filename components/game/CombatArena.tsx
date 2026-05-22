@@ -10,6 +10,7 @@ import { currentChapter } from '@/lib/config/chapters';
 import { bossPhaseCombatTuning, bossPhaseInfo } from '@/lib/config/bossMissions';
 import { bossProfileForChapter, type BossPulseKind } from '@/lib/config/bossProfiles';
 import { COMBAT, COMBAT_ABILITIES, CombatAbilityId, combatStyleForChapter } from '@/lib/config/combat';
+import { CORE_DEFENSE } from '@/lib/config/coreDefense';
 import { prestigePermanentBonuses } from '@/lib/config/prestige';
 import {
   EnemyVariantId,
@@ -150,7 +151,7 @@ function bossArenaPoint(now: number, pressure: number): Vec {
   const drift = 0.8 + pressure * 1.35;
   return {
     x: 50 + Math.sin(now / 2800) * drift,
-    y: 22 + Math.sin(now / 3600 + 0.9) * (0.45 + pressure * 0.75),
+    y: 18 + Math.sin(now / 3600 + 0.9) * (0.35 + pressure * 0.6),
   };
 }
 
@@ -1061,7 +1062,9 @@ export function CombatArena() {
               : bossSummoning
                 ? t('combat.bossSummoning')
                 : t('combat.bossTarget');
-  const bossSize = lowDensity ? (finalBoss || mega ? 112 : 92) : (finalBoss || mega ? 128 : 104);
+  const bossSize = Math.round((lowDensity ? (finalBoss || mega ? 112 : 92) : (finalBoss || mega ? 128 : 104)) * CORE_DEFENSE.bossControllerScale);
+  const coreSize = lowDensity ? CORE_DEFENSE.mobilePlayerCoreSizePx : CORE_DEFENSE.playerCoreSizePx;
+  const coreShieldSize = lowDensity ? CORE_DEFENSE.playerShieldSizePx - 8 : CORE_DEFENSE.playerShieldSizePx;
   const weakPointAngle = bossProfile.rotatingWeakPoint ? (renderNow / 1000) * bossProfile.rotatingWeakPoint.speed : 0;
   const weakPointRadius = bossProfile.rotatingWeakPoint?.radiusPx ?? 0;
   const weakPointX = Math.cos(weakPointAngle) * weakPointRadius;
@@ -1070,6 +1073,15 @@ export function CombatArena() {
   const renderedPulses = lowDensity ? pulses.slice(-1) : pulses;
   const renderedParticles = lowDensity ? particles.slice(-ARENA_PERF.mobileParticleCap) : particles;
   const renderedHpFloats = lowDensity ? hpFloats.slice(-ARENA_PERF.mobileHpFloatCap) : hpFloats;
+  const renderedTargetLines = enemies
+    .map((enemy) => {
+      const dx = player.x - enemy.x;
+      const dy = player.y - enemy.y;
+      return { enemy, distance: Math.hypot(dx, dy), angle: Math.atan2(dy, dx) * (180 / Math.PI) };
+    })
+    .filter((item) => item.distance < 42)
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, lowDensity ? CORE_DEFENSE.targetLineLimitMobile : CORE_DEFENSE.targetLineLimitDesktop);
 
   return (
     <div
@@ -1221,10 +1233,11 @@ export function CombatArena() {
         initial={{ opacity: 0.85, scale: 0.2 }}
         animate={{ opacity: 0, scale: 1.85 }}
         transition={{ duration: 0.7, ease: 'easeOut' }}
-        className="pointer-events-none absolute left-1/2 top-[22%] z-[9] aspect-square w-[132px] -translate-x-1/2 -translate-y-1/2 rounded-full border"
+        className="pointer-events-none absolute left-1/2 top-[18%] z-[9] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border"
         style={{
           left: `${renderBossPoint.x}%`,
           top: `${renderBossPoint.y}%`,
+          width: bossSize + 18,
           borderColor: chapter.accent,
           boxShadow: lowDensity ? undefined : `0 0 32px ${chapter.glow}`,
         }}
@@ -1241,7 +1254,7 @@ export function CombatArena() {
         transition={{ type: 'spring', stiffness: 260, damping: 18 }}
         whileTap={{ scale: 0.96 }}
         onPointerDown={strikeBoss}
-        className="absolute left-1/2 top-[22%] z-[25] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border bg-black/60"
+        className="absolute left-1/2 top-[18%] z-[25] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border bg-black/60"
         style={{
           left: `${renderBossPoint.x}%`,
           top: `${renderBossPoint.y}%`,
@@ -1331,6 +1344,21 @@ export function CombatArena() {
         );
       })}
 
+      {renderedTargetLines.map(({ enemy, distance, angle }) => (
+        <div
+          key={`target-${enemy.id}`}
+          className="pointer-events-none absolute z-[12] h-px origin-left bg-cyan/20"
+          style={{
+            left: `${enemy.x}%`,
+            top: `${enemy.y}%`,
+            width: `${distance}%`,
+            transform: `rotate(${angle}deg)`,
+            opacity: Math.max(0.08, 0.28 - distance * 0.004),
+            boxShadow: lowDensity ? undefined : '0 0 8px rgba(92,246,255,0.18)',
+          }}
+        />
+      ))}
+
       {enemies.map((enemy) => {
         const weak = renderNow <= enemy.weakUntil;
         const hit = renderNow <= enemy.hitUntil;
@@ -1389,8 +1417,8 @@ export function CombatArena() {
         style={{
           left: `${player.x}%`,
           top: `${player.y}%`,
-          width: 46,
-          height: 46,
+          width: coreSize,
+          height: coreSize,
           borderColor: playerHit ? '#ff3d6e' : collapseActive ? '#5cf6ff' : chapter.accent,
           background: playerHit ? 'rgba(255,61,110,0.24)' : collapseActive ? 'rgba(92,246,255,0.18)' : 'rgba(2,16,24,0.82)',
           boxShadow: playerHit
@@ -1400,14 +1428,23 @@ export function CombatArena() {
               : `0 0 ${(18 + intensity * 30) * playerGlow}px ${combo >= 15 ? `rgba(255,92,232,${0.34 + intensity * 0.2})` : chapter.glow}`,
         }}
       >
+        <div
+          className="absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan/20"
+          style={{
+            width: coreShieldSize,
+            height: coreShieldSize,
+            opacity: playerHpPct > 66 ? 0.48 : playerHpPct > 33 ? 0.3 : 0.16,
+            boxShadow: lowDensity ? undefined : `0 0 ${playerHit ? 26 : 16}px rgba(92,246,255,0.16)`,
+          }}
+        />
         {playerHit && !lowDensity && (
-          <div className="absolute -inset-3 rounded-full border border-danger/45 bg-danger/10 shadow-[0_0_22px_rgba(255,61,110,0.38)]" />
+          <div className="absolute -inset-4 rounded-full border-2 border-danger/55 bg-danger/10 shadow-[0_0_28px_rgba(255,61,110,0.48)]" />
         )}
         {collapseActive && (
           <div className="absolute -inset-5 rounded-full border border-cyan/45 bg-cyan/5 shadow-[0_0_28px_rgba(92,246,255,0.36)]" />
         )}
-        <div className="absolute inset-[9px] rounded-full bg-cyan shadow-[0_0_16px_rgba(92,246,255,0.95)]" />
-        <div className="absolute inset-[17px] rounded-full bg-white/80" />
+        <div className="absolute inset-[8px] rounded-full bg-cyan shadow-[0_0_18px_rgba(92,246,255,0.98)]" />
+        <div className="absolute inset-[17px] rounded-full bg-white/85" />
         {orbitSlashActive && (
           <div
             className="absolute left-1/2 top-1/2 h-[76px] w-[76px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-pink/35 animate-spinslow"

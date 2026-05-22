@@ -727,6 +727,12 @@
     "unnamedLiquid": "dış karanlık anomalisi"
   },
   "upgrades": {
+    "rarity": {
+      "common": "yaygın",
+      "rare": "nadir",
+      "epic": "epik",
+      "legendary": "efsanevi"
+    },
     "bigSip": { "name": "büyük yudum" },
     "cosmicSip": { "name": "kozmik yudum" },
     "voidLip": { "name": "boşluk dudağı" },

@@ -5,7 +5,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { BALANCE } from './config/balance';
 import { prestigePermanentBonuses, prestigeShardGain } from './config/prestige';
 import { LEVELS, activeLevels, levelForTotal } from './config/levels';
-import { UPGRADES, upgradeById, upgradeCost } from './config/upgrades';
+import { UPGRADES, affordableUpgradeCount, upgradeBulkCost, upgradeById, upgradeTotalAmount, type UpgradeBuyMode } from './config/upgrades';
 import { bossHp, bossNameKey, bossReward, isMegaBoss, shardDropChance, eliteBossHp } from './config/bosses';
 import { nodeById, previousNode } from './config/skillTree';
 import { AbsurdEvent, AnomalyEffectType, EventReward, pickRandomEvent } from './config/events';
@@ -163,7 +163,7 @@ export interface GameState extends Persisted {
   // actions
   tapDamacana: (clientX?: number, clientY?: number, options?: CombatHitOptions) => void;
   tickAuto: (dtMs: number) => void;
-  buyUpgrade: (id: string) => void;
+  buyUpgrade: (id: string, mode?: UpgradeBuyMode) => void;
   buyTreeNode: (id: string) => void;
   fireAbility: (id: 'voidBurst' | 'flood' | 'timeLoop') => void;
   applyCombatDamage: (amount: number) => { damage: number; hp: number; collapsed: boolean };
@@ -246,7 +246,7 @@ function derivedPerTap(state: Persisted): number {
   let base = 1;
   for (const def of UPGRADES.filter((u) => u.kind === 'tap')) {
     const lvl = state.upgrades[def.id] ?? 0;
-    base += def.amount * lvl;
+    base += upgradeTotalAmount(def, lvl);
   }
   let mult = 1 + state.perRunPerTapPctBonus;
   for (const id of Object.keys(state.tree)) {
@@ -271,7 +271,7 @@ function derivedPerSec(state: Persisted): number {
   let base = 0;
   for (const def of UPGRADES.filter((u) => u.kind === 'auto')) {
     const lvl = state.upgrades[def.id] ?? 0;
-    base += def.amount * lvl;
+    base += upgradeTotalAmount(def, lvl);
   }
   let mult = 1;
   for (const id of Object.keys(state.tree)) {
@@ -937,18 +937,21 @@ export const useGame = create<GameState>()(
         }
       },
 
-      buyUpgrade: (id) => {
+      buyUpgrade: (id, mode = 'x1') => {
         const s = get();
         const def = upgradeById(id);
         if (!def) return;
         if (s.levelIdx < def.unlockLevel) return;
         const lvl = s.upgrades[id] ?? 0;
-        const cost = upgradeCost(def, lvl);
-        if (s.damacana < cost) return;
-        const free = s.tree['chaosCore'] && Math.random() < 0.1;
+        const requested = mode === 'x10' ? 10 : mode === 'max' ? 100 : 1;
+        const count = affordableUpgradeCount(def, lvl, s.damacana, requested);
+        if (mode !== 'max' && count < requested) return;
+        if (count <= 0) return;
+        const cost = upgradeBulkCost(def, lvl, count);
+        const free = mode === 'x1' && s.tree['chaosCore'] && Math.random() < 0.1;
         set({
           damacana: free ? s.damacana : s.damacana - cost,
-          upgrades: { ...s.upgrades, [id]: lvl + 1 },
+          upgrades: { ...s.upgrades, [id]: lvl + count },
           shake: { intensity: 'small', at: Date.now() },
         });
       },
