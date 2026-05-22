@@ -4,13 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
-import { useGame, selectBuildBonuses, selectCombatStats, selectPerTap, selectResearchBonuses } from '@/lib/store';
+import { useGame, selectBuildBonuses, selectCombatStats, selectPerSec, selectPerTap, selectResearchBonuses } from '@/lib/store';
 import type { Buff } from '@/lib/store';
 import { currentChapter } from '@/lib/config/chapters';
 import { bossPhaseCombatTuning, bossPhaseInfo } from '@/lib/config/bossMissions';
 import { bossProfileForChapter, type BossPulseKind } from '@/lib/config/bossProfiles';
 import { COMBAT, COMBAT_ABILITIES, CombatAbilityId, combatStyleForChapter } from '@/lib/config/combat';
-import { CORE_DEFENSE } from '@/lib/config/coreDefense';
+import { CORE_DEFENSE, CORE_DEFENSE_HOOKS } from '@/lib/config/coreDefense';
 import { prestigePermanentBonuses } from '@/lib/config/prestige';
 import {
   EnemyVariantId,
@@ -84,6 +84,30 @@ interface AbilityEffect {
   y: number;
   bornAt: number;
   until: number;
+}
+
+interface Projectile {
+  id: number;
+  x: number;
+  y: number;
+  targetId: number;
+  targetType: 'enemy' | 'boss';
+  damage: number;
+  crit: boolean;
+  speed: number;
+  angle: number;
+  bornAt: number;
+  color: string;
+  hitUntil: number;
+}
+
+interface DamageFloat {
+  id: number;
+  value: number;
+  x: number;
+  y: number;
+  bornAt: number;
+  crit: boolean;
 }
 
 function clamp(v: number, min: number, max: number) {
@@ -203,11 +227,40 @@ function splitterChildren(enemy: Enemy, now: number, slots: number): Enemy[] {
   });
 }
 
+function projectileStats(args: {
+  perTap: number;
+  perSec: number;
+  build: ReturnType<typeof selectBuildBonuses>;
+  research: ReturnType<typeof selectResearchBonuses>;
+  prestige: ReturnType<typeof prestigePermanentBonuses>;
+  combo: number;
+  lowDensity: boolean;
+  burstActive: boolean;
+}) {
+  const comboPressure = Math.min(2.2, 1 + comboCombatPressure(args.combo) * 0.004);
+  const damage =
+    (args.perTap * CORE_DEFENSE.projectileDamageMult + args.perSec * CORE_DEFENSE.projectilePassiveDamageMult) *
+    comboPressure *
+    (1 + args.build.orbitDamagePct + args.research.orbitDamagePct + args.prestige.orbitDamagePct);
+  const cooldownMult = Math.max(0.55, 1 - args.build.cooldownReductionPct - args.prestige.cooldownReductionPct);
+  return {
+    intervalMs: (args.lowDensity ? CORE_DEFENSE.mobileAttackIntervalMs : CORE_DEFENSE.baseAttackIntervalMs) *
+      cooldownMult *
+      (args.burstActive ? CORE_DEFENSE.burstAttackIntervalMult : 1),
+    damage: Math.max(1, Math.floor(damage * (args.burstActive ? 1.22 : 1))),
+    speed: args.lowDensity ? CORE_DEFENSE.mobileProjectileSpeed : CORE_DEFENSE.projectileSpeed,
+    critChance: Math.min(0.35, CORE_DEFENSE.projectileCritChance + args.build.weakPointDamagePct * 0.35),
+    critDamage: CORE_DEFENSE.projectileCritDamage + args.build.weakPointDamagePct + args.prestige.rewardGainPct,
+  };
+}
+
 let enemyId = 1;
 let particleId = 1;
 let pulseId = 1;
 let hpFloatId = 1;
 let abilityEffectId = 1;
+let projectileId = 1;
+let damageFloatId = 1;
 
 export function CombatArena() {
   const t = useTranslations();
@@ -217,6 +270,7 @@ export function CombatArena() {
   const totalPrestiges = useGame((s) => s.totalPrestiges);
   const completedChapters = useGame((s) => s.completedChapters);
   const perTap = useGame(selectPerTap);
+  const perSec = useGame(selectPerSec);
   const combatStats = useGame(selectCombatStats);
   const researchBonuses = useGame(selectResearchBonuses);
   const buildBonuses = useGame(selectBuildBonuses);
@@ -255,7 +309,10 @@ export function CombatArena() {
   const particlesRef = useRef<Particle[]>([]);
   const pulsesRef = useRef<Pulse[]>([]);
   const abilityEffectsRef = useRef<AbilityEffect[]>([]);
+  const projectilesRef = useRef<Projectile[]>([]);
   const lastSpawnRef = useRef(0);
+  const lastProjectileShotRef = useRef(0);
+  const burstFireUntilRef = useRef(0);
   const waveRef = useRef(1);
   const lastOrbitRef = useRef(0);
   const lastBossPulseRef = useRef(0);
@@ -282,6 +339,9 @@ export function CombatArena() {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [pulses, setPulses] = useState<Pulse[]>([]);
   const [abilityEffects, setAbilityEffects] = useState<AbilityEffect[]>([]);
+  const [projectiles, setProjectiles] = useState<Projectile[]>([]);
+  const [damageFloats, setDamageFloats] = useState<DamageFloat[]>([]);
+  const [burstFireUntil, setBurstFireUntil] = useState(0);
   const [bossWeakUntil, setBossWeakUntil] = useState(0);
   const [bossHitUntil, setBossHitUntil] = useState(0);
   const [bossSummonUntil, setBossSummonUntil] = useState(0);
@@ -295,6 +355,7 @@ export function CombatArena() {
   const [lowDensity, setLowDensity] = useState(false);
 
   const perTapRef = useRef(perTap);
+  const perSecRef = useRef(perSec);
   const comboRef = useRef(combo);
   const styleRef = useRef(style);
   const sfxRef = useRef(sfxEnabled);
@@ -317,6 +378,7 @@ export function CombatArena() {
   const discoverEnemyTypeRef = useRef(discoverEnemyType);
 
   useEffect(() => { perTapRef.current = perTap; }, [perTap]);
+  useEffect(() => { perSecRef.current = perSec; }, [perSec]);
   useEffect(() => { comboRef.current = combo; }, [combo]);
   useEffect(() => { styleRef.current = style; }, [style]);
   useEffect(() => { sfxRef.current = sfxEnabled; }, [sfxEnabled]);
@@ -403,6 +465,28 @@ export function CombatArena() {
     setTimeout(() => {
       setHpFloats((items) => items.filter((item) => item.id !== id));
     }, 1000);
+  }, []);
+
+  const pushDamageFloat = useCallback((value: number, x: number, y: number, crit = false) => {
+    const id = damageFloatId++;
+    const cap = lowDensityRef.current ? 5 : 9;
+    setDamageFloats((items) => [
+      ...items.slice(-(cap - 1)),
+      { id, value, x, y, crit, bornAt: Date.now() },
+    ]);
+    setTimeout(() => {
+      setDamageFloats((items) => items.filter((item) => item.id !== id));
+    }, 760);
+  }, []);
+
+  const triggerBurstFire = useCallback((now = Date.now()) => {
+    burstFireUntilRef.current = Math.max(
+      burstFireUntilRef.current + CORE_DEFENSE.burstStackMs,
+      now + CORE_DEFENSE.burstDurationMs,
+    );
+    burstFireUntilRef.current = Math.min(burstFireUntilRef.current, now + CORE_DEFENSE.burstDurationMs + 900);
+    setBurstFireUntil(burstFireUntilRef.current);
+    boostCombatComboRef.current(1.8);
   }, []);
 
   const pointFromEvent = useCallback((e: PointerEvent): Vec => {
@@ -502,6 +586,7 @@ export function CombatArena() {
     e.stopPropagation();
     const point = pointFromEvent(e);
     const now = Date.now();
+    triggerBurstFire(now);
     const activeStyle = styleRef.current;
     const visualIntensity = comboVisualIntensity(comboRef.current);
     let critical = false;
@@ -569,12 +654,13 @@ export function CombatArena() {
     if (critical) setComboFlash(t('combat.criticalRupture'));
     else if (killed) setComboFlash(`x${Math.max(2, Math.floor(comboRef.current))}`);
     else if (comboRef.current >= 2) setComboFlash(`x${Math.floor(comboRef.current)}`);
-  }, [bossDamageGuardMult, emitParticles, pointFromEvent, t]);
+  }, [bossDamageGuardMult, emitParticles, pointFromEvent, t, triggerBurstFire]);
 
   const strikeBoss = useCallback((e: PointerEvent) => {
     e.stopPropagation();
     const now = Date.now();
     const point = pointFromEvent(e);
+    triggerBurstFire(now);
     const critical = now <= bossWeakUntil;
     const visualIntensity = comboVisualIntensity(comboRef.current);
     emitParticles(
@@ -608,7 +694,7 @@ export function CombatArena() {
       if (comboRef.current >= 8) useGame.setState({ shake: { intensity: 'small', at: now } });
       if (sfxRef.current) audio.sfxCombatHit(comboRef.current);
     }
-  }, [bossDamageGuardMult, bossWeakUntil, emitParticles, finalBoss, pointFromEvent, t]);
+  }, [bossDamageGuardMult, bossWeakUntil, emitParticles, finalBoss, pointFromEvent, t, triggerBurstFire]);
 
   const damageEnemiesInRadius = useCallback((center: Vec, radius: number, damage: number, color: string) => {
     const now = Date.now();
@@ -815,6 +901,135 @@ export function CombatArena() {
         spawnWave(now);
       }
 
+      const burstActive = now <= burstFireUntilRef.current;
+      const projectileCap = lowDensityFrame ? CORE_DEFENSE.projectileCapMobile : CORE_DEFENSE.projectileCapDesktop;
+      const shotStats = projectileStats({
+        perTap: perTapRef.current,
+        perSec: perSecRef.current,
+        build: activeBuild,
+        research: researchBonusesRef.current,
+        prestige: activePrestige,
+        combo: comboRef.current,
+        lowDensity: lowDensityFrame,
+        burstActive,
+      });
+      if (
+        CORE_DEFENSE_HOOKS.autoFire &&
+        now - lastProjectileShotRef.current >= shotStats.intervalMs &&
+        projectilesRef.current.length < projectileCap
+      ) {
+        const targetEnemy = enemiesRef.current
+          .map((enemy) => ({ enemy, distance: dist(enemy, p) }))
+          .filter((item) => item.distance < 58)
+          .sort((a, b) => a.distance - b.distance)[0]?.enemy;
+        const bossPoint = bossArenaPoint(now, activePhaseTuning.info.progress);
+        const targetPoint = targetEnemy ?? bossPoint;
+        const angle = Math.atan2(targetPoint.y - p.y, targetPoint.x - p.x);
+        const crit = Math.random() < shotStats.critChance;
+        projectilesRef.current = [
+          ...projectilesRef.current,
+          {
+            id: projectileId++,
+            x: p.x,
+            y: p.y,
+            targetId: targetEnemy?.id ?? bossRef.current.tier,
+            targetType: targetEnemy ? 'enemy' as const : 'boss' as const,
+            damage: Math.floor(shotStats.damage * (crit ? shotStats.critDamage : 1)),
+            crit,
+            speed: shotStats.speed,
+            angle,
+            bornAt: now,
+            color: crit ? '#ffd166' : burstActive ? '#ff5ce8' : '#5cf6ff',
+            hitUntil: 0,
+          },
+        ].slice(-projectileCap);
+        lastProjectileShotRef.current = now;
+        if (!lowDensityFrame) emitParticles(p.x, p.y, burstActive ? '#ff5ce8' : '#5cf6ff', burstActive ? 5 : 3, 0.45);
+      }
+
+      if (CORE_DEFENSE_HOOKS.projectileFiring && projectilesRef.current.length > 0) {
+        const survivors: Projectile[] = [];
+        let nextEnemies = enemiesRef.current;
+        for (const projectile of projectilesRef.current) {
+          const targetEnemy = projectile.targetType === 'enemy'
+            ? nextEnemies.find((enemy) => enemy.id === projectile.targetId)
+            : undefined;
+          const bossPoint = bossArenaPoint(now, activePhaseTuning.info.progress);
+          const targetPoint = targetEnemy ? { x: targetEnemy.x, y: targetEnemy.y } : bossPoint;
+          const dxp = targetPoint.x - projectile.x;
+          const dyp = targetPoint.y - projectile.y;
+          const distance = Math.hypot(dxp, dyp) || 1;
+          const step = projectile.speed * dt;
+          const hitRadius = targetEnemy ? Math.max(2.8, targetEnemy.size * 0.2) : 5.4;
+          if (distance <= step + hitRadius) {
+            if (targetEnemy) {
+              const killedEnemies: Enemy[] = [];
+              const targetVariant = enemyVariantById(targetEnemy.variantId);
+              nextEnemies = nextEnemies
+                .map((enemy) => {
+                  if (enemy.id !== targetEnemy.id) return enemy;
+                  const result = applyEnemyDamage(enemy, projectile.damage, now);
+                  if (result.killed) killedEnemies.push(result.enemy);
+                  const pushX = clamp(result.enemy.x + (dxp / distance) * 0.8, 4, 96);
+                  const pushY = clamp(result.enemy.y + (dyp / distance) * 0.8, 8, 96);
+                  return { ...result.enemy, x: pushX, y: pushY, hitUntil: now + (projectile.crit ? 260 : 170) };
+                })
+                .filter((enemy) => enemy.hp > 0);
+              for (const enemy of killedEnemies) {
+                nextEnemies = [
+                  ...nextEnemies,
+                  ...splitterChildren(enemy, now, enemyCap - nextEnemies.length),
+                ];
+                if (targetVariant.special === 'anomaly') {
+                  useGame.setState((state) => ({
+                    shards: state.shards + (Math.random() < 0.18 ? 1 : 0),
+                    activeBuffs: [
+                      ...state.activeBuffs.filter((buff) => buff.id !== 'enemy_anomaly_signal' && buff.expiresAt > now),
+                      { id: 'enemy_anomaly_signal', expiresAt: now + 12_000, mult: 1.15, type: 'shardChance', labelKey: 'shardChance' },
+                    ],
+                  }));
+                }
+              }
+              pushDamageFloat(projectile.damage, targetPoint.x, targetPoint.y - 3, projectile.crit);
+              emitParticles(targetPoint.x, targetPoint.y, projectile.crit ? '#ffd166' : targetVariant.accent, projectile.crit ? 12 : 7, projectile.crit ? 1.15 : 0.75);
+              if (killedEnemies.length > 0) {
+                boostCombatComboRef.current(6 + killedEnemies.length * 4);
+                restoreCombatManaRef.current(COMBAT.comboManaOnHit);
+                tapRef.current(undefined, undefined, { damageMult: 0.1, rewardMult: 0.18 * targetEnemy.rewardMult, passive: true, silent: true });
+              } else if (projectile.crit) {
+                boostCombatComboRef.current(2.5);
+              }
+            } else {
+              setBossHitUntil(now + (projectile.crit ? 260 : 150));
+              pushDamageFloat(projectile.damage, targetPoint.x, targetPoint.y - 5, projectile.crit);
+              emitParticles(targetPoint.x, targetPoint.y, projectile.crit ? '#ffd166' : activeChapter.accent, projectile.crit ? 10 : 5, projectile.crit ? 1 : 0.65);
+              tapRef.current(undefined, undefined, {
+                damageMult: (projectile.crit ? 0.24 : 0.14) * bossDamageGuardMult(),
+                rewardMult: projectile.crit ? 0.14 : 0.08,
+                comboBoost: projectile.crit ? 2.4 : 0.7,
+                passive: true,
+                silent: true,
+              });
+            }
+            continue;
+          }
+          const nx = projectile.x + (dxp / distance) * step;
+          const ny = projectile.y + (dyp / distance) * step;
+          if (now - projectile.bornAt < 1850 && nx > -5 && nx < 105 && ny > -5 && ny < 105) {
+            survivors.push({
+              ...projectile,
+              x: nx,
+              y: ny,
+              angle: Math.atan2(dyp, dxp),
+              targetType: targetEnemy ? projectile.targetType : 'boss',
+              targetId: targetEnemy ? projectile.targetId : bossRef.current.tier,
+            });
+          }
+        }
+        enemiesRef.current = nextEnemies;
+        projectilesRef.current = survivors.slice(-projectileCap);
+      }
+
       if (now - lastOrbitRef.current > COMBAT.passiveOrbitMs) {
         lastOrbitRef.current = now;
         const target = enemiesRef.current
@@ -985,6 +1200,7 @@ export function CombatArena() {
         setPlayer(p);
         setEnemies(enemiesRef.current);
         setPulses(pulsesRef.current);
+        setProjectiles(projectilesRef.current);
         setParticles(particlesRef.current);
         setAbilityEffects(abilityEffectsRef.current);
       }
@@ -992,7 +1208,7 @@ export function CombatArena() {
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [bossDamageGuardMult, damagePlayer, emitParticles, spawnWave]);
+  }, [bossDamageGuardMult, damagePlayer, emitParticles, pushDamageFloat, spawnWave]);
 
   useEffect(() => {
     if (!comboFlash) return;
@@ -1042,6 +1258,7 @@ export function CombatArena() {
   const bossSummoning = renderNow <= bossSummonUntil;
   const bossShieldActive = renderNow <= bossShieldUntil;
   const bossRageActive = renderNow <= bossRageUntil;
+  const burstFireActive = renderNow <= burstFireUntil;
   const bossWarningActive = pulses.some((pulse) => !pulse.canceled && renderNow < pulse.fireAt);
   const bossSweepWarningActive = pulses.some((pulse) => pulse.kind === 'sweep' && !pulse.canceled && renderNow < pulse.fireAt);
   const bossCorruptedWarningActive = pulses.some((pulse) => pulse.kind === 'corrupted' && !pulse.canceled && renderNow < pulse.fireAt);
@@ -1073,6 +1290,7 @@ export function CombatArena() {
   const renderedPulses = lowDensity ? pulses.slice(-1) : pulses;
   const renderedParticles = lowDensity ? particles.slice(-ARENA_PERF.mobileParticleCap) : particles;
   const renderedHpFloats = lowDensity ? hpFloats.slice(-ARENA_PERF.mobileHpFloatCap) : hpFloats;
+  const renderedDamageFloats = lowDensity ? damageFloats.slice(-5) : damageFloats;
   const renderedTargetLines = enemies
     .map((enemy) => {
       const dx = player.x - enemy.x;
@@ -1089,6 +1307,7 @@ export function CombatArena() {
       data-combat-arena
       tabIndex={0}
       onPointerDown={(e) => {
+        triggerBurstFire();
         dragRef.current = true;
         targetRef.current = pointFromEvent(e);
       }}
@@ -1344,6 +1563,28 @@ export function CombatArena() {
         );
       })}
 
+      {projectiles.map((projectile) => (
+        <div
+          key={projectile.id}
+          className="pointer-events-none absolute z-[31] h-1.5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            left: `${projectile.x}%`,
+            top: `${projectile.y}%`,
+            background: projectile.color,
+            transform: `translate(-50%, -50%) rotate(${projectile.angle}rad)`,
+            opacity: Math.max(0.25, 1 - (renderNow - projectile.bornAt) / 1850),
+            boxShadow: lowDensity ? undefined : `0 0 ${projectile.crit ? 18 : 12}px ${projectile.color}`,
+          }}
+        >
+          {!lowDensity && (
+            <span
+              className="absolute right-full top-1/2 h-px w-7 -translate-y-1/2 rounded-full"
+              style={{ background: `linear-gradient(90deg, transparent, ${projectile.color})` }}
+            />
+          )}
+        </div>
+      ))}
+
       {renderedTargetLines.map(({ enemy, distance, angle }) => (
         <div
           key={`target-${enemy.id}`}
@@ -1420,12 +1661,14 @@ export function CombatArena() {
           width: coreSize,
           height: coreSize,
           borderColor: playerHit ? '#ff3d6e' : collapseActive ? '#5cf6ff' : chapter.accent,
-          background: playerHit ? 'rgba(255,61,110,0.24)' : collapseActive ? 'rgba(92,246,255,0.18)' : 'rgba(2,16,24,0.82)',
+          background: playerHit ? 'rgba(255,61,110,0.24)' : burstFireActive ? 'rgba(255,92,232,0.16)' : collapseActive ? 'rgba(92,246,255,0.18)' : 'rgba(2,16,24,0.82)',
           boxShadow: playerHit
             ? `0 0 ${36 * playerGlow}px rgba(255,61,110,0.78)`
             : collapseActive
               ? `0 0 ${42 * playerGlow}px rgba(92,246,255,0.72)`
-              : `0 0 ${(18 + intensity * 30) * playerGlow}px ${combo >= 15 ? `rgba(255,92,232,${0.34 + intensity * 0.2})` : chapter.glow}`,
+              : burstFireActive
+                ? `0 0 ${44 * playerGlow}px rgba(255,92,232,0.58)`
+                : `0 0 ${(18 + intensity * 30) * playerGlow}px ${combo >= 15 ? `rgba(255,92,232,${0.34 + intensity * 0.2})` : chapter.glow}`,
         }}
       >
         <div
@@ -1442,6 +1685,9 @@ export function CombatArena() {
         )}
         {collapseActive && (
           <div className="absolute -inset-5 rounded-full border border-cyan/45 bg-cyan/5 shadow-[0_0_28px_rgba(92,246,255,0.36)]" />
+        )}
+        {burstFireActive && (
+          <div className="absolute -inset-3 rounded-full border border-dashed border-pink/45 shadow-[0_0_20px_rgba(255,92,232,0.34)]" />
         )}
         <div className="absolute inset-[8px] rounded-full bg-cyan shadow-[0_0_18px_rgba(92,246,255,0.98)]" />
         <div className="absolute inset-[17px] rounded-full bg-white/85" />
@@ -1511,6 +1757,25 @@ export function CombatArena() {
             }}
           >
             -{item.value} HP
+          </div>
+        );
+      })}
+
+      {renderedDamageFloats.map((item) => {
+        const age = Date.now() - item.bornAt;
+        return (
+          <div
+            key={item.id}
+            className="pointer-events-none absolute z-50 -translate-x-1/2 font-vt text-sm drop-shadow-[0_0_10px_rgba(255,209,102,0.65)]"
+            style={{
+              left: `${item.x}%`,
+              top: `${item.y - age * 0.014}%`,
+              color: item.crit ? '#ffd166' : '#bffcff',
+              opacity: Math.max(0, 1 - age / 720),
+              transform: `translate(-50%, 0) scale(${item.crit ? 1.18 : 1})`,
+            }}
+          >
+            {item.crit ? 'CRIT ' : ''}{fmt(item.value)}
           </div>
         );
       })}
