@@ -197,6 +197,16 @@
     "newThreat": "New threat detected",
     "hp": "HP",
     "wave": "wave",
+    "waveLabel": "Wave: {wave}",
+    "waveIncoming": "{wave} wave incoming",
+    "waves": {
+      "normal": "Normal",
+      "rush": "Rush",
+      "tank": "Tank",
+      "splitter": "Splitter",
+      "elite": "Elite",
+      "anomaly": "Anomaly"
+    },
     "orbitDamage": "orbit",
     "chainReady": "chain ready",
     "cosmicChain": "cosmic chain",

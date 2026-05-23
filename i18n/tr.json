@@ -197,6 +197,16 @@
     "newThreat": "Yeni tehdit algılandı",
     "hp": "HP",
     "wave": "dalga",
+    "waveLabel": "Dalga: {wave}",
+    "waveIncoming": "{wave} dalga yaklaşıyor",
+    "waves": {
+      "normal": "Normal",
+      "rush": "Hücum",
+      "tank": "Tank",
+      "splitter": "Bölünen",
+      "elite": "Elit",
+      "anomaly": "Anomali"
+    },
     "orbitDamage": "yörünge",
     "chainReady": "zincir hazır",
     "cosmicChain": "kozmik zincir",

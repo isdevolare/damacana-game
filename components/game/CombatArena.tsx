@@ -13,6 +13,7 @@ import { COMBAT, COMBAT_ABILITIES, CombatAbilityId, combatStyleForChapter } from
 import { CORE_DEFENSE, CORE_DEFENSE_HOOKS } from '@/lib/config/coreDefense';
 import { planetThemeForChapter } from '@/lib/config/planetThemes';
 import { prestigePermanentBonuses } from '@/lib/config/prestige';
+import { pickWaveType, waveTypeById, waveVariantsForChapter, type WaveTypeId } from '@/lib/config/waves';
 import {
   EnemyVariantId,
   enemyVariantById,
@@ -109,6 +110,17 @@ interface DamageFloat {
   y: number;
   bornAt: number;
   crit: boolean;
+}
+
+interface WaveStatus {
+  type: WaveTypeId;
+  incoming: boolean;
+  until: number;
+}
+
+interface PendingWave {
+  type: WaveTypeId;
+  dueAt: number;
 }
 
 function clamp(v: number, min: number, max: number) {
@@ -316,6 +328,8 @@ export function CombatArena() {
   const lastProjectileShotRef = useRef(0);
   const burstFireUntilRef = useRef(0);
   const waveRef = useRef(1);
+  const pendingWaveRef = useRef<PendingWave | null>(null);
+  const activeWaveTypeRef = useRef<WaveTypeId>('normal');
   const lastOrbitRef = useRef(0);
   const lastBossPulseRef = useRef(0);
   const lastBossSummonRef = useRef(0);
@@ -355,6 +369,7 @@ export function CombatArena() {
   const [collapseOverlayUntil, setCollapseOverlayUntil] = useState(0);
   const [entrance, setEntrance] = useState(0);
   const [lowDensity, setLowDensity] = useState(false);
+  const [waveStatus, setWaveStatus] = useState<WaveStatus | null>(null);
 
   const perTapRef = useRef(perTap);
   const perSecRef = useRef(perSec);
@@ -433,6 +448,9 @@ export function CombatArena() {
     rageTriggeredTierRef.current = null;
     setBossShieldUntil(0);
     setBossRageUntil(0);
+    activeWaveTypeRef.current = 'normal';
+    pendingWaveRef.current = null;
+    setWaveStatus(null);
     setEntrance((v) => v + 1);
   }, [boss.tier]);
 
@@ -544,24 +562,30 @@ export function CombatArena() {
     return Date.now() <= bossShieldUntilRef.current ? profile.shieldWindow?.damageTakenMult ?? 0.42 : 1;
   }, []);
 
-  const spawnWave = useCallback((now: number, forcedCount = 0, forcedVariants?: EnemyVariantId[]) => {
+  const spawnWave = useCallback((now: number, forcedCount = 0, forcedVariants?: EnemyVariantId[], waveTypeId: WaveTypeId = 'normal') => {
     const activeChapter = chapterRef.current;
     const activeStyle = styleRef.current;
     const tuning = bossPhaseCombatTuning(bossRef.current.tier, lowDensityRef.current);
+    const wave = waveTypeById(waveTypeId);
     const perfCap = lowDensityRef.current ? ARENA_PERF.mobileEnemyCap : ARENA_PERF.desktopEnemyCap;
     const enemyCap = Math.min(perfCap, tuning.maxMinions);
     const targetCount = Math.min(enemyCap, 2 + activeChapter.order + Math.floor(waveRef.current / 3));
     const needed = Math.max(1, targetCount - enemiesRef.current.length);
-    const count = forcedCount > 0 ? Math.min(forcedCount, Math.max(0, enemyCap - enemiesRef.current.length)) : Math.min(needed, 2 + Math.floor(Math.random() * 2));
+    const baseCount = forcedCount > 0 ? forcedCount : Math.min(needed, 2 + Math.floor(Math.random() * 2));
+    const waveCount = forcedCount > 0
+      ? baseCount
+      : Math.max(1, Math.ceil(baseCount * wave.countMult + wave.countAdd));
+    const count = Math.min(waveCount, Math.max(0, enemyCap - enemiesRef.current.length));
     if (count <= 0) return;
+    const waveVariants = forcedVariants ?? waveVariantsForChapter(waveTypeId, activeChapter.id);
     const nextEnemies = [...enemiesRef.current];
     for (let i = 0; i < count; i++) {
       const start = edgeSpawn();
-      const variant = forcedVariants?.length
-        ? enemyVariantById(forcedVariants[(waveRef.current + i) % forcedVariants.length])
+      const variant = waveVariants?.length
+        ? enemyVariantById(waveVariants[(waveRef.current + i) % waveVariants.length])
         : pickEnemyVariant(activeChapter, tuning.info.progress);
       discoverEnemyTypeRef.current(variant.id);
-      const maxHp = Math.max(8, Math.floor((perTapRef.current * (2.8 + activeChapter.order * 1.1) + bossRef.current.tier * 1.6) * tuning.enemyHpMult * variant.hpMult));
+      const maxHp = Math.max(8, Math.floor((perTapRef.current * (2.8 + activeChapter.order * 1.1) + bossRef.current.tier * 1.6) * tuning.enemyHpMult * variant.hpMult * wave.hpMult));
       nextEnemies.push({
         id: enemyId++,
         x: start.x,
@@ -569,19 +593,21 @@ export function CombatArena() {
         hp: maxHp,
         maxHp,
         size: (7.5 + activeChapter.order * 0.8 + Math.random() * 2) * (variant.id === 'tank' ? 1.14 : variant.id === 'rush' ? 0.84 : 1),
-        speed: (5.2 + activeChapter.order * 0.72) * activeStyle.speedMult * tuning.enemySpeedMult * variant.speedMult,
+        speed: (5.2 + activeChapter.order * 0.72) * activeStyle.speedMult * tuning.enemySpeedMult * variant.speedMult * wave.speedMult,
         weakUntil: 0,
         nextWeakAt: now + 2800 + Math.random() * 5200,
         lastContactAt: 0,
         hitUntil: 0,
         variantId: variant.id,
         shieldHitsLeft: variant.shieldHits ?? 0,
-        damageMult: variant.damageMult,
-        rewardMult: variant.rewardMult,
+        damageMult: variant.damageMult * wave.damageMult,
+        rewardMult: variant.rewardMult * wave.rewardMult,
         splitDepth: 0,
       });
     }
     waveRef.current += 1;
+    activeWaveTypeRef.current = waveTypeId;
+    setWaveStatus({ type: waveTypeId, incoming: false, until: now + (wave.special ? 4200 : 2600) });
     enemiesRef.current = nextEnemies;
     setEnemies(nextEnemies);
   }, []);
@@ -817,6 +843,11 @@ export function CombatArena() {
       const rageActive = now <= bossRageUntilRef.current;
       const pulseRateMult = activeProfile.pulseIntervalMult * (rageActive ? activeProfile.rage?.pulseIntervalMult ?? 1 : 1);
       const summonRateMult = activeProfile.summonIntervalMult * (rageActive ? activeProfile.rage?.summonIntervalMult ?? 1 : 1);
+      const dueWave = pendingWaveRef.current;
+      if (dueWave && now >= dueWave.dueAt) {
+        pendingWaveRef.current = null;
+        spawnWave(now, 0, undefined, dueWave.type);
+      }
       for (const buff of activeAnomalies) {
         if (buff.type !== 'waveSurge' || consumedAnomalyBuffsRef.current.has(buff.id)) continue;
         consumedAnomalyBuffsRef.current.add(buff.id);
@@ -901,9 +932,17 @@ export function CombatArena() {
       });
       enemiesRef.current = updatedEnemies;
 
-      if (now - lastSpawnRef.current > activePhaseTuning.spawnDelayMs || updatedEnemies.length === 0) {
+      if (!pendingWaveRef.current && (now - lastSpawnRef.current > activePhaseTuning.spawnDelayMs || updatedEnemies.length === 0)) {
         lastSpawnRef.current = now;
-        spawnWave(now);
+        const nextWave = pickWaveType(activeChapter, activePhaseTuning.info.progress);
+        if (nextWave.special && updatedEnemies.length > 0) {
+          const warningMs = lowDensityFrame ? 720 : 920;
+          pendingWaveRef.current = { type: nextWave.id, dueAt: now + warningMs };
+          activeWaveTypeRef.current = nextWave.id;
+          setWaveStatus({ type: nextWave.id, incoming: true, until: now + warningMs + 1200 });
+        } else {
+          spawnWave(now, 0, undefined, nextWave.id);
+        }
       }
 
       const burstActive = now <= burstFireUntilRef.current;
@@ -1268,6 +1307,8 @@ export function CombatArena() {
   const bossSweepWarningActive = pulses.some((pulse) => pulse.kind === 'sweep' && !pulse.canceled && renderNow < pulse.fireAt);
   const bossCorruptedWarningActive = pulses.some((pulse) => pulse.kind === 'corrupted' && !pulse.canceled && renderNow < pulse.fireAt);
   const showBossTarget = bossWeakActive || bossWarningActive || bossSummoning || bossHitActive || bossShieldActive || bossRageActive;
+  const activeWaveStatus = waveStatus && waveStatus.until > renderNow ? waveStatus : null;
+  const activeWaveDef = activeWaveStatus ? waveTypeById(activeWaveStatus.type) : null;
   const activeBossPhaseToast = bossPhaseToast && bossPhaseToast.expiresAt > renderNow ? bossPhaseToast : null;
   const bossStatusLabel = bossCorruptedWarningActive
     ? t('combat.corruptedPulse')
@@ -1423,6 +1464,29 @@ export function CombatArena() {
             style={{ color: bossWeakActive ? '#ffd166' : bossShieldActive ? '#80fff4' : bossRageActive || bossWarningActive ? '#ff3d6e' : '#5cf6ff' }}
           >
             {bossStatusLabel}
+          </div>
+        </motion.div>
+      )}
+
+      {activeWaveStatus && activeWaveDef && (
+        <motion.div
+          key={`${activeWaveStatus.type}-${activeWaveStatus.incoming ? 'incoming' : 'active'}`}
+          initial={{ opacity: 0, y: 6, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0 }}
+          className="pointer-events-none absolute left-1/2 top-[16%] z-40 -translate-x-1/2 rounded-md border bg-black/72 px-2.5 py-1 text-center shadow-[0_0_18px_rgba(0,0,0,0.45)] backdrop-blur-sm"
+          style={{
+            borderColor: activeWaveDef.accent,
+            boxShadow: lowDensity ? undefined : `0 0 18px ${activeWaveDef.accent}44`,
+          }}
+        >
+          <div
+            className="font-space text-[8px] uppercase tracking-[0.2em]"
+            style={{ color: activeWaveDef.accent }}
+          >
+            {activeWaveStatus.incoming
+              ? t('combat.waveIncoming', { wave: t(`combat.waves.${activeWaveDef.i18nKey}` as any) })
+              : t('combat.waveLabel', { wave: t(`combat.waves.${activeWaveDef.i18nKey}` as any) })}
           </div>
         </motion.div>
       )}
