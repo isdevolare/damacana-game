@@ -49,3 +49,22 @@ export function prestigePermanentBonuses(totalPrestiges: number): PrestigePerman
     cooldownReductionPct: Math.min(0.16, scaled * 0.003),
   };
 }
+
+export function nextPrestigeGainTarget(
+  totalEarned: number,
+  totalPrestiges: number,
+  prestigeGainPct = 0,
+  guaranteedShards = false,
+) {
+  const currentGain = prestigeShardGain(totalEarned, totalPrestiges, prestigeGainPct, guaranteedShards);
+  const stageMult = 1 + Math.min(1.5, totalPrestiges * 0.04);
+  const mult = stageMult * (1 + prestigeGainPct);
+  const guaranteedOffset = guaranteedShards ? 5 : 0;
+  const nextBaseGain = Math.max(1, currentGain - guaranteedOffset + 1);
+  const nextTotalEarned = Math.ceil(Math.pow(nextBaseGain / Math.max(0.0001, mult), 2) * 20_000);
+  const previousBaseGain = Math.max(0, currentGain - guaranteedOffset);
+  const previousTotalEarned = Math.floor(Math.pow(previousBaseGain / Math.max(0.0001, mult), 2) * 20_000);
+  const span = Math.max(1, nextTotalEarned - previousTotalEarned);
+  const progress = Math.max(0, Math.min(1, (totalEarned - previousTotalEarned) / span));
+  return { currentGain, nextGain: currentGain + 1, nextTotalEarned, progress };
+}

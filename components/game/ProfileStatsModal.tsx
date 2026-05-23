@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
-import { useGame } from '@/lib/store';
+import { selectResearchBonuses, useGame } from '@/lib/store';
+import { nextPrestigeGainTarget, prestigeShardGain } from '@/lib/config/prestige';
 import { fmt } from '@/lib/util';
 
 function formatDuration(ms: number) {
@@ -17,13 +18,19 @@ export function ProfileStatsModal() {
   const show = useGame((s) => s.showProfile);
   const setShow = useGame((s) => s.setShowProfile);
   const setShowAchievements = useGame((s) => s.setShowAchievements);
+  const setShowPrestige = useGame((s) => s.setShowPrestige);
   const totalPlayMs = useGame((s) => s.totalPlayMs);
   const totalEarned = useGame((s) => s.totalEarned);
   const bossKillsLifetime = useGame((s) => s.bossKillsLifetime);
   const completedChapters = useGame((s) => s.completedChapters);
   const knowledgeBulbsCollected = useGame((s) => s.knowledgeBulbsCollected);
   const totalPrestiges = useGame((s) => s.totalPrestiges);
+  const shards = useGame((s) => s.shards);
+  const tree = useGame((s) => s.tree);
+  const researchBonuses = useGame(selectResearchBonuses);
   const t = useTranslations();
+  const prestigeGain = prestigeShardGain(totalEarned, totalPrestiges, researchBonuses.prestigeGainPct, Boolean(tree['guaranteedShards']));
+  const prestigeTarget = nextPrestigeGainTarget(totalEarned, totalPrestiges, researchBonuses.prestigeGainPct, Boolean(tree['guaranteedShards']));
 
   const stats = [
     ['playTime', formatDuration(totalPlayMs)],
@@ -68,6 +75,19 @@ export function ProfileStatsModal() {
                   </div>
                 ))}
               </div>
+              <button
+                onClick={() => {
+                  setShow(false);
+                  setShowPrestige(true);
+                }}
+                className="mt-3 w-full rounded-md border border-pink/45 bg-pink/10 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-pink"
+              >
+                <span>{t('ui.prestigeManualEntry')}</span>
+                <span className="float-right text-gold">◇ {fmt(shards)} + {fmt(prestigeGain)}</span>
+                <span className="mt-1 block text-[9px] tracking-[0.14em] text-white/45">
+                  {t('ui.prestigeNextThreshold', { gain: fmt(prestigeTarget.nextGain) })}
+                </span>
+              </button>
               <button
                 onClick={() => {
                   setShow(false);

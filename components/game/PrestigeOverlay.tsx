@@ -5,12 +5,15 @@ import { selectResearchBonuses, useGame } from '@/lib/store';
 import { useTranslations } from 'next-intl';
 import { fmt } from '@/lib/util';
 import { audio } from '@/lib/audio/AudioEngine';
-import { prestigePermanentBonuses, prestigeShardGain } from '@/lib/config/prestige';
+import { nextPrestigeGainTarget, prestigePermanentBonuses, prestigeShardGain } from '@/lib/config/prestige';
+import { BALANCE } from '@/lib/config/balance';
 
 export function PrestigeOverlay() {
   const show = useGame((s) => s.showPrestige);
   const total = useGame((s) => s.totalEarned);
   const damacana = useGame((s) => s.damacana);
+  const shards = useGame((s) => s.shards);
+  const levelIdx = useGame((s) => s.levelIdx);
   const totalPrestiges = useGame((s) => s.totalPrestiges);
   const setShow = useGame((s) => s.setShowPrestige);
   const prestige = useGame((s) => s.prestige);
@@ -21,6 +24,8 @@ export function PrestigeOverlay() {
 
   if (!show) return null;
   const gain = prestigeShardGain(total, totalPrestiges, researchBonuses.prestigeGainPct, Boolean(tree['guaranteedShards']));
+  const nextGainTarget = nextPrestigeGainTarget(total, totalPrestiges, researchBonuses.prestigeGainPct, Boolean(tree['guaranteedShards']));
+  const canPrestige = levelIdx >= BALANCE.prestige.requiredLevelIdx && gain > 0;
   const currentBonus = prestigePermanentBonuses(totalPrestiges);
   const nextBonus = prestigePermanentBonuses(totalPrestiges + 1);
   const pct = (value: number) => `+${Math.round(value * 100)}%`;
@@ -77,6 +82,33 @@ export function PrestigeOverlay() {
             </section>
           </div>
 
+          <div className="mt-4 grid gap-2 rounded-lg border border-gold/20 bg-gold/5 p-3 sm:grid-cols-3">
+            <div>
+              <div className="font-space text-[8px] uppercase tracking-[0.2em] text-white/45">{t('prestigeCurrentCurrency')}</div>
+              <div className="mt-1 font-vt text-xl text-gold">◇ {fmt(shards)}</div>
+            </div>
+            <div>
+              <div className="font-space text-[8px] uppercase tracking-[0.2em] text-white/45">{t('prestigeAvailableGain')}</div>
+              <div className="mt-1 font-vt text-xl text-gold">+{fmt(gain)}</div>
+            </div>
+            <div>
+              <div className="font-space text-[8px] uppercase tracking-[0.2em] text-white/45">{t('prestigeProjectedTotal')}</div>
+              <div className="mt-1 font-vt text-xl text-cyan">◇ {fmt(shards + gain)}</div>
+            </div>
+            <div className="sm:col-span-3">
+              <div className="flex items-center justify-between font-space text-[8px] uppercase tracking-[0.18em] text-white/45">
+                <span>{t('prestigeNextThreshold', { gain: fmt(nextGainTarget.nextGain) })}</span>
+                <span>{fmt(total)} / {fmt(nextGainTarget.nextTotalEarned)}</span>
+              </div>
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full bg-gold shadow-[0_0_12px_rgba(255,209,102,0.7)]"
+                  style={{ width: `${Math.round(nextGainTarget.progress * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="mt-4 rounded-lg border border-white/10 bg-black/35 p-3">
             <div className="flex items-center justify-between gap-3 font-space text-[9px] uppercase tracking-[0.22em] text-white/50">
               <span>{t('prestigeResetCost')}</span>
@@ -115,7 +147,8 @@ export function PrestigeOverlay() {
                 if (sfxEnabled) audio.sfxPrestige();
                 prestige();
               }}
-              className="rounded-md border border-pink/70 bg-pink/20 px-4 py-2.5 font-space text-xs tracking-wider text-pink shadow-[0_0_22px_rgba(255,92,232,0.18)] transition hover:bg-pink/30 active:scale-[0.98]"
+              disabled={!canPrestige}
+              className="rounded-md border border-pink/70 bg-pink/20 px-4 py-2.5 font-space text-xs tracking-wider text-pink shadow-[0_0_22px_rgba(255,92,232,0.18)] transition hover:bg-pink/30 active:scale-[0.98] disabled:border-white/15 disabled:bg-white/[0.03] disabled:text-white/35"
             >
               {t('prestigeResetForPower')}
             </button>

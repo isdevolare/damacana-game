@@ -35,6 +35,11 @@
     "prestigeGain": "kalıcı kazanç",
     "prestigeGainDesc": "Kırıkları yapı ve prestij sistemlerinde uzun vadeli güç için harca.",
     "prestigeGainTooltip": "Bu kazanç kalıcıdır ve koşu sıfırlandıktan sonra da kalır.",
+    "prestigeManualEntry": "kozmik yükseliş",
+    "prestigeCurrentCurrency": "mevcut kırık",
+    "prestigeAvailableGain": "şimdi hazır",
+    "prestigeProjectedTotal": "prestij sonrası",
+    "prestigeNextThreshold": "sonraki kazanç +{gain}",
     "prestigeResetCost": "sıfırlama bedeli",
     "prestigeFutureHooks": "gelecek kancaları",
     "prestigeFutureHooksDesc": "kalıntı kalıcılığı, yükseliş katmanları ve tekillik sistemleri sonraya ayrıldı.",
@@ -79,6 +84,25 @@
     "shop": "tekillik dükkanı",
     "buy": "al",
     "owned": "var",
+    "powerChanged": "güç değişti",
+    "powerFeedback": {
+      "damageIncreased": "Hasar arttı",
+      "passiveFlowIncreased": "Pasif akış arttı",
+      "maxHpIncreased": "Maks HP arttı",
+      "manaRegenIncreased": "Mana yenilenmesi arttı",
+      "orbitDamageIncreased": "Yörünge hasarı arttı",
+      "comboGainIncreased": "Combo kazanımı arttı",
+      "powerChanged": "Çekirdek gücü arttı"
+    },
+    "unlockReq": {
+      "abilities": "Dünya faz 5'e ulaş",
+      "anomalies": "Dünya final boss T10'u yen",
+      "research": "Mars'a ulaş",
+      "buildTree": "Satürn'e ulaş",
+      "codexAdvanced": "Uranüs'e ulaş",
+      "prestige": "Neptün baskısına ulaş",
+      "default": "Kilitli"
+    },
     "megaPrestige": "mega-prestij"
   },
   "categories": {
@@ -752,7 +776,8 @@
     "damacanaPump": { "name": "damacana pompası" },
     "cosmicPipe": { "name": "kozmik boru" },
     "voidFlow": { "name": "boşluk akışı" },
-    "flowEngine": { "name": "akış motoru" }
+    "flowEngine": { "name": "akış motoru" },
+    "milestoneReached": "{name} {level} seviyeye ulaştı"
   },
   "tree": {
     "offense": {

@@ -1,11 +1,14 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { useGame } from '@/lib/store';
+import { selectResearchBonuses, useGame } from '@/lib/store';
 import { audio } from '@/lib/audio/AudioEngine';
 import { useTranslations } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
 import { locales } from '@/i18n/config';
+import { prestigeShardGain } from '@/lib/config/prestige';
+import { systemRequirementKey, systemUnlocked, type SystemId } from '@/lib/config/systemUnlocks';
+import { fmt } from '@/lib/util';
 
 export function SettingsPanel({ locale }: { locale: string }) {
   const show = useGame((s) => s.showSettings);
@@ -13,12 +16,22 @@ export function SettingsPanel({ locale }: { locale: string }) {
   const setShowProfile = useGame((s) => s.setShowProfile);
   const setShowResearch = useGame((s) => s.setShowResearch);
   const setShowBuildTree = useGame((s) => s.setShowBuildTree);
+  const setShowPrestige = useGame((s) => s.setShowPrestige);
+  const boss = useGame((s) => s.boss);
+  const completedChapters = useGame((s) => s.completedChapters);
+  const totalPrestiges = useGame((s) => s.totalPrestiges);
+  const shards = useGame((s) => s.shards);
+  const totalEarned = useGame((s) => s.totalEarned);
+  const tree = useGame((s) => s.tree);
+  const researchBonuses = useGame(selectResearchBonuses);
   const audioSettings = useGame((s) => s.audio);
   const set = useGame((s) => s.setAudioSetting);
   const reset = useGame((s) => s.reset);
   const t = useTranslations('ui');
   const router = useRouter();
   const pathname = usePathname();
+  const unlockCtx = { bossTier: boss.tier, completedChapters, totalPrestiges, shards };
+  const prestigeGain = prestigeShardGain(totalEarned, totalPrestiges, researchBonuses.prestigeGainPct, Boolean(tree['guaranteedShards']));
 
   const apply = (partial: Partial<typeof audioSettings>) => {
     set(partial);
@@ -33,6 +46,20 @@ export function SettingsPanel({ locale }: { locale: string }) {
     setShow(false);
     router.push(next);
   };
+
+  const openLockedSystem = (id: SystemId, open: () => void) => {
+    if (!systemUnlocked(id, unlockCtx)) return;
+    setShow(false);
+    open();
+  };
+
+  const lockedText = (id: SystemId) => (
+    systemUnlocked(id, unlockCtx) ? null : (
+      <span className="mt-1 block font-space text-[8px] uppercase tracking-[0.14em] text-white/35">
+        {t(systemRequirementKey(id) as any)}
+      </span>
+    )
+  );
 
   return (
     <AnimatePresence>
@@ -64,20 +91,28 @@ export function SettingsPanel({ locale }: { locale: string }) {
             <button
               onClick={() => {
                 setShow(false);
-                setShowResearch(true);
+                setShowPrestige(true);
               }}
-              className="mb-2 w-full rounded-md border border-purple/35 bg-purple/10 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-purple"
+              className="mb-2 w-full rounded-md border border-pink/35 bg-pink/10 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-pink"
             >
-              {t('research')}
+              {t('prestigeManualEntry')}
+              <span className="ml-2 text-gold">+{fmt(prestigeGain)} ◇</span>
             </button>
             <button
-              onClick={() => {
-                setShow(false);
-                setShowBuildTree(true);
-              }}
-              className="mb-4 w-full rounded-md border border-gold/35 bg-gold/10 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-gold"
+              onClick={() => openLockedSystem('research', () => setShowResearch(true))}
+              disabled={!systemUnlocked('research', unlockCtx)}
+              className="mb-2 w-full rounded-md border border-purple/35 bg-purple/10 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-purple disabled:opacity-45"
+            >
+              {t('research')}
+              {lockedText('research')}
+            </button>
+            <button
+              onClick={() => openLockedSystem('buildTree', () => setShowBuildTree(true))}
+              disabled={!systemUnlocked('buildTree', unlockCtx)}
+              className="mb-4 w-full rounded-md border border-gold/35 bg-gold/10 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-gold disabled:opacity-45"
             >
               {t('buildTree')}
+              {lockedText('buildTree')}
             </button>
 
             <div className="space-y-3">

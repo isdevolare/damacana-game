@@ -37,6 +37,7 @@ import {
   previousBuildNode,
   summarizeBuildBonuses,
 } from './config/buildTree';
+import { fmt } from './util';
 
 export interface Buff {
   id: string;
@@ -72,6 +73,13 @@ export interface BossPhaseToast {
   finalPhase: boolean;
   dropId: BossDropId | null;
   shardGain: number;
+  expiresAt: number;
+}
+
+export interface PowerToast {
+  id: number;
+  labelKey: string;
+  amount?: string;
   expiresAt: number;
 }
 
@@ -159,6 +167,7 @@ export interface GameState extends Persisted {
   researchCompletedNotice: string | null;
   bossPhaseToast: BossPhaseToast | null;
   enemyDiscoveryToast: EnemyVariantId | null;
+  powerToast: PowerToast | null;
 
   // actions
   tapDamacana: (clientX?: number, clientY?: number, options?: CombatHitOptions) => void;
@@ -193,6 +202,7 @@ export interface GameState extends Persisted {
   dismissBossPhaseToast: () => void;
   discoverEnemyType: (id: EnemyVariantId) => void;
   dismissEnemyDiscoveryToast: () => void;
+  dismissPowerToast: () => void;
   buyBuildNode: (id: string) => void;
   claimOfflineProgress: () => void;
   triggerEvent: () => void;
@@ -533,6 +543,30 @@ function completeChapterPatch(
 
 let floatingIdCounter = 1;
 let bossPhaseToastCounter = 1;
+let powerToastCounter = 1;
+
+function formatPowerAmount(value: number) {
+  if (Math.abs(value) >= 1) return `+${fmt(Math.floor(value))}`;
+  return `+${Math.round(value * 100)}%`;
+}
+
+function powerToast(labelKey: string, amount?: string): PowerToast {
+  return {
+    id: powerToastCounter++,
+    labelKey,
+    amount,
+    expiresAt: Date.now() + 1800,
+  };
+}
+
+function bonusPowerLabel(type: string) {
+  if (type === 'maxHpPct' || type === 'damageReductionPct' || type === 'armor') return 'maxHpIncreased';
+  if (type === 'manaRegenPct') return 'manaRegenIncreased';
+  if (type === 'orbitDamagePct' || type === 'orbitSlashRadiusPct' || type === 'aoeDamagePct') return 'orbitDamageIncreased';
+  if (type === 'comboGainPct' || type === 'comboDecayPct' || type === 'weakPointDamagePct' || type === 'damageComboPreservePct') return 'comboGainIncreased';
+  if (type === 'passiveProductionPct' || type === 'rewardMultiplierPct' || type === 'offlineEfficiencyPct') return 'passiveFlowIncreased';
+  return 'powerChanged';
+}
 
 function bossDefeatDropPatch(
   state: Persisted,
@@ -652,6 +686,7 @@ export const useGame = create<GameState>()(
       researchCompletedNotice: null,
       bossPhaseToast: null,
       enemyDiscoveryToast: null,
+      powerToast: null,
 
       tapDamacana: (clientX, clientY, options = {}) => {
         const s = get();
@@ -949,10 +984,12 @@ export const useGame = create<GameState>()(
         if (count <= 0) return;
         const cost = upgradeBulkCost(def, lvl, count);
         const free = mode === 'x1' && s.tree['chaosCore'] && Math.random() < 0.1;
+        const gainedPower = upgradeTotalAmount(def, lvl + count) - upgradeTotalAmount(def, lvl);
         set({
           damacana: free ? s.damacana : s.damacana - cost,
           upgrades: { ...s.upgrades, [id]: lvl + count },
           shake: { intensity: 'small', at: Date.now() },
+          powerToast: powerToast(def.kind === 'tap' ? 'damageIncreased' : 'passiveFlowIncreased', formatPowerAmount(gainedPower)),
         });
       },
 
@@ -1070,6 +1107,7 @@ export const useGame = create<GameState>()(
         });
       },
       dismissEnemyDiscoveryToast: () => set({ enemyDiscoveryToast: null }),
+      dismissPowerToast: () => set({ powerToast: null }),
 
       buyBuildNode: (id) => {
         const s = get();
@@ -1090,6 +1128,7 @@ export const useGame = create<GameState>()(
           playerHp: Math.min(stats.maxHp, s.playerHp ?? stats.maxHp),
           playerMana: Math.min(stats.maxMana, s.playerMana ?? stats.maxMana),
           shake: { intensity: 'small', at: Date.now() },
+          powerToast: powerToast(bonusPowerLabel(node.bonuses[0]?.type ?? '')),
         });
       },
 
@@ -1127,6 +1166,8 @@ export const useGame = create<GameState>()(
       claimResearch: (id) => {
         get().refreshResearchProgress();
         const s = get();
+        const research = researchById(id);
+        if (!research) return;
         if (s.activeResearchId !== id) return;
         if (!s.completedResearchIds.includes(id) && Date.now() < s.activeResearchEndAt) return;
         const claimedResearchIds = s.claimedResearchIds.includes(id) ? s.claimedResearchIds : [...s.claimedResearchIds, id];
@@ -1144,6 +1185,7 @@ export const useGame = create<GameState>()(
           playerHp: Math.min(stats.maxHp, s.playerHp ?? stats.maxHp),
           playerMana: Math.min(stats.maxMana, s.playerMana ?? stats.maxMana),
           shake: { intensity: 'medium', at: Date.now() },
+          powerToast: powerToast(bonusPowerLabel(research.bonuses[0]?.type ?? '')),
         });
       },
 
@@ -1350,6 +1392,7 @@ export const useGame = create<GameState>()(
           researchCompletedNotice: null,
           bossPhaseToast: null,
           enemyDiscoveryToast: null,
+          powerToast: null,
           combo: 1,
           lastTapAt: 0,
         });
@@ -1401,6 +1444,7 @@ export const useGame = create<GameState>()(
           bossPhaseToast: null,
           discoveredEnemyTypeIds: ['basic'],
           enemyDiscoveryToast: null,
+          powerToast: null,
         });
       },
 

@@ -16,6 +16,7 @@ import { useTranslations } from 'next-intl';
 import { audio } from '@/lib/audio/AudioEngine';
 
 const BUY_MODES: UpgradeBuyMode[] = ['x1', 'x10', 'max'];
+const UPGRADE_MILESTONES = [10, 25, 50, 100, 250, 1000];
 
 const RARITY_STYLE = {
   common: { border: 'border-white/15', text: 'text-white/70', bg: 'bg-white/[0.03]' },
@@ -32,6 +33,8 @@ export function UpgradePanel() {
   const sfxEnabled = useGame((s) => !s.audio.muted);
   const [collapsed, setCollapsed] = useState(false);
   const [buyMode, setBuyMode] = useState<UpgradeBuyMode>('x1');
+  const [flashedId, setFlashedId] = useState<string | null>(null);
+  const [milestoneToast, setMilestoneToast] = useState<{ id: number; name: string; level: number } | null>(null);
   const t = useTranslations('upgrades');
   const ui = useTranslations('ui');
 
@@ -62,14 +65,17 @@ export function UpgradePanel() {
     const can = !locked && (buyMode === 'max' ? count > 0 : count >= requested);
     const rarity = RARITY_STYLE[u.rarity];
     const nextGain = upgradeTotalAmount(u, lvl + Math.max(1, count || 1)) - upgradeTotalAmount(u, lvl);
+    const nextLevel = lvl + count;
+    const reachedMilestone = UPGRADE_MILESTONES.filter((mark) => lvl < mark && nextLevel >= mark).pop();
     return (
       <div
         key={u.id}
         className={clsx(
-          'rounded-md border px-2 py-1.5 transition-transform duration-150',
+          'rounded-md border px-2 py-1.5 transition duration-150',
           rarity.border,
           rarity.bg,
           locked ? 'opacity-45' : 'hover:-translate-y-0.5',
+          flashedId === u.id && 'scale-[1.015] ring-1 ring-cyan/60 shadow-[0_0_18px_rgba(92,246,255,0.22)]',
         )}
       >
         <div className="flex min-w-0 items-start gap-2">
@@ -98,6 +104,13 @@ export function UpgradePanel() {
             disabled={!can}
             onClick={() => {
               buy(u.id, buyMode);
+              setFlashedId(u.id);
+              setTimeout(() => setFlashedId((current) => current === u.id ? null : current), 360);
+              if (reachedMilestone) {
+                const toast = { id: Date.now(), name: t(`${u.key}.name`), level: reachedMilestone };
+                setMilestoneToast(toast);
+                setTimeout(() => setMilestoneToast((current) => current?.id === toast.id ? null : current), 2200);
+              }
               if (sfxEnabled) audio.sfxUpgrade();
             }}
             className={clsx(
@@ -164,6 +177,13 @@ export function UpgradePanel() {
         </div>
       </div>
       </div>
+      {milestoneToast && (
+        <div className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+7rem)] left-1/2 z-[57] w-[min(88vw,280px)] -translate-x-1/2 rounded-lg border border-gold/45 bg-black/88 px-3 py-2 text-center shadow-[0_0_22px_rgba(255,209,102,0.16)]">
+          <div className="font-space text-[9px] uppercase tracking-[0.2em] text-gold">
+            {t('milestoneReached', { name: milestoneToast.name, level: milestoneToast.level })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -35,6 +35,11 @@
     "prestigeGain": "permanent gain",
     "prestigeGainDesc": "Spend shards in build and prestige systems for long-term power.",
     "prestigeGainTooltip": "This gain is permanent and remains after the run resets.",
+    "prestigeManualEntry": "cosmic ascension",
+    "prestigeCurrentCurrency": "current shards",
+    "prestigeAvailableGain": "available now",
+    "prestigeProjectedTotal": "after prestige",
+    "prestigeNextThreshold": "next gain +{gain}",
     "prestigeResetCost": "reset cost",
     "prestigeFutureHooks": "future hooks",
     "prestigeFutureHooksDesc": "relic persistence, ascension layers, and singularity systems are reserved for later.",
@@ -79,6 +84,25 @@
     "shop": "singularity shop",
     "buy": "buy",
     "owned": "owned",
+    "powerChanged": "power changed",
+    "powerFeedback": {
+      "damageIncreased": "Damage increased",
+      "passiveFlowIncreased": "Passive flow increased",
+      "maxHpIncreased": "Max HP increased",
+      "manaRegenIncreased": "Mana regen increased",
+      "orbitDamageIncreased": "Orbit damage increased",
+      "comboGainIncreased": "Combo gain increased",
+      "powerChanged": "Core power increased"
+    },
+    "unlockReq": {
+      "abilities": "Reach Earth phase 5",
+      "anomalies": "Defeat Earth final boss T10",
+      "research": "Reach Mars",
+      "buildTree": "Reach Saturn",
+      "codexAdvanced": "Reach Uranus",
+      "prestige": "Reach Neptune pressure",
+      "default": "Locked"
+    },
     "megaPrestige": "mega-prestige"
   },
   "categories": {
@@ -752,7 +776,8 @@
     "damacanaPump": { "name": "damacana pump" },
     "cosmicPipe": { "name": "cosmic pipe" },
     "voidFlow": { "name": "void flow" },
-    "flowEngine": { "name": "flow engine" }
+    "flowEngine": { "name": "flow engine" },
+    "milestoneReached": "{name} reached level {level}"
   },
   "tree": {
     "offense": {

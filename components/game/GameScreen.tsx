@@ -28,6 +28,7 @@ import { ResearchLabModal } from './ResearchLabModal';
 import { ResearchToast } from './ResearchToast';
 import { BuildTreeModal } from './BuildTreeModal';
 import { AudioUnlockPrompt } from './AudioUnlockPrompt';
+import { PowerToast } from './PowerToast';
 import { useScreenShake } from '@/lib/hooks/useScreenShake';
 import { useGameLoop } from '@/lib/hooks/useGameLoop';
 import { useAchievements } from '@/lib/hooks/useAchievements';
@@ -71,6 +72,7 @@ export function GameScreen({ locale }: { locale: string }) {
       <OfflineReturnModal />
       <ResearchToast />
       <AchievementToast />
+      <PowerToast />
       <SettingsPanel locale={locale} />
       <AudioUnlockPrompt />
       <StartOverlay />

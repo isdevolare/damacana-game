@@ -3,6 +3,7 @@
 import { useGame } from '@/lib/store';
 import { activeLevels } from '@/lib/config/levels';
 import { currentChapter } from '@/lib/config/chapters';
+import { systemRequirementKey, systemUnlocked } from '@/lib/config/systemUnlocks';
 import { useTranslations } from 'next-intl';
 
 export function TopBar() {
@@ -24,6 +25,9 @@ export function TopBar() {
   const lv = levels[Math.min(levelIdx, levels.length - 1)];
   const chapter = currentChapter(completedChapters);
   const showAdvanced = totalPlayMs >= 5 * 60 * 1000 || shards > 0 || totalPrestiges > 0;
+  const unlockCtx = { bossTier: boss.tier, completedChapters, totalPrestiges, shards };
+  const treeUnlocked = showAdvanced && systemUnlocked('buildTree', unlockCtx);
+  const codexUnlocked = collectedFacts.length > 0 || showAdvanced || systemUnlocked('codexAdvanced', unlockCtx);
   const chapterLevel = Math.min(Math.max(boss.tier - chapter.levelStart + 1, 1), chapter.levelEnd - chapter.levelStart + 1);
 
   return (
@@ -51,8 +55,9 @@ export function TopBar() {
         <button
           onClick={() => setShowCodex(true)}
           className="h-8 w-8 rounded-md border border-gold/40 bg-gold/5 text-sm text-gold disabled:opacity-35 sm:h-9 sm:w-9 sm:text-base"
-          disabled={collectedFacts.length === 0 && !showAdvanced}
+          disabled={!codexUnlocked}
           aria-label="knowledge codex"
+          title={codexUnlocked ? 'knowledge codex' : t(`ui.${systemRequirementKey('codexAdvanced')}` as any)}
         >
           ◫
         </button>
@@ -66,8 +71,9 @@ export function TopBar() {
         <button
           onClick={() => setShowTree(true)}
           className="h-8 w-8 rounded-md border border-purple/40 bg-purple/10 font-vt text-base text-purple disabled:opacity-30 sm:h-9 sm:w-9 sm:text-lg"
-          disabled={!showAdvanced}
+          disabled={!treeUnlocked}
           aria-label="skill tree"
+          title={treeUnlocked ? 'skill tree' : t(`ui.${systemRequirementKey('buildTree')}` as any)}
         >
           ✦
         </button>

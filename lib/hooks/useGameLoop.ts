@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useGame, selectBuildBonuses } from '@/lib/store';
 import { audio } from '@/lib/audio/AudioEngine';
 import { BALANCE } from '@/lib/config/balance';
+import { systemUnlocked } from '@/lib/config/systemUnlocks';
 
 export function useGameLoop() {
   const tick = useGame((s) => s.tickAuto);
@@ -11,6 +12,10 @@ export function useGameLoop() {
   const has = useGame((s) => s.hasStarted);
   const levelIdx = useGame((s) => s.levelIdx);
   const tree = useGame((s) => s.tree);
+  const boss = useGame((s) => s.boss);
+  const completedChapters = useGame((s) => s.completedChapters);
+  const totalPrestiges = useGame((s) => s.totalPrestiges);
+  const shards = useGame((s) => s.shards);
   const buildBonuses = useGame(selectBuildBonuses);
   const spawnRandomBulb = useGame((s) => s.spawnRandomBulb);
   const scheduleNextKnowledgeBulb = useGame((s) => s.scheduleNextKnowledgeBulb);
@@ -46,6 +51,7 @@ export function useGameLoop() {
   // event scheduler
   useEffect(() => {
     if (!has) return;
+    if (!systemUnlocked('anomalies', { bossTier: boss.tier, completedChapters, totalPrestiges, shards })) return;
     let timer: ReturnType<typeof setTimeout>;
     const schedule = () => {
       const magnet = tree['eventMagnet'];
@@ -60,7 +66,7 @@ export function useGameLoop() {
     };
     schedule();
     return () => clearTimeout(timer);
-  }, [has, tree, triggerEvent, buildBonuses.anomalyFrequencyPct]);
+  }, [has, tree, triggerEvent, buildBonuses.anomalyFrequencyPct, boss.tier, completedChapters, totalPrestiges, shards]);
 
   // knowledge bulbs use a persisted randomized 5-10 minute schedule.
   useEffect(() => {
