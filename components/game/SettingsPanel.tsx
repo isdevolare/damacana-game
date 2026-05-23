@@ -26,9 +26,11 @@ export function SettingsPanel({ locale }: { locale: string }) {
   };
 
   const switchLocale = (loc: string) => {
-    let next = pathname || '/';
-    const stripped = next.replace(/^\/(en|tr)(?=\/|$)/, '') || '/';
-    next = loc === 'en' ? stripped : `/${loc}${stripped}`;
+    const current = pathname || '/';
+    const stripped = current.replace(/^\/(en|tr)(?=\/|$)/, '') || '/';
+    const next = `/${loc}${stripped === '/' ? '' : stripped}`;
+    document.cookie = `NEXT_LOCALE=${loc}; path=/; max-age=31536000; samesite=lax`;
+    setShow(false);
     router.push(next);
   };
 

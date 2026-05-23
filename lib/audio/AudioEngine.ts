@@ -30,6 +30,7 @@ class AudioEngine {
     if (!this.Tone) return;
     this.settings = settings;
     if (this.started) {
+      await this.resumeContext();
       this.setLevel(level);
       return;
     }
@@ -44,6 +45,28 @@ class AudioEngine {
     this.Tone.Transport.start();
     this.setLevel(level);
     this.started = true;
+  }
+
+  async unlock(level: number, settings: { master: number; music: number; sfx: number; muted: boolean }) {
+    await this.start(level, settings);
+    await this.resumeContext();
+    return this.isUnlocked();
+  }
+
+  isUnlocked() {
+    const state = this.getContextState();
+    return this.started && (!state || state === 'running');
+  }
+
+  private async resumeContext() {
+    const context = (this.Tone as any)?.context ?? (this.Tone as any)?.getContext?.().rawContext;
+    if (context?.state === 'suspended') {
+      await context.resume();
+    }
+  }
+
+  private getContextState() {
+    return (this.Tone as any)?.context?.state ?? (this.Tone as any)?.getContext?.().rawContext?.state;
   }
 
   private buildLayers() {

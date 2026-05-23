@@ -17,14 +17,13 @@ const RARITY_STYLE = {
 export function EventPopup() {
   const ev = useGame((s) => s.currentEvent);
   const resolve = useGame((s) => s.resolveEventChoice);
-  const dismiss = useGame((s) => s.dismissEvent);
   const sfxEnabled = useGame((s) => !s.audio.muted);
   const t = useTranslations('events');
 
   useEffect(() => {
     if (!ev) return;
     if (sfxEnabled) audio.sfxEventDing();
-  }, [ev, sfxEnabled, dismiss]);
+  }, [ev, sfxEnabled]);
 
   return (
     <AnimatePresence>
@@ -34,30 +33,30 @@ export function EventPopup() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -80, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 200, damping: 22 }}
-          className="pointer-events-none fixed left-1/2 top-[4.5rem] z-40 w-[94%] max-w-md -translate-x-1/2 sm:top-20 sm:w-[88%]"
+          className="pointer-events-none fixed left-1/2 top-[max(4rem,env(safe-area-inset-top))] z-40 w-[calc(100vw_-_1rem)] max-w-md -translate-x-1/2 sm:top-20 sm:w-[88%]"
         >
           <div
-            className={`pointer-events-auto rounded-lg border bg-black/90 p-3 backdrop-blur-sm ${RARITY_STYLE[ev.rarity]}`}
+            className={`pointer-events-auto max-h-[calc(100dvh_-_7.5rem_-_env(safe-area-inset-bottom))] overflow-y-auto overflow-x-hidden rounded-lg border bg-black/90 p-2.5 backdrop-blur-sm sm:max-h-[calc(100dvh_-_8rem)] sm:p-3 ${RARITY_STYLE[ev.rarity]}`}
           >
             <div className="mb-1 flex items-center justify-between gap-2">
-              <div className="font-major text-sm uppercase tracking-wide text-white/90">
+              <div className="min-w-0 break-words font-major text-xs uppercase tracking-wide text-white/90 sm:text-sm">
                 {t(`${ev.i18nKey}.title`)}
               </div>
-              <div className="shrink-0 font-space text-[8px] uppercase tracking-[0.24em] opacity-80">
+              <div className="shrink-0 font-space text-[7px] uppercase tracking-[0.18em] opacity-80 sm:text-[8px] sm:tracking-[0.24em]">
                 {t(`rarity.${ev.rarity}`)}
               </div>
             </div>
-            <div className="font-space text-xs leading-snug text-white/70">
+            <div className="font-space text-[11px] leading-snug text-white/70 sm:text-xs">
               {t(`${ev.i18nKey}.text`)}
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mt-2 grid grid-cols-1 gap-2 sm:mt-3 sm:grid-cols-2">
               {ev.choices.map((c) => (
                 <button
                   key={c.key}
                   onClick={() => resolve(c.key)}
-                  className="min-h-14 rounded-md border border-white/15 bg-white/[0.04] px-2 py-2 text-left transition active:scale-[0.98] hover:bg-white/[0.08]"
+                  className="min-h-12 rounded-md border border-white/15 bg-white/[0.04] px-2 py-2 text-left transition active:scale-[0.98] hover:bg-white/[0.08] sm:min-h-14"
                 >
-                  <div className="font-space text-[10px] uppercase tracking-[0.18em] text-white/90">
+                  <div className="font-space text-[9px] uppercase tracking-[0.16em] text-white/90 sm:text-[10px] sm:tracking-[0.18em]">
                     {t(`${ev.i18nKey}.${c.key}`)}
                   </div>
                   <div className="mt-1 whitespace-pre-line font-space text-[9px] leading-snug text-cyan/70">

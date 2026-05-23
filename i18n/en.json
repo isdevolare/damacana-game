@@ -17,6 +17,7 @@
     "sfx": "sfx",
     "mute": "mute",
     "unmute": "unmute",
+    "enableSound": "Enable Sound",
     "language": "language",
     "close": "close",
     "later": "later",
