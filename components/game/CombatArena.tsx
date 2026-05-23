@@ -11,6 +11,7 @@ import { bossPhaseCombatTuning, bossPhaseInfo } from '@/lib/config/bossMissions'
 import { bossProfileForChapter, type BossPulseKind } from '@/lib/config/bossProfiles';
 import { COMBAT, COMBAT_ABILITIES, CombatAbilityId, combatStyleForChapter } from '@/lib/config/combat';
 import { CORE_DEFENSE, CORE_DEFENSE_HOOKS } from '@/lib/config/coreDefense';
+import { planetThemeForChapter } from '@/lib/config/planetThemes';
 import { prestigePermanentBonuses } from '@/lib/config/prestige';
 import {
   EnemyVariantId,
@@ -295,6 +296,7 @@ export function CombatArena() {
 
   const chapter = currentChapter(completedChapters);
   const style = useMemo(() => combatStyleForChapter(chapter), [chapter]);
+  const planetTheme = useMemo(() => planetThemeForChapter(chapter.id), [chapter.id]);
   const bossProfile = useMemo(() => bossProfileForChapter(chapter.id), [chapter.id]);
   const finalBoss = boss.tier === chapter.finalBossTier;
   const mega = isMegaBoss(boss.tier);
@@ -358,6 +360,7 @@ export function CombatArena() {
   const perSecRef = useRef(perSec);
   const comboRef = useRef(combo);
   const styleRef = useRef(style);
+  const planetThemeRef = useRef(planetTheme);
   const sfxRef = useRef(sfxEnabled);
   const tapRef = useRef(tap);
   const bossRef = useRef(boss);
@@ -381,6 +384,7 @@ export function CombatArena() {
   useEffect(() => { perSecRef.current = perSec; }, [perSec]);
   useEffect(() => { comboRef.current = combo; }, [combo]);
   useEffect(() => { styleRef.current = style; }, [style]);
+  useEffect(() => { planetThemeRef.current = planetTheme; }, [planetTheme]);
   useEffect(() => { sfxRef.current = sfxEnabled; }, [sfxEnabled]);
   useEffect(() => { tapRef.current = tap; }, [tap]);
   useEffect(() => { bossRef.current = boss; }, [boss]);
@@ -851,6 +855,7 @@ export function CombatArena() {
       }
 
       const activeStyle = styleRef.current;
+      const activeTheme = planetThemeRef.current;
       const activeChapter = chapterRef.current;
       const activeBuild = buildBonusesRef.current;
       const activePrestige = prestigePermanentBonuses(totalPrestigesRef.current);
@@ -881,7 +886,7 @@ export function CombatArena() {
           lastContactAt = now;
           lastGlobalContactRef.current = now;
           hitUntil = now + 180;
-          damagePlayer(COMBAT.contactDamage * enemy.damageMult);
+          damagePlayer(COMBAT.contactDamage * enemy.damageMult * activePhaseTuning.enemyDamageMult);
           if (variant.special === 'manaLeech') {
             restoreCombatManaRef.current(-12);
             useGame.setState((state) => ({
@@ -939,12 +944,12 @@ export function CombatArena() {
             speed: shotStats.speed,
             angle,
             bornAt: now,
-            color: crit ? '#ffd166' : burstActive ? '#ff5ce8' : '#5cf6ff',
+            color: crit ? '#ffd166' : burstActive ? '#ff5ce8' : activeTheme.particleColor,
             hitUntil: 0,
           },
         ].slice(-projectileCap);
         lastProjectileShotRef.current = now;
-        if (!lowDensityFrame) emitParticles(p.x, p.y, burstActive ? '#ff5ce8' : '#5cf6ff', burstActive ? 5 : 3, 0.45);
+        if (!lowDensityFrame) emitParticles(p.x, p.y, burstActive ? '#ff5ce8' : activeTheme.particleColor, burstActive ? 5 : 3, 0.45);
       }
 
       if (CORE_DEFENSE_HOOKS.projectileFiring && projectilesRef.current.length > 0) {
@@ -1321,15 +1326,35 @@ export function CombatArena() {
       style={{
         minHeight: 'clamp(280px, calc(100dvh - 270px), 420px)',
         touchAction: 'none',
-        background: `radial-gradient(circle at 50% 25%, ${style.arenaGlow}, rgba(0,0,0,0.08) 34%, rgba(0,0,0,0.48) 100%)`,
+        borderColor: planetTheme.arenaBorder,
+        boxShadow: lowDensity ? `0 0 20px ${planetTheme.ambientGlow}` : `0 0 34px ${planetTheme.ambientGlow}`,
+        background: `radial-gradient(circle at 50% 22%, ${planetTheme.arenaTint}, ${style.arenaGlow} 34%, rgba(0,0,0,0.48) 100%)`,
       }}
       aria-label="combat arena"
     >
       <div className="pointer-events-none absolute inset-0 opacity-45">
-        <div className="absolute inset-x-5 top-[32%] h-px bg-cyan/20" />
+        <div className="absolute inset-x-5 top-[32%] h-px" style={{ background: planetTheme.gridColor }} />
         <div className="absolute inset-x-10 top-[62%] h-px bg-white/10" />
         <div className="absolute left-1/2 top-0 h-full w-px bg-white/10" />
       </div>
+      {planetTheme.effect === 'rings' && !lowDensity && (
+        <div
+          className="pointer-events-none absolute left-1/2 top-[50%] z-[4] h-20 w-[118%] -translate-x-1/2 -rotate-12 rounded-full border opacity-20"
+          style={{ borderColor: planetTheme.uiAccent, boxShadow: `0 0 26px ${planetTheme.ambientGlow}` }}
+        />
+      )}
+      {planetTheme.effect === 'storm' && (
+        <div
+          className="pointer-events-none absolute inset-x-[-10%] top-[22%] z-[4] h-32 opacity-20"
+          style={{ background: `repeating-linear-gradient(155deg, transparent 0 18px, ${planetTheme.dustColor} 20px 23px, transparent 24px 40px)` }}
+        />
+      )}
+      {planetTheme.effect === 'dust' && (
+        <div
+          className="pointer-events-none absolute inset-x-[-8%] top-[34%] z-[4] h-20"
+          style={{ opacity: 0.18, background: `linear-gradient(105deg, transparent, ${planetTheme.dustColor}, transparent)` }}
+        />
+      )}
 
       <div className="pointer-events-none absolute left-2 right-2 top-2 z-20 sm:left-3 sm:right-3 sm:top-3">
         <div className="flex items-start justify-between gap-3">

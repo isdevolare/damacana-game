@@ -15,7 +15,7 @@ export const CORE_DEFENSE = {
   projectileSpeed: 0.078,
   mobileProjectileSpeed: 0.07,
   projectileDamageMult: 0.62,
-  projectilePassiveDamageMult: 0.08,
+  projectilePassiveDamageMult: 0.11,
   projectileCritChance: 0.08,
   projectileCritDamage: 1.85,
 };

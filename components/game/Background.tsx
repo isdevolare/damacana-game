@@ -1,27 +1,24 @@
 'use client';
 
 import { useGame } from '@/lib/store';
-import { activeLevels } from '@/lib/config/levels';
-import { chapterForLevel } from '@/lib/config/chapters';
+import { currentChapter } from '@/lib/config/chapters';
+import { planetThemeForChapter } from '@/lib/config/planetThemes';
 import { useEffect, useState } from 'react';
 
 interface Star { id: number; x: number; y: number; s: number; o: number; d: number }
 interface Flow { id: number; x: number; d: number; delay: number; h: number }
 
 export function Background() {
-  const levelIdx = useGame((s) => s.levelIdx);
-  const totalPrestiges = useGame((s) => s.totalPrestiges);
-  const levels = activeLevels(totalPrestiges);
-  const level = levels[Math.min(levelIdx, levels.length - 1)];
-  const chapter = chapterForLevel(levelIdx);
-  const bg = level.bgGradient;
+  const completedChapters = useGame((s) => s.completedChapters);
+  const chapter = currentChapter(completedChapters);
+  const theme = planetThemeForChapter(chapter.id);
 
   const [stars, setStars] = useState<Star[]>([]);
   const [flows, setFlows] = useState<Flow[]>([]);
 
   useEffect(() => {
     setStars(
-      Array.from({ length: 80 }).map((_, i) => ({
+      Array.from({ length: theme.starDensity }).map((_, i) => ({
         id: i,
         x: Math.random() * 100,
         y: Math.random() * 100,
@@ -31,32 +28,66 @@ export function Background() {
       })),
     );
     setFlows(
-      Array.from({ length: 8 }).map((_, i) => ({
+      Array.from({ length: theme.dustDensity }).map((_, i) => ({
         id: i,
         x: 5 + Math.random() * 90,
-        d: 4 + Math.random() * 5,
+        d: 5 + Math.random() * 7,
         delay: Math.random() * 5,
         h: 80 + Math.random() * 160,
       })),
     );
-  }, []);
+  }, [theme.dustDensity, theme.starDensity]);
 
   return (
     <div
       className="fixed inset-0 z-0 transition-[background] duration-700"
-      style={{ background: bg }}
+      style={{ background: theme.backgroundGradient }}
     >
       <div
-        className="absolute left-1/2 top-[12%] h-[210px] w-[210px] -translate-x-1/2 rounded-full opacity-35 blur-[1px]"
+        className="absolute inset-0 opacity-70 transition-opacity duration-700"
         style={{
-          background: `radial-gradient(circle at 35% 30%, rgba(255,255,255,0.85), ${chapter.accent} 18%, transparent 62%)`,
-          boxShadow: `0 0 90px 24px ${chapter.glow}`,
+          background: `radial-gradient(circle at 50% 18%, ${theme.ambientGlow}, transparent 34%), radial-gradient(circle at 50% 72%, rgba(0,0,0,0), rgba(0,0,0,0.72) 70%)`,
         }}
       />
-      {chapter.id === 'saturn' && (
+      <div
+        className="absolute left-1/2 top-[11%] h-[210px] w-[210px] -translate-x-1/2 rounded-full opacity-40 blur-[1px] transition-[background,box-shadow] duration-700"
+        style={{
+          background: theme.planetGradient,
+          boxShadow: `0 0 90px 24px ${theme.ambientGlow}`,
+        }}
+      />
+      {theme.effect === 'rings' && (
+        <>
+          <div
+            className="absolute left-1/2 top-[calc(11%+92px)] h-8 w-[318px] -translate-x-1/2 -rotate-12 rounded-full border opacity-40"
+            style={{ borderColor: theme.uiAccent, boxShadow: `0 0 28px ${theme.ambientGlow}` }}
+          />
+          <div
+            className="absolute left-1/2 top-[calc(11%+98px)] h-3 w-[370px] -translate-x-1/2 -rotate-12 rounded-full border opacity-20"
+            style={{ borderColor: theme.uiAccent }}
+          />
+        </>
+      )}
+      {theme.effect === 'storm' && (
         <div
-          className="absolute left-1/2 top-[calc(12%+92px)] h-8 w-[300px] -translate-x-1/2 -rotate-12 rounded-full border opacity-35"
-          style={{ borderColor: chapter.accent, boxShadow: `0 0 28px ${chapter.glow}` }}
+          className="absolute left-1/2 top-[18%] h-24 w-[280px] -translate-x-1/2 rounded-full opacity-25 blur-[2px]"
+          style={{
+            background: `repeating-linear-gradient(160deg, transparent 0 12px, ${theme.dustColor} 13px 16px, transparent 17px 30px)`,
+          }}
+        />
+      )}
+      {theme.effect === 'iceFog' && (
+        <div
+          className="absolute left-1/2 top-[24%] h-44 w-[340px] -translate-x-1/2 rounded-full opacity-20 blur-lg"
+          style={{ background: theme.dustColor }}
+        />
+      )}
+      {theme.effect === 'dust' && (
+        <div
+          className="absolute inset-x-0 top-[28%] h-20 opacity-20 blur-[1px]"
+          style={{
+            background: `linear-gradient(100deg, transparent, ${theme.dustColor}, transparent)`,
+          }}
         />
       )}
       {stars.map((s) => (
@@ -76,14 +107,15 @@ export function Background() {
       {flows.map((f) => (
         <div
           key={f.id}
-          className="absolute w-[2px] bg-gradient-to-b from-transparent via-cyan/60 to-transparent"
+          className="absolute w-[2px]"
           style={{
             left: `${f.x}%`,
             top: -f.h,
             height: f.h,
+            background: `linear-gradient(to bottom, transparent, ${theme.dustColor}, transparent)`,
             filter: 'blur(0.5px)',
             animation: `flow ${f.d}s linear ${f.delay}s infinite`,
-            boxShadow: '0 0 12px rgba(92,246,255,0.6)',
+            boxShadow: `0 0 12px ${theme.particleGlow}`,
           }}
         />
       ))}
