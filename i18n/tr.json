@@ -833,41 +833,51 @@
     "milestoneReached": "{name} {level} seviyeye ulaştı"
   },
   "tree": {
+    "explain": "Ağaç bölümler ilerledikçe açılır.",
+    "requirements": {
+      "tier1": "Dünya 3. faza ulaş",
+      "tier2": "Dünya final boss T10’u yen",
+      "tier3": "Mars 8. faza ulaş",
+      "tier4": "Satürn’e ulaş",
+      "tier5": "Satürn 10. faza ulaş",
+      "tier6": "Uranüs’e ulaş veya 1 kez prestij yap",
+      "previous": "Önce önceki düğümü aç"
+    },
     "offense": {
       "title": "SALDIRI",
-      "sharpDrop": { "name": "keskin damla", "desc": "+%25 dokunma gücü" },
-      "cosmicFang": { "name": "kozmik diş", "desc": "+%50 dokunma gücü" },
-      "critDrop": { "name": "kritik damla", "desc": "%10 şans ×5 kritik" },
-      "bossKiller": { "name": "boss avcısı", "desc": "+%100 boss hasarı" },
+      "sharpDrop": { "name": "keskin damla", "desc": "+%45 dokunma ve mermi temel gücü" },
+      "cosmicFang": { "name": "kozmik diş", "desc": "+%85 dokunma ve mermi temel gücü" },
+      "critDrop": { "name": "kritik damla", "desc": "%16 tıklama kritik şansı, mermi kritik desteği" },
+      "bossKiller": { "name": "boss avcısı", "desc": "+%135 boss hasarı" },
       "voidBurst": { "name": "boşluk patlaması", "desc": "aktif: büyük boss vuruşu" },
-      "voidClaw": { "name": "boşluk pençesi", "desc": "dokunma ×3, kritik ×10" }
+      "voidClaw": { "name": "boşluk pençesi", "desc": "dokunma ×4.25, daha güçlü kritik mermiler" }
     },
     "flow": {
       "title": "AKIŞ",
-      "wideFaucet": { "name": "geniş musluk", "desc": "+%25 pasif akış" },
-      "flowChannel": { "name": "akış kanalı", "desc": "+%50 pasif akış" },
-      "autoTap": { "name": "oto-dokunma", "desc": "0.5 sessiz dokunma/sn" },
-      "fastPump": { "name": "hızlı pompa", "desc": "+%100 akış, oto-dokunma ×2" },
+      "wideFaucet": { "name": "geniş musluk", "desc": "+%50 pasif akış" },
+      "flowChannel": { "name": "akış kanalı", "desc": "+%95 pasif akış" },
+      "autoTap": { "name": "oto-dokunma", "desc": "0.9 sessiz dokunma/sn" },
+      "fastPump": { "name": "hızlı pompa", "desc": "+%150 akış, oto-dokunma ×2.5" },
       "flood": { "name": "sel", "desc": "aktif: 10sn ×10 akış" },
-      "infiniteFlow": { "name": "sonsuz akış", "desc": "akış ×3, oto-dokunma 2/sn" }
+      "infiniteFlow": { "name": "sonsuz akış", "desc": "akış ×4.5, oto-dokunma 3/sn" }
     },
     "void": {
       "title": "BOŞLUK",
-      "shardAttractor": { "name": "kırık çekici", "desc": "+%50 kırık düşme" },
+      "shardAttractor": { "name": "kırık çekici", "desc": "+%75 kırık düşme" },
       "halo": { "name": "hale", "desc": "yavaş dönen bir halka" },
-      "doubleShard": { "name": "çift kırık", "desc": "%25 şans ×2 kırık" },
-      "evolutionShock": { "name": "evrim şoku", "desc": "evrimler ×2 dmc verir" },
+      "doubleShard": { "name": "çift kırık", "desc": "%35 şans ×2 kırık" },
+      "evolutionShock": { "name": "evrim şoku", "desc": "evrimler ×2.5 dmc verir" },
       "crown": { "name": "taç", "desc": "parıldayan parçacık taç" },
       "guaranteedShards": { "name": "garanti kırık", "desc": "prestij başına +5 kırık" }
     },
     "chaos": {
       "title": "KAOS",
-      "startingGift": { "name": "başlangıç hediyesi", "desc": "her run +100 dmc" },
-      "comboMaster": { "name": "combo ustası", "desc": "combo tavanı 5 → 10" },
-      "luckyTap": { "name": "şanslı dokunma", "desc": "her 10. dokunma ×5" },
+      "startingGift": { "name": "başlangıç hediyesi", "desc": "her run +500 dmc" },
+      "comboMaster": { "name": "combo ustası", "desc": "combo tavanı x2500’e çıkar" },
+      "luckyTap": { "name": "şanslı dokunma", "desc": "her 10. dokunma ×7" },
       "eventMagnet": { "name": "olay mıknatısı", "desc": "olaylar ×2 daha sık" },
       "timeLoop": { "name": "zaman döngüsü", "desc": "aktif: son 15sn’yi tekrarla" },
-      "chaosCore": { "name": "kaos çekirdeği", "desc": "%10 bedava upgrade" }
+      "chaosCore": { "name": "kaos çekirdeği", "desc": "%16 bedava upgrade" }
     }
   },
   "events": {

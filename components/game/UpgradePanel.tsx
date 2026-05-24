@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from '@/lib/store';
 import {
   UPGRADES,
@@ -177,13 +178,22 @@ export function UpgradePanel() {
         </div>
       </div>
       </div>
-      {milestoneToast && (
-        <div className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+7rem)] left-1/2 z-[57] w-[min(88vw,280px)] -translate-x-1/2 rounded-lg border border-gold/45 bg-black/88 px-3 py-2 text-center shadow-[0_0_22px_rgba(255,209,102,0.16)]">
-          <div className="font-space text-[9px] uppercase tracking-[0.2em] text-gold">
-            {t('milestoneReached', { name: milestoneToast.name, level: milestoneToast.level })}
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {milestoneToast && (
+          <motion.div
+            key={milestoneToast.id}
+            initial={{ opacity: 0, y: 12, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+            className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+7rem)] left-1/2 z-[57] w-[min(88vw,292px)] -translate-x-1/2 rounded-lg border border-gold/50 bg-black/90 px-3 py-2 text-center shadow-[0_0_28px_rgba(255,209,102,0.22)]"
+          >
+            <div className="mx-auto mb-1 h-px w-16 bg-gold/55 shadow-[0_0_12px_rgba(255,209,102,0.55)]" />
+            <div className="font-space text-[9px] uppercase tracking-[0.2em] text-gold">
+              {t('milestoneReached', { name: milestoneToast.name, level: milestoneToast.level })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

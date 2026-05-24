@@ -7,7 +7,7 @@ import { prestigePermanentBonuses, prestigeShardGain } from './config/prestige';
 import { LEVELS, activeLevels, levelForTotal } from './config/levels';
 import { UPGRADES, affordableUpgradeCount, upgradeBulkCost, upgradeById, upgradeTotalAmount, type UpgradeBuyMode } from './config/upgrades';
 import { bossHp, bossNameKey, bossReward, isMegaBoss, shardDropChance, eliteBossHp } from './config/bosses';
-import { nodeById, previousNode } from './config/skillTree';
+import { nodeById, previousNode, skillTierUnlocked } from './config/skillTree';
 import { AbsurdEvent, AnomalyEffectType, EventReward, pickRandomEvent } from './config/events';
 import { CATEGORIES, categoryComplete, factById, pickFactForLevel, pickRandomBonusFact } from './config/facts';
 import { ELITE_NAME_KEYS, KNOWLEDGE_BULB_TIMING, OFFLINE_PROGRESS, SHOP_ITEMS, shouldBeElite } from './config/progression';
@@ -403,6 +403,33 @@ function buildRequirementMet(state: Persisted, id: string): boolean {
   return !prev || (state.ownedBuildNodeIds ?? []).includes(prev.id);
 }
 
+function legacySkillRequirementMet(state: Persisted, id: string): boolean {
+  const node = nodeById(id);
+  if (!node) return false;
+  const prev = previousNode(node);
+  return (!prev || Boolean(state.tree[prev.id])) && skillTierUnlocked(node.tier, {
+    bossTier: state.boss.tier,
+    totalPrestiges: state.totalPrestiges,
+  });
+}
+
+function legacySkillValue(state: Persisted, id: string, fallback = 0): number {
+  if (!state.tree[id]) return fallback;
+  return nodeById(id)?.value ?? fallback;
+}
+
+function legacySkillChance(state: Persisted, id: string, fallback = 0): number {
+  return Math.max(0, Math.min(1, legacySkillValue(state, id, fallback)));
+}
+
+function bossDamageMultiplier(state: Persisted): number {
+  return 1 + legacySkillValue(state, 'bossKiller', 0);
+}
+
+function shardDoubleChance(state: Persisted): number {
+  return legacySkillChance(state, 'doubleShard', 0);
+}
+
 function derivedAutoTapRate(state: Persisted): number {
   let r = 0;
   for (const id of Object.keys(state.tree)) {
@@ -411,8 +438,8 @@ function derivedAutoTapRate(state: Persisted): number {
     if (!n) continue;
     if (n.effect === 'autoTapRate' && n.value) r += n.value;
   }
-  if (state.tree['fastPump']) r *= 2;
-  if (state.tree['infiniteFlow'] && r < 2) r = 2;
+  if (state.tree['fastPump']) r *= 2.5;
+  if (state.tree['infiniteFlow'] && r < 3) r = 3;
   return r;
 }
 
@@ -438,7 +465,9 @@ function derivedCombatStats(state: Persisted): CombatStats {
 }
 
 function comboMax(state: Persisted): number {
-  return state.tree['comboMaster'] ? BALANCE.combo.masterMax : BALANCE.combo.baseMax;
+  return state.tree['comboMaster']
+    ? Math.max(BALANCE.combo.baseMax, legacySkillValue(state, 'comboMaster', BALANCE.combo.masterMax))
+    : BALANCE.combo.baseMax;
 }
 
 function effectiveComboPower(combo: number): number {
@@ -448,10 +477,14 @@ function effectiveComboPower(combo: number): number {
 }
 
 function tapHasCrit(state: Persisted): { crit: boolean; mult: number } {
-  let chance = 0;
-  if (state.tree['critDrop']) chance += BALANCE.crit.critDropChance;
+  let chance = BALANCE.crit.baseChance;
+  for (const id of Object.keys(state.tree)) {
+    if (!state.tree[id]) continue;
+    const node = nodeById(id);
+    if (node?.effect === 'critChance') chance += node.value ?? 0;
+  }
   let m = BALANCE.crit.critMult;
-  if (state.tree['voidClaw']) m = BALANCE.crit.voidClawCritMult;
+  if (state.tree['voidClaw']) m = Math.max(m, BALANCE.crit.voidClawCritMult + 2);
   return { crit: Math.random() < chance, mult: m };
 }
 
@@ -802,10 +835,10 @@ export const useGame = create<GameState>()(
         multiplier *= options.damageMult ?? 1;
         const newTapsCount = options.passive ? s.tapsThisRun : s.tapsThisRun + 1;
         const lucky = !options.passive && s.tree['luckyTap'] && newTapsCount % BALANCE.luckyTap.interval === 0;
-        if (lucky) multiplier *= BALANCE.luckyTap.mult;
+        if (lucky) multiplier *= legacySkillValue(s, 'luckyTap', BALANCE.luckyTap.mult);
 
         const dmg = Math.max(1, Math.floor(perTap * multiplier));
-        const bossDmgMult = s.tree['bossKiller'] ? 2 : 1;
+        const bossDmgMult = bossDamageMultiplier(s);
         const rewardBuff = activeBuffMult(s, 'reward') * researchRewardMult(s) * (1 + buildBonuses(s).unstableRewardPct);
         const earn = Math.max(0, Math.floor(dmg * (options.rewardMult ?? 1) * rewardBuff));
 
@@ -837,11 +870,11 @@ export const useGame = create<GameState>()(
           const guaranteed = mega || boss.isElite;
           if (guaranteed) {
             let shardGain = 1;
-            if (s.tree['doubleShard'] && Math.random() < 0.25) shardGain *= 2;
+            if (Math.random() < shardDoubleChance(s)) shardGain *= 2;
             shardsDelta += shardGain;
           } else if (Math.random() < shardDropChance(boss.tier) * dropMult * activeBuffMult(s, 'shardChance') * researchShardChanceMult(s)) {
             let shardGain = 1;
-            if (s.tree['doubleShard'] && Math.random() < 0.25) shardGain *= 2;
+            if (Math.random() < shardDoubleChance(s)) shardGain *= 2;
             shardsDelta += shardGain;
           }
           // crystal drop from elites at ★10
@@ -923,7 +956,7 @@ export const useGame = create<GameState>()(
 
         if (leveledUp && get().tree['evolutionShock']) {
           const cur = get();
-          const bonus = Math.floor(cur.damacana * 1);
+          const bonus = Math.floor(cur.damacana * Math.max(0, legacySkillValue(cur, 'evolutionShock', 2) - 1));
           set({ damacana: cur.damacana + bonus, totalEarned: cur.totalEarned + bonus });
         }
 
@@ -963,7 +996,7 @@ export const useGame = create<GameState>()(
         if (autoTapRate > 0) {
           const autoTaps = (autoTapRate * dtMs) / 1000;
           const perTap = derivedPerTap({ ...s, activeBuffs: buffs });
-          const bossDmgMult = s.tree['bossKiller'] ? 2 : 1;
+          const bossDmgMult = bossDamageMultiplier(s);
           let dmgPool = perTap * autoTaps;
           while (dmgPool > 0 && boss.hpCur > 0) {
             const apply = Math.min(boss.hpCur, dmgPool * bossDmgMult);
@@ -983,11 +1016,11 @@ export const useGame = create<GameState>()(
               const guaranteed = mega || boss.isElite;
               if (guaranteed) {
                 let shardGain = 1;
-                if (s.tree['doubleShard'] && Math.random() < 0.25) shardGain *= 2;
+                if (Math.random() < shardDoubleChance(s)) shardGain *= 2;
                 shardsDelta += shardGain;
               } else if (Math.random() < shardDropChance(boss.tier) * dropMult * activeBuffMult(s, 'shardChance') * researchShardChanceMult(s)) {
                 let shardGain = 1;
-                if (s.tree['doubleShard'] && Math.random() < 0.25) shardGain *= 2;
+                if (Math.random() < shardDoubleChance(s)) shardGain *= 2;
                 shardsDelta += shardGain;
               }
               if (boss.isElite && s.totalPrestiges >= 10 && Math.random() < 0.05) crystalsDelta += 1;
@@ -1058,7 +1091,7 @@ export const useGame = create<GameState>()(
 
         if (leveledUp && get().tree['evolutionShock']) {
           const cur = get();
-          const bonus = Math.floor(cur.damacana * 1);
+          const bonus = Math.floor(cur.damacana * Math.max(0, legacySkillValue(cur, 'evolutionShock', 2) - 1));
           set({ damacana: cur.damacana + bonus, totalEarned: cur.totalEarned + bonus });
         }
 
@@ -1085,7 +1118,7 @@ export const useGame = create<GameState>()(
         if (mode !== 'max' && count < requested) return;
         if (count <= 0) return;
         const cost = upgradeBulkCost(def, lvl, count);
-        const free = mode === 'x1' && s.tree['chaosCore'] && Math.random() < 0.1;
+        const free = mode === 'x1' && s.tree['chaosCore'] && Math.random() < legacySkillChance(s, 'chaosCore', 0.1);
         const gainedPower = upgradeTotalAmount(def, lvl + count) - upgradeTotalAmount(def, lvl);
         set({
           damacana: free ? s.damacana : s.damacana - cost,
@@ -1100,8 +1133,7 @@ export const useGame = create<GameState>()(
         const node = nodeById(id);
         if (!node) return;
         if (s.tree[id]) return;
-        const prev = previousNode(node);
-        if (prev && !s.tree[prev.id]) return;
+        if (!legacySkillRequirementMet(s, id)) return;
         if (s.shards < node.cost) return;
         set({
           shards: s.shards - node.cost,
@@ -1503,7 +1535,7 @@ export const useGame = create<GameState>()(
           shop: s.shop,
           audio: s.audio,
           hasStarted: s.hasStarted,
-          damacana: s.tree['startingGift'] ? 100 : 0,
+          damacana: legacySkillValue(s, 'startingGift', 0),
           boss: freshBoss(1, 0, false),
           runStartAt: now,
           showPrestige: false,
@@ -1535,7 +1567,7 @@ export const useGame = create<GameState>()(
 
       start: () => {
         const s = get();
-        const dmc = s.tree['startingGift'] && s.totalEarned === 0 ? 100 : s.damacana;
+        const dmc = s.tree['startingGift'] && s.totalEarned === 0 ? legacySkillValue(s, 'startingGift', 100) : s.damacana;
         const now = Date.now();
         set({
           hasStarted: true,
@@ -1579,6 +1611,16 @@ export const useGame = create<GameState>()(
           enemyDiscoveryToast: null,
           powerToast: null,
           artifactToast: null,
+          currentEvent: null,
+          floatingNumbers: [],
+          shake: null,
+          recentEarnings: [],
+          currentBulb: null,
+          pendingBulbLevel: null,
+          currentFact: null,
+          achievementToast: null,
+          combo: 1,
+          lastTapAt: 0,
         });
       },
 

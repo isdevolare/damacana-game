@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from '@/lib/store';
-import { BRANCHES, nodesOfBranch, previousNode, SkillBranch } from '@/lib/config/skillTree';
+import { BRANCHES, nodesOfBranch, previousNode, SkillBranch, skillTierRequirementKey, skillTierUnlocked } from '@/lib/config/skillTree';
 import { useTranslations } from 'next-intl';
 import { clsx } from '@/lib/util';
 import { audio } from '@/lib/audio/AudioEngine';
@@ -19,6 +19,8 @@ export function SkillTreeModal() {
   const setShow = useGame((s) => s.setShowTree);
   const tree = useGame((s) => s.tree);
   const shards = useGame((s) => s.shards);
+  const bossTier = useGame((s) => s.boss.tier);
+  const totalPrestiges = useGame((s) => s.totalPrestiges);
   const buy = useGame((s) => s.buyTreeNode);
   const sfxEnabled = useGame((s) => !s.audio.muted);
   const t = useTranslations('tree');
@@ -44,6 +46,9 @@ export function SkillTreeModal() {
                 <div className="text-[10px] font-space text-white/60">
                   ◇ <span className="text-gold">{shards}</span> {ui('shards')}
                 </div>
+                <div className="mt-1 max-w-[260px] text-[9px] font-space uppercase tracking-wider text-white/45">
+                  {t('explain')}
+                </div>
               </div>
               <div className="flex gap-2">
                 <button
@@ -60,7 +65,7 @@ export function SkillTreeModal() {
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-2 flex-1">
+            <div className="grid grid-cols-2 gap-2 flex-1 sm:grid-cols-4">
               {BRANCHES.map((b) => {
                 const meta = BRANCH_META[b];
                 const nodes = nodesOfBranch(b);
@@ -72,8 +77,15 @@ export function SkillTreeModal() {
                     {nodes.map((node) => {
                       const owned = !!tree[node.id];
                       const prev = previousNode(node);
-                      const unlocked = !prev || tree[prev.id];
+                      const tierOpen = skillTierUnlocked(node.tier, { bossTier, totalPrestiges });
+                      const chainOpen = !prev || tree[prev.id];
+                      const unlocked = tierOpen && chainOpen;
                       const affordable = !owned && unlocked && shards >= node.cost;
+                      const lockText = !tierOpen
+                        ? t(skillTierRequirementKey(node.tier) as any)
+                        : prev && !tree[prev.id]
+                          ? t('requirements.previous')
+                          : null;
                       return (
                         <button
                           key={node.id}
@@ -99,11 +111,22 @@ export function SkillTreeModal() {
                           <div className="text-[9px] font-space mt-0.5 text-white/60">
                             {t(`${b}.${node.id}.desc`)}
                           </div>
+                          {lockText && (
+                            <div className="mt-1 rounded border border-white/10 bg-black/25 px-1.5 py-1 text-[8px] font-space uppercase tracking-wider text-white/45">
+                              {lockText}
+                            </div>
+                          )}
                           <div className="text-[10px] font-vt mt-1 flex justify-between">
                             <span>T{node.tier}</span>
                             <span className={owned ? 'text-gold' : 'text-cyan'}>
                               {owned ? '✓' : `◇${node.cost}`}
                             </span>
+                          </div>
+                          <div className={clsx(
+                            'mt-1 text-[8px] font-space uppercase tracking-wider',
+                            owned ? 'text-gold' : affordable ? 'text-cyan' : 'text-white/35',
+                          )}>
+                            {owned ? ui('owned') : affordable ? ui('unlocked') : ui('locked')}
                           </div>
                         </button>
                       );

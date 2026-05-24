@@ -833,41 +833,51 @@
     "milestoneReached": "{name} reached level {level}"
   },
   "tree": {
+    "explain": "Tree nodes unlock as chapters progress.",
+    "requirements": {
+      "tier1": "Reach Earth phase 3",
+      "tier2": "Defeat Earth final boss T10",
+      "tier3": "Reach Mars phase 8",
+      "tier4": "Reach Saturn",
+      "tier5": "Reach Saturn phase 10",
+      "tier6": "Reach Uranus or prestige once",
+      "previous": "Unlock the previous node first"
+    },
     "offense": {
       "title": "OFFENSE",
-      "sharpDrop": { "name": "sharp drop", "desc": "+25% tap power" },
-      "cosmicFang": { "name": "cosmic fang", "desc": "+50% tap power" },
-      "critDrop": { "name": "crit drop", "desc": "10% chance ×5 crit" },
-      "bossKiller": { "name": "boss killer", "desc": "+100% boss damage" },
+      "sharpDrop": { "name": "sharp drop", "desc": "+45% tap and projectile base power" },
+      "cosmicFang": { "name": "cosmic fang", "desc": "+85% tap and projectile base power" },
+      "critDrop": { "name": "crit drop", "desc": "16% click crit chance, projectile crit boost" },
+      "bossKiller": { "name": "boss killer", "desc": "+135% boss damage" },
       "voidBurst": { "name": "void burst", "desc": "active: massive boss hit" },
-      "voidClaw": { "name": "void claw", "desc": "tap ×3, crit ×10" }
+      "voidClaw": { "name": "void claw", "desc": "tap ×4.25, stronger crit projectiles" }
     },
     "flow": {
       "title": "FLOW",
-      "wideFaucet": { "name": "wide faucet", "desc": "+25% passive flow" },
-      "flowChannel": { "name": "flow channel", "desc": "+50% passive flow" },
-      "autoTap": { "name": "auto-tap", "desc": "0.5 silent taps/sec" },
-      "fastPump": { "name": "fast pump", "desc": "+100% flow, auto-tap ×2" },
+      "wideFaucet": { "name": "wide faucet", "desc": "+50% passive flow" },
+      "flowChannel": { "name": "flow channel", "desc": "+95% passive flow" },
+      "autoTap": { "name": "auto-tap", "desc": "0.9 silent taps/sec" },
+      "fastPump": { "name": "fast pump", "desc": "+150% flow, auto-tap ×2.5" },
       "flood": { "name": "flood", "desc": "active: 10s ×10 flow" },
-      "infiniteFlow": { "name": "infinite flow", "desc": "flow ×3, auto-tap 2/s" }
+      "infiniteFlow": { "name": "infinite flow", "desc": "flow ×4.5, auto-tap 3/s" }
     },
     "void": {
       "title": "VOID",
-      "shardAttractor": { "name": "shard attractor", "desc": "+50% shard drop" },
+      "shardAttractor": { "name": "shard attractor", "desc": "+75% shard drop" },
       "halo": { "name": "halo", "desc": "a slow rotating ring" },
-      "doubleShard": { "name": "double shard", "desc": "25% chance ×2 shards" },
-      "evolutionShock": { "name": "evolution shock", "desc": "evolutions give ×2 dmc" },
+      "doubleShard": { "name": "double shard", "desc": "35% chance ×2 shards" },
+      "evolutionShock": { "name": "evolution shock", "desc": "evolutions give ×2.5 dmc" },
       "crown": { "name": "crown", "desc": "a glowing particle crown" },
       "guaranteedShards": { "name": "guaranteed shards", "desc": "+5 shards per prestige" }
     },
     "chaos": {
       "title": "CHAOS",
-      "startingGift": { "name": "starting gift", "desc": "start each run +100" },
-      "comboMaster": { "name": "combo master", "desc": "combo cap 5 → 10" },
-      "luckyTap": { "name": "lucky tap", "desc": "every 10th tap ×5" },
+      "startingGift": { "name": "starting gift", "desc": "start each run +500" },
+      "comboMaster": { "name": "combo master", "desc": "combo cap rises to x2500" },
+      "luckyTap": { "name": "lucky tap", "desc": "every 10th tap ×7" },
       "eventMagnet": { "name": "event magnet", "desc": "events ×2 more often" },
       "timeLoop": { "name": "time loop", "desc": "active: replay last 15s" },
-      "chaosCore": { "name": "chaos core", "desc": "10% free upgrade chance" }
+      "chaosCore": { "name": "chaos core", "desc": "16% free upgrade chance" }
     }
   },
   "events": {
