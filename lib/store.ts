@@ -37,6 +37,15 @@ import {
   previousBuildNode,
   summarizeBuildBonuses,
 } from './config/buildTree';
+import {
+  ArtifactBonusSummary,
+  ArtifactSource,
+  EMPTY_ARTIFACT_BONUSES,
+  OwnedArtifact,
+  duplicateShardValue,
+  rollArtifactDrop,
+  summarizeArtifactBonuses,
+} from './config/artifacts';
 import { fmt } from './util';
 
 export interface Buff {
@@ -80,6 +89,15 @@ export interface PowerToast {
   id: number;
   labelKey: string;
   amount?: string;
+  expiresAt: number;
+}
+
+export interface ArtifactToast {
+  id: number;
+  artifactId: string;
+  level: number;
+  source: ArtifactSource;
+  convertedShards: number;
   expiresAt: number;
 }
 
@@ -129,6 +147,9 @@ interface Persisted {
   researchBonuses: ResearchBonusSummary;
   ownedBuildNodeIds: string[];
   buildBonuses: BuildBonusSummary;
+  runArtifacts: OwnedArtifact[];
+  permanentArtifacts: OwnedArtifact[];
+  artifactBonuses: ArtifactBonusSummary;
   shop: { tapBoost: number; flowBoost: number; shardBoost: number };
   // audio settings
   audio: { master: number; music: number; sfx: number; muted: boolean };
@@ -151,6 +172,7 @@ export interface GameState extends Persisted {
   showProfile: boolean;
   showResearch: boolean;
   showBuildTree: boolean;
+  showArtifacts: boolean;
   currentEvent: AbsurdEvent | null;
   floatingNumbers: Array<{ id: number; value: number; x: number; y: number; crit?: boolean }>;
   shake: { intensity: 'small' | 'medium' | 'hard'; at: number } | null;
@@ -168,6 +190,7 @@ export interface GameState extends Persisted {
   bossPhaseToast: BossPhaseToast | null;
   enemyDiscoveryToast: EnemyVariantId | null;
   powerToast: PowerToast | null;
+  artifactToast: ArtifactToast | null;
 
   // actions
   tapDamacana: (clientX?: number, clientY?: number, options?: CombatHitOptions) => void;
@@ -192,6 +215,7 @@ export interface GameState extends Persisted {
   setShowProfile: (v: boolean) => void;
   setShowResearch: (v: boolean) => void;
   setShowBuildTree: (v: boolean) => void;
+  setShowArtifacts: (v: boolean) => void;
   dismissEvolution: () => void;
   dismissChapterComplete: () => void;
   dismissOfflineReward: () => void;
@@ -203,6 +227,8 @@ export interface GameState extends Persisted {
   discoverEnemyType: (id: EnemyVariantId) => void;
   dismissEnemyDiscoveryToast: () => void;
   dismissPowerToast: () => void;
+  dismissArtifactToast: () => void;
+  rollArtifactReward: (source: ArtifactSource) => void;
   buyBuildNode: (id: string) => void;
   claimOfflineProgress: () => void;
   triggerEvent: () => void;
@@ -296,6 +322,7 @@ function derivedPerSec(state: Persisted): number {
   mult *= 1 + researchBonuses(state).passiveProductionPct;
   mult *= 1 + (state.totalPrestiges > 0 ? researchBonuses(state).postPrestigeProductionPct : 0);
   mult *= 1 + buildBonuses(state).passiveProductionPct;
+  mult *= 1 + artifactBonuses(state).passiveProductionPct;
   const now = Date.now();
   for (const b of state.activeBuffs) {
     if (b.type === 'flow' && b.expiresAt > now) mult *= b.mult;
@@ -333,12 +360,16 @@ function buildBonuses(state: Persisted): BuildBonusSummary {
   return state.buildBonuses ?? summarizeBuildBonuses(state.ownedBuildNodeIds ?? []);
 }
 
+function artifactBonuses(state: Persisted): ArtifactBonusSummary {
+  return state.artifactBonuses ?? summarizeArtifactBonuses(state.runArtifacts ?? [], state.permanentArtifacts ?? []);
+}
+
 function researchRewardMult(state: Persisted): number {
   return 1 + researchBonuses(state).rewardMultiplierPct + prestigePermanentBonuses(state.totalPrestiges).rewardGainPct;
 }
 
 function researchShardChanceMult(state: Persisted): number {
-  return 1 + researchBonuses(state).shardChancePct;
+  return 1 + researchBonuses(state).shardChancePct + artifactBonuses(state).shardChancePct;
 }
 
 function researchRequirementMet(state: Persisted, id: string): boolean {
@@ -389,6 +420,7 @@ function derivedCombatStats(state: Persisted): CombatStats {
   const bonuses = state.combatStatBonuses ?? EMPTY_COMBAT_STAT_BONUSES;
   const research = researchBonuses(state);
   const build = buildBonuses(state);
+  const artifact = artifactBonuses(state);
   const prestige = prestigePermanentBonuses(state.totalPrestiges);
   const levelHp = state.bestLevel * COMBAT.playerHpPerLevel;
   const levelMana = state.bestLevel * COMBAT.playerManaPerLevel;
@@ -396,12 +428,12 @@ function derivedCombatStats(state: Persisted): CombatStats {
   const baseManaRegen = BASE_COMBAT_STATS.manaRegen + bonuses.manaRegen;
   const baseHpRegen = BASE_COMBAT_STATS.hpRegen + bonuses.hpRegen;
   return {
-    maxHp: baseHp * (1 + research.maxHpPct + build.maxHpPct + prestige.maxHpPct),
+    maxHp: baseHp * (1 + research.maxHpPct + build.maxHpPct + artifact.maxHpPct + prestige.maxHpPct),
     maxMana: (BASE_COMBAT_STATS.maxMana + levelMana + bonuses.maxMana) * (1 + prestige.maxManaPct),
     hpRegen: baseHpRegen * (1 + build.hpRegenPct),
-    manaRegen: baseManaRegen * (1 + research.manaRegenPct + build.manaRegenPct + prestige.manaRegenPct) * activeBuffMult(state, 'manaRegen'),
+    manaRegen: baseManaRegen * (1 + research.manaRegenPct + build.manaRegenPct + artifact.manaRegenPct + prestige.manaRegenPct) * activeBuffMult(state, 'manaRegen'),
     armor: BASE_COMBAT_STATS.armor + bonuses.armor + build.armor,
-    damageReduction: Math.min(0.75, BASE_COMBAT_STATS.damageReduction + bonuses.damageReduction + build.damageReductionPct),
+    damageReduction: Math.min(0.75, BASE_COMBAT_STATS.damageReduction + bonuses.damageReduction + build.damageReductionPct + artifact.damageReductionPct),
   };
 }
 
@@ -426,11 +458,14 @@ function tapHasCrit(state: Persisted): { crit: boolean; mult: number } {
 function applyRewardToState(state: Persisted, reward: EventReward): Partial<Persisted> {
   const patch: Partial<Persisted> = {};
   const now = Date.now();
+  const artifacts = artifactBonuses(state);
   switch (reward.type) {
-    case 'dmc':
-      patch.damacana = Math.max(0, state.damacana + reward.amount);
-      patch.totalEarned = state.totalEarned + Math.max(0, reward.amount);
+    case 'dmc': {
+      const amount = reward.amount > 0 ? reward.amount * (1 + artifacts.anomalyRewardPct) : reward.amount;
+      patch.damacana = Math.max(0, state.damacana + amount);
+      patch.totalEarned = state.totalEarned + Math.max(0, amount);
       break;
+    }
     case 'shards':
       patch.shards = state.shards + reward.amount;
       break;
@@ -452,7 +487,7 @@ function applyRewardToState(state: Persisted, reward: EventReward): Partial<Pers
         {
           id: `anomaly_${reward.effect}_${now}_${Math.random().toString(36).slice(2, 7)}`,
           expiresAt: now + reward.durationMs,
-          mult: reward.mult,
+          mult: reward.effect === 'reward' ? 1 + (reward.mult - 1) * (1 + artifacts.anomalyRewardPct) : reward.mult,
           type: reward.effect,
           labelKey: reward.labelKey ?? reward.effect,
         },
@@ -544,6 +579,7 @@ function completeChapterPatch(
 let floatingIdCounter = 1;
 let bossPhaseToastCounter = 1;
 let powerToastCounter = 1;
+let artifactToastCounter = 1;
 
 function formatPowerAmount(value: number) {
   if (Math.abs(value) >= 1) return `+${fmt(Math.floor(value))}`;
@@ -568,13 +604,64 @@ function bonusPowerLabel(type: string) {
   return 'powerChanged';
 }
 
+function addArtifactPatch(
+  state: Persisted,
+  source: ArtifactSource,
+): Partial<Pick<Persisted, 'runArtifacts' | 'permanentArtifacts' | 'artifactBonuses'>> & { artifactToast?: ArtifactToast; artifactShardGain?: number } {
+  const artifact = rollArtifactDrop(source);
+  if (!artifact) return {};
+  const now = Date.now();
+  const key = artifact.scope === 'run' ? 'runArtifacts' : 'permanentArtifacts';
+  const current = state[key] ?? [];
+  const index = current.findIndex((item) => item.id === artifact.id);
+  let convertedShards = 0;
+  let level = 1;
+  let nextArtifacts: OwnedArtifact[];
+  if (index >= 0) {
+    const existing = current[index];
+    if (existing.level < artifact.maxLevel) {
+      level = existing.level + 1;
+      nextArtifacts = current.map((item, itemIndex) => (
+        itemIndex === index ? { ...item, level, source } : item
+      ));
+    } else {
+      level = existing.level;
+      convertedShards = duplicateShardValue(artifact.rarity);
+      nextArtifacts = current;
+    }
+  } else {
+    nextArtifacts = [...current, { id: artifact.id, level, source, acquiredAt: now }];
+  }
+  const runArtifacts = key === 'runArtifacts' ? nextArtifacts : state.runArtifacts ?? [];
+  const permanentArtifacts = key === 'permanentArtifacts' ? nextArtifacts : state.permanentArtifacts ?? [];
+  return {
+    [key]: nextArtifacts,
+    ...(convertedShards > 0 ? { artifactShardGain: convertedShards } : {}),
+    artifactBonuses: summarizeArtifactBonuses(runArtifacts, permanentArtifacts),
+    artifactToast: {
+      id: artifactToastCounter++,
+      artifactId: artifact.id,
+      level,
+      source,
+      convertedShards,
+      expiresAt: now + 3600,
+    },
+  };
+}
+
+function artifactStatePatch(patch: ReturnType<typeof addArtifactPatch>) {
+  const { artifactShardGain: _artifactShardGain, ...statePatch } = patch;
+  return statePatch;
+}
+
 function bossDefeatDropPatch(
   state: Persisted,
   defeatedTier: number,
   now: number,
-): { activeBuffs: Buff[]; shardGain: number; toast: BossPhaseToast } {
+): { activeBuffs: Buff[]; shardGain: number; toast: BossPhaseToast; artifactPatch: ReturnType<typeof addArtifactPatch> } {
   const info = bossPhaseInfo(defeatedTier);
   const drop = rollBossDrop(info.finalPhase);
+  const artifactPatch = addArtifactPatch(state, info.finalPhase ? 'chapterClear' : 'bossPhase');
   let activeBuffs = state.activeBuffs.filter((buff) => buff.expiresAt > now);
   let shardGain = 0;
   if (drop?.buffType && drop.durationMs && drop.mult) {
@@ -593,6 +680,7 @@ function bossDefeatDropPatch(
   return {
     activeBuffs,
     shardGain,
+    artifactPatch,
     toast: {
       id: bossPhaseToastCounter++,
       chapterId: info.chapter.id,
@@ -650,6 +738,9 @@ const initialState: Persisted = {
   researchBonuses: EMPTY_RESEARCH_BONUSES,
   ownedBuildNodeIds: [],
   buildBonuses: EMPTY_BUILD_BONUSES,
+  runArtifacts: [],
+  permanentArtifacts: [],
+  artifactBonuses: EMPTY_ARTIFACT_BONUSES,
   shop: { tapBoost: 0, flowBoost: 0, shardBoost: 0 },
   audio: { master: 0.7, music: 0.6, sfx: 0.8, muted: false },
   hasStarted: false,
@@ -672,6 +763,7 @@ export const useGame = create<GameState>()(
       showProfile: false,
       showResearch: false,
       showBuildTree: false,
+      showArtifacts: false,
       currentEvent: null,
       floatingNumbers: [],
       shake: null,
@@ -687,13 +779,15 @@ export const useGame = create<GameState>()(
       bossPhaseToast: null,
       enemyDiscoveryToast: null,
       powerToast: null,
+      artifactToast: null,
 
       tapDamacana: (clientX, clientY, options = {}) => {
         const s = get();
         const now = Date.now();
+        const artifacts = artifactBonuses(s);
         let combo = s.combo;
         if (!options.passive) {
-          const step = (BALANCE.combo.step * (options.comboBoost ?? 1) * activeBuffMult(s, 'comboGain') * (1 + buildBonuses(s).comboGainPct)) + (options.comboFlatBonus ?? 0);
+          const step = (BALANCE.combo.step * (options.comboBoost ?? 1) * activeBuffMult(s, 'comboGain') * (1 + buildBonuses(s).comboGainPct + artifacts.comboGainPct)) + (options.comboFlatBonus ?? 0);
           if (now - s.lastTapAt <= BALANCE.combo.window) {
             combo = Math.min(comboMax(s), combo + step);
           } else {
@@ -703,7 +797,7 @@ export const useGame = create<GameState>()(
         const perTap = derivedPerTap(s);
         const roll = tapHasCrit(s);
         const crit = options.forceCrit || roll.crit;
-        const critMult = options.forceCrit ? Math.max(roll.mult, BALANCE.crit.critMult) * (1 + buildBonuses(s).weakPointDamagePct) : roll.mult;
+        const critMult = options.forceCrit ? Math.max(roll.mult, BALANCE.crit.critMult) * (1 + buildBonuses(s).weakPointDamagePct + artifacts.weakPointDamagePct) : roll.mult;
         let multiplier = effectiveComboPower(combo) * (crit ? critMult : 1);
         multiplier *= options.damageMult ?? 1;
         const newTapsCount = options.passive ? s.tapsThisRun : s.tapsThisRun + 1;
@@ -724,6 +818,7 @@ export const useGame = create<GameState>()(
         let chapterPatch: ReturnType<typeof completeChapterPatch> = {};
         let activeBuffs = s.activeBuffs;
         let bossPhaseToast: BossPhaseToast | null = null;
+        let artifactPatch: ReturnType<typeof addArtifactPatch> = {};
         boss.hpCur -= Math.floor(dmg * bossDmgMult);
 
         let bestBossTier = s.bestBossTier;
@@ -756,6 +851,8 @@ export const useGame = create<GameState>()(
           const dropPatch = bossDefeatDropPatch({ ...s, activeBuffs }, defeatedTier, now);
           activeBuffs = dropPatch.activeBuffs;
           shardsDelta += dropPatch.shardGain;
+          shardsDelta += dropPatch.artifactPatch.artifactShardGain ?? 0;
+          artifactPatch = dropPatch.artifactPatch;
           bossPhaseToast = dropPatch.toast;
           bossKillsRun += 1;
           bossKillsLife += 1;
@@ -812,6 +909,7 @@ export const useGame = create<GameState>()(
           fastestLevel6Ms,
           floatingNumbers: floating,
           recentEarnings,
+          ...artifactStatePatch(artifactPatch),
           ...(bossPhaseToast ? { bossPhaseToast } : {}),
           ...chapterPatch,
           ...(leveledUp
@@ -859,6 +957,7 @@ export const useGame = create<GameState>()(
         let shakeNeeded: GameState['shake'] = s.shake;
         let chapterPatch: ReturnType<typeof completeChapterPatch> = {};
         let bossPhaseToast: BossPhaseToast | null = null;
+        let artifactPatch: ReturnType<typeof addArtifactPatch> = {};
         const eliteUnlocked = s.totalPrestiges >= 5;
 
         if (autoTapRate > 0) {
@@ -895,6 +994,8 @@ export const useGame = create<GameState>()(
               const dropPatch = bossDefeatDropPatch({ ...s, activeBuffs: buffs }, defeatedTier, now);
               buffs = dropPatch.activeBuffs;
               shardsDelta += dropPatch.shardGain;
+              shardsDelta += dropPatch.artifactPatch.artifactShardGain ?? 0;
+              artifactPatch = dropPatch.artifactPatch;
               bossPhaseToast = dropPatch.toast;
               bossKillsRun += 1;
               bossKillsLife += 1;
@@ -944,6 +1045,7 @@ export const useGame = create<GameState>()(
           recentEarnings,
           shake: shakeNeeded,
           fastestLevel6Ms,
+          ...artifactStatePatch(artifactPatch),
           ...(bossPhaseToast ? { bossPhaseToast } : {}),
           ...chapterPatch,
           ...(leveledUp
@@ -1029,12 +1131,15 @@ export const useGame = create<GameState>()(
           let chapterPatch: ReturnType<typeof completeChapterPatch> = {};
           let activeBuffs = s.activeBuffs;
           let bossPhaseToast: BossPhaseToast | null = null;
+          let artifactPatch: ReturnType<typeof addArtifactPatch> = {};
           if (boss.hpCur <= 0) {
             const defeatedTier = boss.tier;
             dmcDelta += bossReward(boss.tier, s.levelIdx);
             const dropPatch = bossDefeatDropPatch({ ...s, activeBuffs }, defeatedTier, now);
             activeBuffs = dropPatch.activeBuffs;
             shardsDelta += dropPatch.shardGain;
+            shardsDelta += dropPatch.artifactPatch.artifactShardGain ?? 0;
+            artifactPatch = dropPatch.artifactPatch;
             bossPhaseToast = dropPatch.toast;
             bossKillsRun += 1;
             bossKillsLife += 1;
@@ -1053,6 +1158,7 @@ export const useGame = create<GameState>()(
             bossKillsThisRun: bossKillsRun,
             bossKillsLifetime: bossKillsLife,
             voidBurstUses: s.voidBurstUses + 1,
+            ...artifactStatePatch(artifactPatch),
             ...(bossPhaseToast ? { bossPhaseToast } : {}),
             ...chapterPatch,
             shake: { intensity: 'hard', at: now },
@@ -1092,6 +1198,7 @@ export const useGame = create<GameState>()(
       setShowProfile: (v) => set({ showProfile: v }),
       setShowResearch: (v) => set({ showResearch: v }),
       setShowBuildTree: (v) => set({ showBuildTree: v }),
+      setShowArtifacts: (v) => set({ showArtifacts: v }),
 
       dismissEvolution: () => set({ showEvolution: null }),
       dismissChapterComplete: () => set({ showChapterComplete: null }),
@@ -1108,6 +1215,17 @@ export const useGame = create<GameState>()(
       },
       dismissEnemyDiscoveryToast: () => set({ enemyDiscoveryToast: null }),
       dismissPowerToast: () => set({ powerToast: null }),
+      dismissArtifactToast: () => set({ artifactToast: null }),
+      rollArtifactReward: (source) => {
+        const s = get();
+        const patch = addArtifactPatch(s, source);
+        if (!patch.artifactToast) return;
+        const shardGain = patch.artifactShardGain ?? 0;
+        set({
+          ...artifactStatePatch(patch),
+          ...(shardGain > 0 ? { shards: s.shards + shardGain } : {}),
+        });
+      },
 
       buyBuildNode: (id) => {
         const s = get();
@@ -1193,7 +1311,7 @@ export const useGame = create<GameState>()(
         const s = get();
         const stats = derivedCombatStats(s);
         const shield = Math.min(1, Math.max(0, activeBuffMax(s, 'shield')));
-        const incoming = amount * activeBuffMult(s, 'enemyDamage') * (1 - shield);
+        const incoming = amount * activeBuffMult(s, 'enemyDamage') * (1 + artifactBonuses(s).enemyDamagePct) * (1 - shield);
         const reduced = Math.max(0, Math.floor((incoming - stats.armor) * (1 - stats.damageReduction)));
         const hp = Math.max(0, Math.min(s.playerHp ?? stats.maxHp, stats.maxHp) - reduced);
         set({ playerHp: hp });
@@ -1227,7 +1345,7 @@ export const useGame = create<GameState>()(
         const now = Date.now();
         if ((s.combatAbilityCooldowns[id] ?? 0) > now) return false;
         if ((s.playerMana ?? 0) < ability.manaCost) return false;
-        const cooldownMult = Math.max(0.25, 1 - researchBonuses(s).abilityCooldownPct - buildBonuses(s).cooldownReductionPct - prestigePermanentBonuses(s.totalPrestiges).cooldownReductionPct);
+        const cooldownMult = Math.max(0.25, 1 - researchBonuses(s).abilityCooldownPct - buildBonuses(s).cooldownReductionPct - artifactBonuses(s).cooldownReductionPct - prestigePermanentBonuses(s.totalPrestiges).cooldownReductionPct);
         set({
           playerMana: Math.max(0, (s.playerMana ?? 0) - ability.manaCost),
           combatAbilityCooldowns: {
@@ -1269,10 +1387,11 @@ export const useGame = create<GameState>()(
         const awayMs = Math.max(0, now - s.lastActiveAt);
         const research = researchBonuses(s);
         const build = buildBonuses(s);
+        const artifacts = artifactBonuses(s);
         const maxOfflineMs = (s.offlineMaxMs || OFFLINE_PROGRESS.defaultMaxMs) + research.offlineCapMs;
         const cappedMs = Math.min(awayMs, maxOfflineMs);
         const ps = derivedPerSec(s);
-        const gained = Math.floor(((ps * cappedMs) / 1000) * (1 + research.offlineEfficiencyPct + build.offlineEfficiencyPct));
+        const gained = Math.floor(((ps * cappedMs) / 1000) * (1 + research.offlineEfficiencyPct + build.offlineEfficiencyPct + artifacts.offlineEfficiencyPct));
         if (awayMs < OFFLINE_PROGRESS.minNotifyMs || gained <= 0) {
           set({ lastActiveAt: now });
           return;
@@ -1315,10 +1434,16 @@ export const useGame = create<GameState>()(
           const p = applyRewardToState(next, r);
           next = { ...next, ...p } as Persisted & typeof s;
         }
+        const eventArtifactPatch = ev.rarity === 'singularity'
+          ? addArtifactPatch(next, 'singularityEvent')
+          : ev.rarity === 'corrupted'
+            ? addArtifactPatch(next, 'corruptedEvent')
+            : {};
+        const artifactShardGain = eventArtifactPatch.artifactShardGain ?? 0;
         set({
           damacana: next.damacana,
           totalEarned: next.totalEarned,
-          shards: next.shards,
+          shards: next.shards + artifactShardGain,
           activeBuffs: next.activeBuffs,
           boss: next.boss,
           perRunPerTapPctBonus: next.perRunPerTapPctBonus,
@@ -1327,6 +1452,7 @@ export const useGame = create<GameState>()(
           activeAbilityCooldowns: next.activeAbilityCooldowns,
           combatAbilityCooldowns: next.combatAbilityCooldowns,
           currentEvent: null,
+          ...artifactStatePatch(eventArtifactPatch),
         });
       },
 
@@ -1371,6 +1497,9 @@ export const useGame = create<GameState>()(
           researchBonuses: s.researchBonuses ?? summarizeResearchBonuses(s.claimedResearchIds ?? []),
           ownedBuildNodeIds: s.ownedBuildNodeIds ?? [],
           buildBonuses: s.buildBonuses ?? summarizeBuildBonuses(s.ownedBuildNodeIds ?? []),
+          runArtifacts: [],
+          permanentArtifacts: s.permanentArtifacts ?? [],
+          artifactBonuses: summarizeArtifactBonuses([], s.permanentArtifacts ?? []),
           shop: s.shop,
           audio: s.audio,
           hasStarted: s.hasStarted,
@@ -1393,6 +1522,7 @@ export const useGame = create<GameState>()(
           bossPhaseToast: null,
           enemyDiscoveryToast: null,
           powerToast: null,
+          artifactToast: null,
           combo: 1,
           lastTapAt: 0,
         });
@@ -1437,6 +1567,9 @@ export const useGame = create<GameState>()(
           researchBonuses: EMPTY_RESEARCH_BONUSES,
           ownedBuildNodeIds: [],
           buildBonuses: EMPTY_BUILD_BONUSES,
+          runArtifacts: [],
+          permanentArtifacts: [],
+          artifactBonuses: EMPTY_ARTIFACT_BONUSES,
           nextKnowledgeBulbAt: 0,
           showChapterComplete: null,
           offlineReward: null,
@@ -1445,6 +1578,7 @@ export const useGame = create<GameState>()(
           discoveredEnemyTypeIds: ['basic'],
           enemyDiscoveryToast: null,
           powerToast: null,
+          artifactToast: null,
         });
       },
 
@@ -1609,6 +1743,9 @@ export const useGame = create<GameState>()(
         researchBonuses: s.researchBonuses,
         ownedBuildNodeIds: s.ownedBuildNodeIds,
         buildBonuses: s.buildBonuses,
+        runArtifacts: s.runArtifacts,
+        permanentArtifacts: s.permanentArtifacts,
+        artifactBonuses: s.artifactBonuses,
         shop: s.shop,
         audio: s.audio,
         hasStarted: s.hasStarted,
@@ -1639,4 +1776,7 @@ export function selectResearchBonuses(s: GameState) {
 }
 export function selectBuildBonuses(s: GameState) {
   return buildBonuses(s);
+}
+export function selectArtifactBonuses(s: GameState) {
+  return artifactBonuses(s);
 }

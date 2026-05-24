@@ -12,6 +12,7 @@
     "profileStats": "profil / istatistikler",
     "research": "laboratuvar",
     "buildTree": "yapı ağacı",
+    "artifacts": "artefaktlar",
     "master": "ana ses",
     "music": "müzik",
     "sfx": "efekt",
@@ -363,6 +364,58 @@
     "manaLeech": { "name": "Mana Sömürücü" },
     "orbitJammer": { "name": "Yörünge Bozucu" },
     "anomaly": { "name": "Anomali Halkası" }
+  },
+  "artifacts": {
+    "title": "ARTEFAKTLAR",
+    "subtitle": "nadir koşu ve kalıcı yapı değiştiricileri",
+    "empty": "Henüz artefakt bulunmadı. Boss fazları, elit dalgalar ve anomaliler düşürebilir.",
+    "drop": "Artefakt bulundu",
+    "converted": "Kopya dönüştü",
+    "source": "kaynak",
+    "scope": {
+      "run": "koşu",
+      "permanent": "kalıcı"
+    },
+    "rarity": {
+      "common": "yaygın",
+      "rare": "nadir",
+      "epic": "epik",
+      "corrupted": "bozuk",
+      "cosmic": "kozmik"
+    },
+    "category": {
+      "combo": "combo",
+      "orbit": "yörünge",
+      "projectile": "mermi",
+      "tank": "çekirdek",
+      "mana": "mana",
+      "void": "boşluk",
+      "flow": "akış"
+    },
+    "sources": {
+      "bossPhase": "boss faz temizliği",
+      "chapterClear": "bölüm temizliği",
+      "eliteWave": "elit dalga",
+      "anomalyWave": "anomali dalgası",
+      "corruptedEvent": "bozuk anomali",
+      "singularityEvent": "tekillik anomalisi"
+    },
+    "items": {
+      "fracturedCore": { "name": "Kırık Çekirdek", "effect": "combo kazanımı +%12" },
+      "ruptureLens": { "name": "Kırılma Merceği", "effect": "zayıf nokta hasarı +%15" },
+      "saturnRingFragment": { "name": "Satürn Halka Parçası", "effect": "yörünge hasarı +%20" },
+      "gravityLoop": { "name": "Yerçekimi Döngüsü", "effect": "yörünge yarıçapı +%10" },
+      "marsSpark": { "name": "Mars Kıvılcımı", "effect": "mermi atış hızı +%8" },
+      "splitCurrent": { "name": "Bölünen Akıntı", "effect": "ek mermi şansı" },
+      "denseCore": { "name": "Yoğun Çekirdek", "effect": "maks HP +%10" },
+      "shieldSeed": { "name": "Kalkan Tohumu", "effect": "hasar azaltma +%4" },
+      "manaPrism": { "name": "Mana Prizması", "effect": "mana yenilenmesi +%12" },
+      "cooldownShard": { "name": "Bekleme Kırığı", "effect": "yetenek beklemeleri -%6" },
+      "voidThread": { "name": "Boşluk İpliği", "effect": "anomali ödülleri +%15, düşman hasarı +%5" },
+      "blackSignal": { "name": "Kara Sinyal", "effect": "kırık şansı +%8, boss darbe hasarı +%5" },
+      "silentPump": { "name": "Sessiz Pompa", "effect": "pasif üretim +%10" },
+      "nightReservoir": { "name": "Gece Rezervuarı", "effect": "çevrimdışı verim +%10" }
+    }
   },
   "facts": {
     "cosmos_ageUniverse": {

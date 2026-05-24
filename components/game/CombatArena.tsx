@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
-import { useGame, selectBuildBonuses, selectCombatStats, selectPerSec, selectPerTap, selectResearchBonuses } from '@/lib/store';
+import { useGame, selectArtifactBonuses, selectBuildBonuses, selectCombatStats, selectPerSec, selectPerTap, selectResearchBonuses } from '@/lib/store';
 import type { Buff } from '@/lib/store';
 import { currentChapter } from '@/lib/config/chapters';
 import { bossPhaseCombatTuning, bossPhaseInfo } from '@/lib/config/bossMissions';
@@ -245,6 +245,7 @@ function projectileStats(args: {
   perSec: number;
   build: ReturnType<typeof selectBuildBonuses>;
   research: ReturnType<typeof selectResearchBonuses>;
+  artifacts: ReturnType<typeof selectArtifactBonuses>;
   prestige: ReturnType<typeof prestigePermanentBonuses>;
   combo: number;
   lowDensity: boolean;
@@ -254,8 +255,8 @@ function projectileStats(args: {
   const damage =
     (args.perTap * CORE_DEFENSE.projectileDamageMult + args.perSec * CORE_DEFENSE.projectilePassiveDamageMult) *
     comboPressure *
-    (1 + args.build.orbitDamagePct + args.research.orbitDamagePct + args.prestige.orbitDamagePct);
-  const cooldownMult = Math.max(0.55, 1 - args.build.cooldownReductionPct - args.prestige.cooldownReductionPct);
+    (1 + args.build.orbitDamagePct + args.research.orbitDamagePct + args.artifacts.orbitDamagePct + args.prestige.orbitDamagePct);
+  const cooldownMult = Math.max(0.42, 1 - args.build.cooldownReductionPct - args.artifacts.cooldownReductionPct - args.artifacts.projectileFireRatePct - args.prestige.cooldownReductionPct);
   return {
     intervalMs: (args.lowDensity ? CORE_DEFENSE.mobileAttackIntervalMs : CORE_DEFENSE.baseAttackIntervalMs) *
       cooldownMult *
@@ -263,7 +264,8 @@ function projectileStats(args: {
     damage: Math.max(1, Math.floor(damage * (args.burstActive ? 1.22 : 1))),
     speed: args.lowDensity ? CORE_DEFENSE.mobileProjectileSpeed : CORE_DEFENSE.projectileSpeed,
     critChance: Math.min(0.35, CORE_DEFENSE.projectileCritChance + args.build.weakPointDamagePct * 0.35),
-    critDamage: CORE_DEFENSE.projectileCritDamage + args.build.weakPointDamagePct + args.prestige.rewardGainPct,
+    critDamage: CORE_DEFENSE.projectileCritDamage + args.build.weakPointDamagePct + args.artifacts.weakPointDamagePct + args.prestige.rewardGainPct,
+    extraProjectileChance: args.artifacts.extraProjectileChancePct,
   };
 }
 
@@ -287,6 +289,7 @@ export function CombatArena() {
   const combatStats = useGame(selectCombatStats);
   const researchBonuses = useGame(selectResearchBonuses);
   const buildBonuses = useGame(selectBuildBonuses);
+  const artifactBonuses = useGame(selectArtifactBonuses);
   const playerHp = useGame((s) => s.playerHp);
   const playerMana = useGame((s) => s.playerMana);
   const abilityCooldowns = useGame((s) => s.combatAbilityCooldowns);
@@ -304,6 +307,7 @@ export function CombatArena() {
   const enemyDiscoveryToast = useGame((s) => s.enemyDiscoveryToast);
   const dismissEnemyDiscoveryToast = useGame((s) => s.dismissEnemyDiscoveryToast);
   const discoverEnemyType = useGame((s) => s.discoverEnemyType);
+  const rollArtifactReward = useGame((s) => s.rollArtifactReward);
   const sfxEnabled = useGame((s) => !s.audio.muted);
 
   const chapter = currentChapter(completedChapters);
@@ -392,8 +396,10 @@ export function CombatArena() {
   const activeBuffsRef = useRef(activeBuffs);
   const researchBonusesRef = useRef(researchBonuses);
   const buildBonusesRef = useRef(buildBonuses);
+  const artifactBonusesRef = useRef(artifactBonuses);
   const totalPrestigesRef = useRef(totalPrestiges);
   const discoverEnemyTypeRef = useRef(discoverEnemyType);
+  const rollArtifactRewardRef = useRef(rollArtifactReward);
 
   useEffect(() => { perTapRef.current = perTap; }, [perTap]);
   useEffect(() => { perSecRef.current = perSec; }, [perSec]);
@@ -416,8 +422,10 @@ export function CombatArena() {
   useEffect(() => { activeBuffsRef.current = activeBuffs; }, [activeBuffs]);
   useEffect(() => { researchBonusesRef.current = researchBonuses; }, [researchBonuses]);
   useEffect(() => { buildBonusesRef.current = buildBonuses; }, [buildBonuses]);
+  useEffect(() => { artifactBonusesRef.current = artifactBonuses; }, [artifactBonuses]);
   useEffect(() => { totalPrestigesRef.current = totalPrestiges; }, [totalPrestiges]);
   useEffect(() => { discoverEnemyTypeRef.current = discoverEnemyType; }, [discoverEnemyType]);
+  useEffect(() => { rollArtifactRewardRef.current = rollArtifactReward; }, [rollArtifactReward]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -608,6 +616,8 @@ export function CombatArena() {
     waveRef.current += 1;
     activeWaveTypeRef.current = waveTypeId;
     setWaveStatus({ type: waveTypeId, incoming: false, until: now + (wave.special ? 4200 : 2600) });
+    if (waveTypeId === 'elite') rollArtifactRewardRef.current('eliteWave');
+    if (waveTypeId === 'anomaly') rollArtifactRewardRef.current('anomalyWave');
     enemiesRef.current = nextEnemies;
     setEnemies(nextEnemies);
   }, []);
@@ -889,6 +899,7 @@ export function CombatArena() {
       const activeTheme = planetThemeRef.current;
       const activeChapter = chapterRef.current;
       const activeBuild = buildBonusesRef.current;
+      const activeArtifacts = artifactBonusesRef.current;
       const activePrestige = prestigePermanentBonuses(totalPrestigesRef.current);
       const orbitJammerMult = enemiesRef.current.some((enemy) => enemy.variantId === 'orbitJammer') ? 0.62 : 1;
       const updatedEnemies = enemiesRef.current.map((enemy) => {
@@ -952,6 +963,7 @@ export function CombatArena() {
         perSec: perSecRef.current,
         build: activeBuild,
         research: researchBonusesRef.current,
+        artifacts: activeArtifacts,
         prestige: activePrestige,
         combo: comboRef.current,
         lowDensity: lowDensityFrame,
@@ -970,9 +982,7 @@ export function CombatArena() {
         const targetPoint = targetEnemy ?? bossPoint;
         const angle = Math.atan2(targetPoint.y - p.y, targetPoint.x - p.x);
         const crit = Math.random() < shotStats.critChance;
-        projectilesRef.current = [
-          ...projectilesRef.current,
-          {
+        const baseProjectile: Projectile = {
             id: projectileId++,
             x: p.x,
             y: p.y,
@@ -985,8 +995,21 @@ export function CombatArena() {
             bornAt: now,
             color: crit ? '#ffd166' : burstActive ? '#ff5ce8' : activeTheme.particleColor,
             hitUntil: 0,
-          },
-        ].slice(-projectileCap);
+          };
+        const shots: Projectile[] = [baseProjectile];
+        if (
+          projectilesRef.current.length + shots.length < projectileCap &&
+          Math.random() < shotStats.extraProjectileChance
+        ) {
+          shots.push({
+            ...baseProjectile,
+            id: projectileId++,
+            angle: angle + (Math.random() > 0.5 ? 0.16 : -0.16),
+            damage: Math.max(1, Math.floor(baseProjectile.damage * 0.72)),
+            color: burstActive ? '#ff5ce8' : '#bffcff',
+          });
+        }
+        projectilesRef.current = [...projectilesRef.current, ...shots].slice(-projectileCap);
         lastProjectileShotRef.current = now;
         if (!lowDensityFrame) emitParticles(p.x, p.y, burstActive ? '#ff5ce8' : activeTheme.particleColor, burstActive ? 5 : 3, 0.45);
       }
@@ -1081,7 +1104,7 @@ export function CombatArena() {
           .filter((item) => item.d < 30)
           .sort((a, b) => a.d - b.d)[0]?.enemy;
         if (target) {
-          const damage = Math.max(1, Math.floor(perTapRef.current * 0.48 * orbitJammerMult * anomalyMult(activeAnomalies, 'orbitDamage') * (1 + researchBonusesRef.current.orbitDamagePct + activeBuild.orbitDamagePct + activePrestige.orbitDamagePct)));
+          const damage = Math.max(1, Math.floor(perTapRef.current * 0.48 * orbitJammerMult * anomalyMult(activeAnomalies, 'orbitDamage') * (1 + researchBonusesRef.current.orbitDamagePct + activeBuild.orbitDamagePct + activeArtifacts.orbitDamagePct + activePrestige.orbitDamagePct)));
           let killedEnemy: Enemy | null = null;
           enemiesRef.current = enemiesRef.current
             .map((enemy) => {
@@ -1105,9 +1128,9 @@ export function CombatArena() {
       const activeOrbit = abilityEffectsRef.current.find((effect) => effect.kind === 'orbitSlash' && now < effect.until);
       if (activeOrbit && now - lastOrbitSlashDamageRef.current > 220) {
         lastOrbitSlashDamageRef.current = now;
-        const damage = Math.max(1, Math.floor(perTapRef.current * 0.28 * orbitJammerMult * anomalyMult(activeAnomalies, 'orbitDamage') * (1 + researchBonusesRef.current.orbitDamagePct + activeBuild.orbitDamagePct + activePrestige.orbitDamagePct)));
+        const damage = Math.max(1, Math.floor(perTapRef.current * 0.28 * orbitJammerMult * anomalyMult(activeAnomalies, 'orbitDamage') * (1 + researchBonusesRef.current.orbitDamagePct + activeBuild.orbitDamagePct + activeArtifacts.orbitDamagePct + activePrestige.orbitDamagePct)));
         const baseRadius = COMBAT_ABILITIES.find((ability) => ability.id === 'orbitSlash')?.radius ?? 28;
-        const radius = baseRadius * (1 + activeBuild.orbitSlashRadiusPct);
+        const radius = baseRadius * (1 + activeBuild.orbitSlashRadiusPct + activeArtifacts.orbitRadiusPct);
         let orbitHits = 0;
         const killedEnemies: Enemy[] = [];
         let nextEnemies = enemiesRef.current
@@ -1195,7 +1218,7 @@ export function CombatArena() {
           const radius = ((now - pulse.fireAt) * pulse.speed) / anomalyMult(activeAnomalies, 'bossSlow');
           const distance = dist(bossArenaPoint(now, activePhaseTuning.info.progress), p);
           if (!pulse.hit && Math.abs(distance - radius) < COMBAT.bossPulseDamageBand) {
-            damagePlayer(COMBAT.bossPulseDamage * activePhaseTuning.pulseDamageMult * pulse.damageMult * anomalyMult(activeAnomalies, 'bossRage'));
+            damagePlayer(COMBAT.bossPulseDamage * activePhaseTuning.pulseDamageMult * pulse.damageMult * anomalyMult(activeAnomalies, 'bossRage') * (1 + activeArtifacts.bossPulseDamagePct));
             return { ...pulse, hit: true };
           }
           return pulse;
@@ -1809,7 +1832,7 @@ export function CombatArena() {
         const duration = Math.max(1, effect.until - effect.bornAt);
         const progress = Math.min(1, age / duration);
         const color = effect.kind === 'coreHeal' ? '#5cf6ff' : effect.kind === 'orbitSlash' ? '#ff5ce8' : '#5cf6ff';
-        const orbitEffectSize = 112 * (1 + buildBonuses.orbitSlashRadiusPct);
+        const orbitEffectSize = 112 * (1 + buildBonuses.orbitSlashRadiusPct + artifactBonuses.orbitRadiusPct);
         return (
           <div
             key={effect.id}

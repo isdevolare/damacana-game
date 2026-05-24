@@ -27,8 +27,10 @@ import { ProfileStatsModal } from './ProfileStatsModal';
 import { ResearchLabModal } from './ResearchLabModal';
 import { ResearchToast } from './ResearchToast';
 import { BuildTreeModal } from './BuildTreeModal';
+import { ArtifactInventoryModal } from './ArtifactInventoryModal';
 import { AudioUnlockPrompt } from './AudioUnlockPrompt';
 import { PowerToast } from './PowerToast';
+import { ArtifactToast } from './ArtifactToast';
 import { useScreenShake } from '@/lib/hooks/useScreenShake';
 import { useGameLoop } from '@/lib/hooks/useGameLoop';
 import { useAchievements } from '@/lib/hooks/useAchievements';
@@ -67,12 +69,14 @@ export function GameScreen({ locale }: { locale: string }) {
       <ProfileStatsModal />
       <ResearchLabModal />
       <BuildTreeModal />
+      <ArtifactInventoryModal />
       <ShopModal />
       <ChapterCompleteModal />
       <OfflineReturnModal />
       <ResearchToast />
       <AchievementToast />
       <PowerToast />
+      <ArtifactToast />
       <SettingsPanel locale={locale} />
       <AudioUnlockPrompt />
       <StartOverlay />

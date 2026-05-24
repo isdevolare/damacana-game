@@ -12,6 +12,7 @@
     "profileStats": "profile / stats",
     "research": "research lab",
     "buildTree": "build tree",
+    "artifacts": "artifacts",
     "master": "master",
     "music": "music",
     "sfx": "sfx",
@@ -363,6 +364,58 @@
     "manaLeech": { "name": "Mana Leech" },
     "orbitJammer": { "name": "Orbit Jammer" },
     "anomaly": { "name": "Anomaly Ring" }
+  },
+  "artifacts": {
+    "title": "ARTIFACTS",
+    "subtitle": "rare run and permanent build modifiers",
+    "empty": "No artifacts found yet. Boss phases, elite waves, and anomalies can drop them.",
+    "drop": "Artifact found",
+    "converted": "Duplicate converted",
+    "source": "source",
+    "scope": {
+      "run": "run",
+      "permanent": "permanent"
+    },
+    "rarity": {
+      "common": "common",
+      "rare": "rare",
+      "epic": "epic",
+      "corrupted": "corrupted",
+      "cosmic": "cosmic"
+    },
+    "category": {
+      "combo": "combo",
+      "orbit": "orbit",
+      "projectile": "projectile",
+      "tank": "core",
+      "mana": "mana",
+      "void": "void",
+      "flow": "flow"
+    },
+    "sources": {
+      "bossPhase": "boss phase clear",
+      "chapterClear": "chapter clear",
+      "eliteWave": "elite wave",
+      "anomalyWave": "anomaly wave",
+      "corruptedEvent": "corrupted anomaly",
+      "singularityEvent": "singularity anomaly"
+    },
+    "items": {
+      "fracturedCore": { "name": "Fractured Core", "effect": "combo gain +12%" },
+      "ruptureLens": { "name": "Rupture Lens", "effect": "weak point damage +15%" },
+      "saturnRingFragment": { "name": "Saturn Ring Fragment", "effect": "orbit damage +20%" },
+      "gravityLoop": { "name": "Gravity Loop", "effect": "orbit radius +10%" },
+      "marsSpark": { "name": "Mars Spark", "effect": "projectile fire rate +8%" },
+      "splitCurrent": { "name": "Split Current", "effect": "chance for an extra projectile" },
+      "denseCore": { "name": "Dense Core", "effect": "max HP +10%" },
+      "shieldSeed": { "name": "Shield Seed", "effect": "damage reduction +4%" },
+      "manaPrism": { "name": "Mana Prism", "effect": "mana regen +12%" },
+      "cooldownShard": { "name": "Cooldown Shard", "effect": "ability cooldowns -6%" },
+      "voidThread": { "name": "Void Thread", "effect": "anomaly rewards +15%, enemy damage +5%" },
+      "blackSignal": { "name": "Black Signal", "effect": "shard chance +8%, boss pulse damage +5%" },
+      "silentPump": { "name": "Silent Pump", "effect": "passive production +10%" },
+      "nightReservoir": { "name": "Night Reservoir", "effect": "offline efficiency +10%" }
+    }
   },
   "facts": {
     "cosmos_ageUniverse": {

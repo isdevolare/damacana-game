@@ -16,6 +16,7 @@ export function SettingsPanel({ locale }: { locale: string }) {
   const setShowProfile = useGame((s) => s.setShowProfile);
   const setShowResearch = useGame((s) => s.setShowResearch);
   const setShowBuildTree = useGame((s) => s.setShowBuildTree);
+  const setShowArtifacts = useGame((s) => s.setShowArtifacts);
   const setShowPrestige = useGame((s) => s.setShowPrestige);
   const boss = useGame((s) => s.boss);
   const completedChapters = useGame((s) => s.completedChapters);
@@ -109,10 +110,19 @@ export function SettingsPanel({ locale }: { locale: string }) {
             <button
               onClick={() => openLockedSystem('buildTree', () => setShowBuildTree(true))}
               disabled={!systemUnlocked('buildTree', unlockCtx)}
-              className="mb-4 w-full rounded-md border border-gold/35 bg-gold/10 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-gold disabled:opacity-45"
+              className="mb-2 w-full rounded-md border border-gold/35 bg-gold/10 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-gold disabled:opacity-45"
             >
               {t('buildTree')}
               {lockedText('buildTree')}
+            </button>
+            <button
+              onClick={() => {
+                setShow(false);
+                setShowArtifacts(true);
+              }}
+              className="mb-4 w-full rounded-md border border-gold/35 bg-black/30 px-3 py-2 text-left font-space text-xs uppercase tracking-widest text-gold"
+            >
+              {t('artifacts')}
             </button>
 
             <div className="space-y-3">
