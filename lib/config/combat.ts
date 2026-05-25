@@ -147,7 +147,7 @@ export const COMBAT_ABILITIES: CombatAbilityDef[] = [
     manaCost: 30,
     cooldownMs: 8_000,
     radius: 30,
-    damageMult: 4.5,
+    damageMult: 5.2,
   },
   {
     id: 'orbitSlash',

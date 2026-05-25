@@ -80,7 +80,7 @@ export const RESEARCH_LIST: ResearchDefinition[] = [
     i18nKey: 'stableCore1',
     durationMs: 1 * m,
     cost: { currency: 'damacana', amount: 250 },
-    bonuses: [{ type: 'maxHpPct', value: 0.05 }],
+    bonuses: [{ type: 'maxHpPct', value: 0.1 }],
     requirement: { type: 'none' },
   },
   {
@@ -89,7 +89,7 @@ export const RESEARCH_LIST: ResearchDefinition[] = [
     i18nKey: 'comboMemory1',
     durationMs: 3 * m,
     cost: { currency: 'damacana', amount: 1500 },
-    bonuses: [{ type: 'comboDecayPct', value: 0.05 }],
+    bonuses: [{ type: 'comboDecayPct', value: 0.1 }],
     requirement: { type: 'none' },
   },
   {
@@ -98,7 +98,7 @@ export const RESEARCH_LIST: ResearchDefinition[] = [
     i18nKey: 'manaChannel1',
     durationMs: 5 * m,
     cost: { currency: 'damacana', amount: 4000 },
-    bonuses: [{ type: 'manaRegenPct', value: 0.05 }],
+    bonuses: [{ type: 'manaRegenPct', value: 0.1 }],
     requirement: { type: 'none' },
   },
   {
@@ -107,7 +107,7 @@ export const RESEARCH_LIST: ResearchDefinition[] = [
     i18nKey: 'efficientFlow1',
     durationMs: 1 * m,
     cost: { currency: 'damacana', amount: 250 },
-    bonuses: [{ type: 'passiveProductionPct', value: 0.05 }],
+    bonuses: [{ type: 'passiveProductionPct', value: 0.1 }],
     requirement: { type: 'none' },
   },
   {
@@ -116,7 +116,7 @@ export const RESEARCH_LIST: ResearchDefinition[] = [
     i18nKey: 'rewardCurrent1',
     durationMs: 5 * m,
     cost: { currency: 'damacana', amount: 5000 },
-    bonuses: [{ type: 'rewardMultiplierPct', value: 0.05 }],
+    bonuses: [{ type: 'rewardMultiplierPct', value: 0.1 }],
     requirement: { type: 'none' },
   },
   {
@@ -125,7 +125,7 @@ export const RESEARCH_LIST: ResearchDefinition[] = [
     i18nKey: 'orbitCalibration1',
     durationMs: 10 * m,
     cost: { currency: 'damacana', amount: 15000 },
-    bonuses: [{ type: 'orbitDamagePct', value: 0.05 }],
+    bonuses: [{ type: 'orbitDamagePct', value: 0.12 }],
     requirement: { type: 'none' },
   },
   {
@@ -143,7 +143,7 @@ export const RESEARCH_LIST: ResearchDefinition[] = [
     i18nKey: 'silentEngine1',
     durationMs: 10 * m,
     cost: { currency: 'damacana', amount: 10000 },
-    bonuses: [{ type: 'offlineEfficiencyPct', value: 0.1 }],
+    bonuses: [{ type: 'offlineEfficiencyPct', value: 0.15 }],
     requirement: { type: 'passiveProduction', min: 1, fallbackChapter: 'earth' },
   },
   {
@@ -161,7 +161,7 @@ export const RESEARCH_LIST: ResearchDefinition[] = [
     i18nKey: 'voidAnalysis1',
     durationMs: 20 * m,
     cost: { currency: 'shards', amount: 1 },
-    bonuses: [{ type: 'prestigeGainPct', value: 0.05 }],
+    bonuses: [{ type: 'prestigeGainPct', value: 0.12 }],
     requirement: { type: 'prestigeOrShard' },
   },
   {
@@ -170,7 +170,7 @@ export const RESEARCH_LIST: ResearchDefinition[] = [
     i18nKey: 'fractureDetector1',
     durationMs: 30 * m,
     cost: { currency: 'shards', amount: 2 },
-    bonuses: [{ type: 'shardChancePct', value: 0.05 }],
+    bonuses: [{ type: 'shardChancePct', value: 0.1 }],
     requirement: { type: 'prestigeOrShard' },
   },
   {
@@ -179,7 +179,7 @@ export const RESEARCH_LIST: ResearchDefinition[] = [
     i18nKey: 'permanentTrace1',
     durationMs: 60 * m,
     cost: { currency: 'shards', amount: 3 },
-    bonuses: [{ type: 'postPrestigeProductionPct', value: 0.05 }],
+    bonuses: [{ type: 'postPrestigeProductionPct', value: 0.1 }],
     requirement: { type: 'prestigeOrShard' },
   },
 ];
@@ -199,4 +199,3 @@ export function summarizeResearchBonuses(ids: string[]): ResearchBonusSummary {
   }
   return out;
 }
-

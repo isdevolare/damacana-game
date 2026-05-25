@@ -14,8 +14,8 @@ export const CORE_DEFENSE = {
   burstStackMs: 320,
   projectileSpeed: 0.078,
   mobileProjectileSpeed: 0.07,
-  projectileDamageMult: 0.62,
-  projectilePassiveDamageMult: 0.11,
+  projectileDamageMult: 0.94,
+  projectilePassiveDamageMult: 0.15,
   projectileCritChance: 0.08,
   projectileCritDamage: 1.85,
 };

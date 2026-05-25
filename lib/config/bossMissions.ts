@@ -27,10 +27,10 @@ interface ChapterCombatProfile {
 
 const CHAPTER_PROFILES: Record<ChapterId, ChapterCombatProfile> = {
   earth: {
-    hpMult: 0.74,
-    rewardMult: 1.12,
-    hpCurve: [0.68, 0.98],
-    rewardCurve: [1.08, 1.7],
+    hpMult: 0.86,
+    rewardMult: 1.04,
+    hpCurve: [0.8, 1.06],
+    rewardCurve: [0.98, 1.48],
     desktopMinions: [2, 4],
     mobileMinions: [2, 3],
     spawnMs: [5200, 3900],
@@ -43,10 +43,10 @@ const CHAPTER_PROFILES: Record<ChapterId, ChapterCombatProfile> = {
     summonCount: [1, 2],
   },
   mars: {
-    hpMult: 0.92,
-    rewardMult: 1.15,
-    hpCurve: [0.78, 1.1],
-    rewardCurve: [1, 1.56],
+    hpMult: 1,
+    rewardMult: 1.08,
+    hpCurve: [0.88, 1.18],
+    rewardCurve: [0.96, 1.44],
     desktopMinions: [3, 5],
     mobileMinions: [3, 4],
     spawnMs: [4100, 3000],
@@ -59,36 +59,36 @@ const CHAPTER_PROFILES: Record<ChapterId, ChapterCombatProfile> = {
     summonCount: [1, 3],
   },
   saturn: {
-    hpMult: 0.98,
-    rewardMult: 1.32,
-    hpCurve: [0.72, 1.1],
-    rewardCurve: [1, 1.56],
-    desktopMinions: [3, 6],
-    mobileMinions: [3, 4],
-    spawnMs: [4000, 2800],
+    hpMult: 0.82,
+    rewardMult: 1.48,
+    hpCurve: [0.68, 0.88],
+    rewardCurve: [1.08, 1.82],
+    desktopMinions: [3, 5],
+    mobileMinions: [2, 4],
+    spawnMs: [4500, 3400],
     pulseMs: [3800, 2650],
-    summonMs: [12800, 8600],
-    enemyHp: [0.96, 1.38],
+    summonMs: [15000, 10800],
+    enemyHp: [0.88, 1.12],
     enemySpeed: [0.92, 1.08],
-    enemyDamage: [0.82, 1.02],
-    pulseDamage: [0.9, 1.18],
-    summonCount: [1, 3],
+    enemyDamage: [0.72, 0.86],
+    pulseDamage: [0.78, 0.96],
+    summonCount: [1, 2],
   },
   uranus: {
-    hpMult: 1.3,
-    rewardMult: 1.24,
-    hpCurve: [0.82, 1.24],
-    rewardCurve: [0.9, 1.45],
-    desktopMinions: [5, 8],
-    mobileMinions: [4, 6],
-    spawnMs: [3300, 2250],
-    pulseMs: [3500, 2300],
-    summonMs: [9800, 6500],
-    enemyHp: [1.16, 1.7],
+    hpMult: 1.08,
+    rewardMult: 1.48,
+    hpCurve: [0.74, 1.24],
+    rewardCurve: [1.06, 1.52],
+    desktopMinions: [4, 8],
+    mobileMinions: [3, 6],
+    spawnMs: [4200, 2250],
+    pulseMs: [4500, 2300],
+    summonMs: [12600, 6500],
+    enemyHp: [1.02, 1.7],
     enemySpeed: [1.02, 1.22],
-    enemyDamage: [1.04, 1.25],
-    pulseDamage: [1.08, 1.42],
-    summonCount: [2, 4],
+    enemyDamage: [0.84, 1.25],
+    pulseDamage: [0.86, 1.42],
+    summonCount: [1, 4],
   },
   neptune: {
     hpMult: 1.48,
@@ -113,10 +113,10 @@ function mix([from, to]: [number, number], progress: number) {
 }
 
 function tunedProgress(info: BossPhaseInfo) {
-  if (info.chapter.id !== 'saturn') return info.progress;
-  const smootherUntilPhase = 12;
+  if (info.chapter.id !== 'saturn' && info.chapter.id !== 'uranus') return info.progress;
+  const smootherUntilPhase = info.chapter.id === 'uranus' ? 8 : 12;
   const hinge = (smootherUntilPhase - 1) / Math.max(1, info.totalPhases - 1);
-  const easedHinge = 0.42;
+  const easedHinge = info.chapter.id === 'uranus' ? 0.2 : 0.42;
   if (info.progress <= hinge) return (info.progress / hinge) * easedHinge;
   return easedHinge + ((info.progress - hinge) / (1 - hinge)) * (1 - easedHinge);
 }

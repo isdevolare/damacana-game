@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMessages, useTranslations } from 'next-intl';
 import { useGame } from '@/lib/store';
-import { BUILD_BRANCHES, BuildBranch, buildNodesOfBranch, previousBuildNode } from '@/lib/config/buildTree';
+import { BUILD_BRANCHES, BuildBranch, buildNodesOfBranch, buildTierRequirementKey, buildTierUnlocked, previousBuildNode } from '@/lib/config/buildTree';
 import { clsx, fmt } from '@/lib/util';
 import { audio } from '@/lib/audio/AudioEngine';
 
@@ -23,6 +23,8 @@ export function BuildTreeModal() {
   const owned = useGame((s) => s.ownedBuildNodeIds ?? []);
   const damacana = useGame((s) => s.damacana);
   const shards = useGame((s) => s.shards);
+  const bossTier = useGame((s) => s.boss.tier);
+  const totalPrestiges = useGame((s) => s.totalPrestiges);
   const buy = useGame((s) => s.buyBuildNode);
   const sfxEnabled = useGame((s) => !s.audio.muted);
   const ui = useTranslations('ui');
@@ -113,10 +115,17 @@ export function BuildTreeModal() {
                 {nodes.map((node) => {
                   const nodeOwned = ownedSet.has(node.id);
                   const prev = previousBuildNode(node);
-                  const unlocked = !prev || ownedSet.has(prev.id);
+                  const tierOpen = buildTierUnlocked(node.tier, { bossTier, totalPrestiges });
+                  const chainOpen = !prev || ownedSet.has(prev.id);
+                  const unlocked = tierOpen && chainOpen;
                   const canPay = node.cost.currency === 'shards' ? shards >= node.cost.amount : damacana >= node.cost.amount;
                   const affordable = unlocked && canPay && !nodeOwned;
                   const status = nodeOwned ? 'owned' : unlocked ? 'available' : 'locked';
+                  const lockText = !tierOpen
+                    ? text(buildTierRequirementKey(node.tier), '')
+                    : !chainOpen
+                      ? text('requirements.previous', '')
+                      : '';
                   return (
                     <button
                       key={node.id}
@@ -155,6 +164,11 @@ export function BuildTreeModal() {
                         <div className="mt-1 font-space text-[10px] leading-relaxed text-white/50">
                           {text(`nodes.${node.i18nKey}.desc`, '')}
                         </div>
+                        {!unlocked && lockText && (
+                          <div className="mt-2 rounded border border-danger/25 bg-danger/10 px-2 py-1 font-space text-[9px] uppercase tracking-wider text-danger/85">
+                            {lockText}
+                          </div>
+                        )}
                         <div className="mt-2 flex items-center justify-between gap-2 font-space text-[9px] uppercase tracking-widest">
                           <span className="text-cyan">{text(`nodes.${node.i18nKey}.bonus`, '')}</span>
                           <span className={canPay || nodeOwned ? 'text-white/70' : 'text-danger'}>

@@ -78,7 +78,7 @@ export const ARTIFACTS: ArtifactDef[] = [
     scope: 'run',
     category: 'combo',
     maxLevel: 5,
-    bonuses: [{ type: 'comboGainPct', value: 0.12 }],
+    bonuses: [{ type: 'comboGainPct', value: 0.18 }],
     sourceWeight: { bossPhase: 12, eliteWave: 10, anomalyWave: 7 },
   },
   {
@@ -88,7 +88,7 @@ export const ARTIFACTS: ArtifactDef[] = [
     scope: 'run',
     category: 'combo',
     maxLevel: 5,
-    bonuses: [{ type: 'weakPointDamagePct', value: 0.15 }],
+    bonuses: [{ type: 'weakPointDamagePct', value: 0.24 }],
     sourceWeight: { bossPhase: 7, chapterClear: 8, eliteWave: 7, anomalyWave: 8 },
   },
   {
@@ -98,7 +98,7 @@ export const ARTIFACTS: ArtifactDef[] = [
     scope: 'run',
     category: 'orbit',
     maxLevel: 5,
-    bonuses: [{ type: 'orbitDamagePct', value: 0.2 }],
+    bonuses: [{ type: 'orbitDamagePct', value: 0.32 }],
     sourceWeight: { chapterClear: 5, eliteWave: 4, anomalyWave: 6 },
   },
   {
@@ -108,7 +108,7 @@ export const ARTIFACTS: ArtifactDef[] = [
     scope: 'permanent',
     category: 'orbit',
     maxLevel: 5,
-    bonuses: [{ type: 'orbitRadiusPct', value: 0.1 }],
+    bonuses: [{ type: 'orbitRadiusPct', value: 0.16 }],
     sourceWeight: { chapterClear: 5, anomalyWave: 3, singularityEvent: 4 },
   },
   {
@@ -118,7 +118,7 @@ export const ARTIFACTS: ArtifactDef[] = [
     scope: 'run',
     category: 'projectile',
     maxLevel: 5,
-    bonuses: [{ type: 'projectileFireRatePct', value: 0.08 }],
+    bonuses: [{ type: 'projectileFireRatePct', value: 0.13 }],
     sourceWeight: { bossPhase: 12, eliteWave: 9, anomalyWave: 6 },
   },
   {
@@ -128,7 +128,7 @@ export const ARTIFACTS: ArtifactDef[] = [
     scope: 'run',
     category: 'projectile',
     maxLevel: 5,
-    bonuses: [{ type: 'extraProjectileChancePct', value: 0.08 }],
+    bonuses: [{ type: 'extraProjectileChancePct', value: 0.11 }],
     sourceWeight: { chapterClear: 4, eliteWave: 4, anomalyWave: 6, corruptedEvent: 3 },
   },
   {
@@ -138,7 +138,7 @@ export const ARTIFACTS: ArtifactDef[] = [
     scope: 'permanent',
     category: 'tank',
     maxLevel: 5,
-    bonuses: [{ type: 'maxHpPct', value: 0.1 }],
+    bonuses: [{ type: 'maxHpPct', value: 0.16 }],
     sourceWeight: { bossPhase: 5, chapterClear: 8, eliteWave: 5 },
   },
   {
@@ -148,7 +148,7 @@ export const ARTIFACTS: ArtifactDef[] = [
     scope: 'permanent',
     category: 'tank',
     maxLevel: 5,
-    bonuses: [{ type: 'damageReductionPct', value: 0.04 }],
+    bonuses: [{ type: 'damageReductionPct', value: 0.06 }],
     sourceWeight: { chapterClear: 5, eliteWave: 5, anomalyWave: 4 },
   },
   {
@@ -158,7 +158,7 @@ export const ARTIFACTS: ArtifactDef[] = [
     scope: 'run',
     category: 'mana',
     maxLevel: 5,
-    bonuses: [{ type: 'manaRegenPct', value: 0.12 }],
+    bonuses: [{ type: 'manaRegenPct', value: 0.2 }],
     sourceWeight: { bossPhase: 7, eliteWave: 7, anomalyWave: 7 },
   },
   {
@@ -168,7 +168,7 @@ export const ARTIFACTS: ArtifactDef[] = [
     scope: 'permanent',
     category: 'mana',
     maxLevel: 5,
-    bonuses: [{ type: 'cooldownReductionPct', value: 0.06 }],
+    bonuses: [{ type: 'cooldownReductionPct', value: 0.1 }],
     sourceWeight: { chapterClear: 4, anomalyWave: 5, singularityEvent: 4 },
   },
   {
@@ -179,8 +179,8 @@ export const ARTIFACTS: ArtifactDef[] = [
     category: 'void',
     maxLevel: 5,
     bonuses: [
-      { type: 'anomalyRewardPct', value: 0.15 },
-      { type: 'enemyDamagePct', value: 0.05 },
+      { type: 'anomalyRewardPct', value: 0.25 },
+      { type: 'enemyDamagePct', value: 0.07 },
     ],
     sourceWeight: { anomalyWave: 8, corruptedEvent: 8, singularityEvent: 5 },
   },
@@ -192,8 +192,8 @@ export const ARTIFACTS: ArtifactDef[] = [
     category: 'void',
     maxLevel: 5,
     bonuses: [
-      { type: 'shardChancePct', value: 0.08 },
-      { type: 'bossPulseDamagePct', value: 0.05 },
+      { type: 'shardChancePct', value: 0.14 },
+      { type: 'bossPulseDamagePct', value: 0.08 },
     ],
     sourceWeight: { anomalyWave: 4, corruptedEvent: 7, singularityEvent: 7 },
   },
@@ -204,7 +204,7 @@ export const ARTIFACTS: ArtifactDef[] = [
     scope: 'permanent',
     category: 'flow',
     maxLevel: 5,
-    bonuses: [{ type: 'passiveProductionPct', value: 0.1 }],
+    bonuses: [{ type: 'passiveProductionPct', value: 0.18 }],
     sourceWeight: { bossPhase: 6, chapterClear: 8, eliteWave: 5 },
   },
   {
@@ -214,16 +214,16 @@ export const ARTIFACTS: ArtifactDef[] = [
     scope: 'permanent',
     category: 'flow',
     maxLevel: 5,
-    bonuses: [{ type: 'offlineEfficiencyPct', value: 0.1 }],
+    bonuses: [{ type: 'offlineEfficiencyPct', value: 0.16 }],
     sourceWeight: { chapterClear: 5, anomalyWave: 4, singularityEvent: 4 },
   },
 ];
 
 export const ARTIFACT_DROP_CHANCE: Record<ArtifactSource, number> = {
-  bossPhase: 0.07,
-  chapterClear: 0.18,
-  eliteWave: 0.08,
-  anomalyWave: 0.16,
+  bossPhase: 0.09,
+  chapterClear: 0.24,
+  eliteWave: 0.1,
+  anomalyWave: 0.2,
   corruptedEvent: 0.2,
   singularityEvent: 0.24,
 };

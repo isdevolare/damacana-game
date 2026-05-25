@@ -34,6 +34,7 @@ import {
   BuildBonusSummary,
   EMPTY_BUILD_BONUSES,
   buildNodeById,
+  buildTierUnlocked,
   previousBuildNode,
   summarizeBuildBonuses,
 } from './config/buildTree';
@@ -400,7 +401,10 @@ function buildRequirementMet(state: Persisted, id: string): boolean {
   const node = buildNodeById(id);
   if (!node) return false;
   const prev = previousBuildNode(node);
-  return !prev || (state.ownedBuildNodeIds ?? []).includes(prev.id);
+  return (!prev || (state.ownedBuildNodeIds ?? []).includes(prev.id)) && buildTierUnlocked(node.tier, {
+    bossTier: state.boss.tier,
+    totalPrestiges: state.totalPrestiges,
+  });
 }
 
 function legacySkillRequirementMet(state: Persisted, id: string): boolean {

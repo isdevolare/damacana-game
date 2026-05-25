@@ -271,7 +271,7 @@ function projectileStats(args: {
   lowDensity: boolean;
   burstActive: boolean;
 }) {
-  const comboPressure = Math.min(2.2, 1 + comboCombatPressure(args.combo) * 0.004);
+  const comboPressure = Math.min(2.75, 1 + comboCombatPressure(args.combo) * 0.006);
   const damage =
     (args.perTap * CORE_DEFENSE.projectileDamageMult + args.perSec * CORE_DEFENSE.projectilePassiveDamageMult) *
     comboPressure *
@@ -1252,7 +1252,7 @@ export function CombatArena() {
           .filter((item) => item.d < 30)
           .sort((a, b) => a.d - b.d)[0]?.enemy;
         if (target) {
-          const damage = Math.max(1, Math.floor(perTapRef.current * 0.48 * orbitJammerMult * anomalyMult(activeAnomalies, 'orbitDamage') * (1 + researchBonusesRef.current.orbitDamagePct + activeBuild.orbitDamagePct + activeArtifacts.orbitDamagePct + activePrestige.orbitDamagePct)));
+          const damage = Math.max(1, Math.floor(perTapRef.current * 0.64 * orbitJammerMult * anomalyMult(activeAnomalies, 'orbitDamage') * (1 + researchBonusesRef.current.orbitDamagePct + activeBuild.orbitDamagePct + activeArtifacts.orbitDamagePct + activePrestige.orbitDamagePct)));
           let killedEnemy: Enemy | null = null;
           enemiesRef.current = enemiesRef.current
             .map((enemy) => {
@@ -1276,7 +1276,7 @@ export function CombatArena() {
       const activeOrbit = abilityEffectsRef.current.find((effect) => effect.kind === 'orbitSlash' && now < effect.until);
       if (activeOrbit && now - lastOrbitSlashDamageRef.current > 220) {
         lastOrbitSlashDamageRef.current = now;
-        const damage = Math.max(1, Math.floor(perTapRef.current * 0.28 * orbitJammerMult * anomalyMult(activeAnomalies, 'orbitDamage') * (1 + researchBonusesRef.current.orbitDamagePct + activeBuild.orbitDamagePct + activeArtifacts.orbitDamagePct + activePrestige.orbitDamagePct)));
+        const damage = Math.max(1, Math.floor(perTapRef.current * 0.36 * orbitJammerMult * anomalyMult(activeAnomalies, 'orbitDamage') * (1 + researchBonusesRef.current.orbitDamagePct + activeBuild.orbitDamagePct + activeArtifacts.orbitDamagePct + activePrestige.orbitDamagePct)));
         const baseRadius = COMBAT_ABILITIES.find((ability) => ability.id === 'orbitSlash')?.radius ?? 28;
         const radius = baseRadius * (1 + activeBuild.orbitSlashRadiusPct + activeArtifacts.orbitRadiusPct);
         let orbitHits = 0;
@@ -2169,7 +2169,7 @@ export function CombatArena() {
         </div>
         <div className="text-right font-space text-[9px] uppercase tracking-widest text-white/45">
           <div>{t('combat.wave')} {waveRef.current}</div>
-          <div>{t('combat.orbitDamage')} {fmt(Math.max(1, Math.floor(perTap * 0.48)))}</div>
+          <div>{t('combat.orbitDamage')} {fmt(Math.max(1, Math.floor(perTap * 0.64)))}</div>
         </div>
       </div>
 

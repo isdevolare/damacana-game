@@ -39,14 +39,14 @@ export function prestigePermanentBonuses(totalPrestiges: number): PrestigePerman
   const late = Math.max(0, count - early);
   const scaled = early + late * 0.6;
   return {
-    globalProductionPct: Math.min(0.75, scaled * 0.02),
-    rewardGainPct: Math.min(0.5, scaled * 0.012),
-    comboRetentionPct: Math.min(0.3, scaled * 0.01),
-    maxHpPct: Math.min(0.6, scaled * 0.018),
-    maxManaPct: Math.min(0.45, scaled * 0.012),
-    manaRegenPct: Math.min(0.4, scaled * 0.01),
-    orbitDamagePct: Math.min(0.45, scaled * 0.012),
-    cooldownReductionPct: Math.min(0.16, scaled * 0.003),
+    globalProductionPct: Math.min(1.75, scaled * 0.05),
+    rewardGainPct: Math.min(1.2, scaled * 0.032),
+    comboRetentionPct: Math.min(0.6, scaled * 0.024),
+    maxHpPct: Math.min(1.5, scaled * 0.045),
+    maxManaPct: Math.min(1, scaled * 0.03),
+    manaRegenPct: Math.min(0.9, scaled * 0.026),
+    orbitDamagePct: Math.min(1, scaled * 0.034),
+    cooldownReductionPct: Math.min(0.28, scaled * 0.008),
   };
 }
 
