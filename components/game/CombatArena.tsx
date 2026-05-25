@@ -46,6 +46,7 @@ interface Enemy {
   damageMult: number;
   rewardMult: number;
   splitDepth: number;
+  lastShotAt: number;
 }
 
 interface Particle {
@@ -66,6 +67,7 @@ interface Pulse {
   fireAt: number;
   hit: boolean;
   canceled: boolean;
+  projectilesEmitted?: boolean;
   kind: BossPulseKind;
   damageMult: number;
   speed: number;
@@ -104,6 +106,24 @@ interface Projectile {
   hitUntil: number;
 }
 
+type EnemyProjectileKind = 'basic' | 'heavy' | 'leech' | 'anomaly';
+
+interface EnemyProjectile {
+  id: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  angle: number;
+  bornAt: number;
+  kind: EnemyProjectileKind;
+  damage: number;
+  manaDamage: number;
+  color: string;
+  size: number;
+  nearMissed: boolean;
+}
+
 interface DamageFloat {
   id: number;
   value: number;
@@ -111,6 +131,13 @@ interface DamageFloat {
   y: number;
   bornAt: number;
   crit: boolean;
+}
+
+interface DodgeFloat {
+  id: number;
+  x: number;
+  y: number;
+  bornAt: number;
 }
 
 interface WaveStatus {
@@ -181,7 +208,54 @@ const ARENA_PERF = {
   mobileEffectCap: 3,
   desktopHpFloatCap: 5,
   mobileHpFloatCap: 3,
+  desktopEnemyProjectileCap: 18,
+  mobileEnemyProjectileCap: 9,
+  desktopDodgeFloatCap: 4,
+  mobileDodgeFloatCap: 2,
 };
+
+const ENEMY_PROJECTILES: Record<EnemyProjectileKind, {
+  speed: number;
+  damageMult: number;
+  manaDamage: number;
+  color: string;
+  size: number;
+  lifeMs: number;
+  hitRadius: number;
+}> = {
+  basic: { speed: 0.026, damageMult: 0.42, manaDamage: 0, color: '#ff6b4a', size: 8, lifeMs: 4300, hitRadius: 4.2 },
+  heavy: { speed: 0.019, damageMult: 0.68, manaDamage: 0, color: '#ffd166', size: 12, lifeMs: 5000, hitRadius: 5.4 },
+  leech: { speed: 0.023, damageMult: 0.24, manaDamage: 16, color: '#b87aff', size: 9, lifeMs: 4500, hitRadius: 4.8 },
+  anomaly: { speed: 0.024, damageMult: 0.78, manaDamage: 8, color: '#ff5ce8', size: 10, lifeMs: 4700, hitRadius: 5 },
+};
+
+function enemyProjectileKind(variantId: EnemyVariantId): EnemyProjectileKind | null {
+  if (variantId === 'tank' || variantId === 'shield') return 'heavy';
+  if (variantId === 'manaLeech') return 'leech';
+  if (variantId === 'anomaly') return 'anomaly';
+  if (variantId === 'rush' || variantId === 'splitter' || variantId === 'orbitJammer') return 'basic';
+  return null;
+}
+
+function enemyProjectileInterval(chapterId: string, variantId: EnemyVariantId, phaseProgress: number) {
+  if (chapterId === 'earth') return null;
+  if (chapterId === 'mars') {
+    if (variantId !== 'rush' && variantId !== 'tank') return null;
+    return 5200 - phaseProgress * 900;
+  }
+  if (chapterId === 'saturn') {
+    if (variantId !== 'splitter' && variantId !== 'orbitJammer' && variantId !== 'tank') return null;
+    return 4600 - phaseProgress * 850;
+  }
+  if (chapterId === 'uranus') {
+    if (variantId !== 'shield' && variantId !== 'manaLeech' && variantId !== 'orbitJammer') return null;
+    return 3950 - phaseProgress * 850;
+  }
+  if (chapterId === 'neptune') {
+    return 3450 - phaseProgress * 950;
+  }
+  return null;
+}
 
 function comboTier(combo: number) {
   return COMBO_TIERS.find((tier) => combo >= tier.threshold) ?? COMBO_TIERS[COMBO_TIERS.length - 1];
@@ -256,6 +330,7 @@ function splitterChildren(enemy: Enemy, now: number, slots: number): Enemy[] {
       damageMult: 0.65,
       rewardMult: 0.35,
       splitDepth: enemy.splitDepth + 1,
+      lastShotAt: now + 1200 + Math.random() * 2200,
     };
   });
 }
@@ -295,7 +370,9 @@ let pulseId = 1;
 let hpFloatId = 1;
 let abilityEffectId = 1;
 let projectileId = 1;
+let enemyProjectileId = 1;
 let damageFloatId = 1;
+let dodgeFloatId = 1;
 
 export function CombatArena() {
   const t = useTranslations();
@@ -350,8 +427,10 @@ export function CombatArena() {
   const pulsesRef = useRef<Pulse[]>([]);
   const abilityEffectsRef = useRef<AbilityEffect[]>([]);
   const projectilesRef = useRef<Projectile[]>([]);
+  const enemyProjectilesRef = useRef<EnemyProjectile[]>([]);
   const lastSpawnRef = useRef(0);
   const lastProjectileShotRef = useRef(0);
+  const lastBossProjectileShotRef = useRef(0);
   const burstFireUntilRef = useRef(0);
   const waveRef = useRef(1);
   const pendingWaveRef = useRef<PendingWave | null>(null);
@@ -384,7 +463,9 @@ export function CombatArena() {
   const [pulses, setPulses] = useState<Pulse[]>([]);
   const [abilityEffects, setAbilityEffects] = useState<AbilityEffect[]>([]);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
+  const [enemyProjectiles, setEnemyProjectiles] = useState<EnemyProjectile[]>([]);
   const [damageFloats, setDamageFloats] = useState<DamageFloat[]>([]);
+  const [dodgeFloats, setDodgeFloats] = useState<DodgeFloat[]>([]);
   const [burstFireUntil, setBurstFireUntil] = useState(0);
   const [bossWeakUntil, setBossWeakUntil] = useState(0);
   const [bossHitUntil, setBossHitUntil] = useState(0);
@@ -486,8 +567,10 @@ export function CombatArena() {
     pulsesRef.current = [];
     abilityEffectsRef.current = [];
     projectilesRef.current = [];
+    enemyProjectilesRef.current = [];
     lastSpawnRef.current = now;
     lastProjectileShotRef.current = now;
+    lastBossProjectileShotRef.current = now;
     burstFireUntilRef.current = 0;
     waveRef.current = 1;
     pendingWaveRef.current = null;
@@ -518,7 +601,9 @@ export function CombatArena() {
     setPulses([]);
     setAbilityEffects([]);
     setProjectiles([]);
+    setEnemyProjectiles([]);
     setDamageFloats([]);
+    setDodgeFloats([]);
     setHpFloats([]);
     setBurstFireUntil(0);
     setBossWeakUntil(0);
@@ -540,6 +625,9 @@ export function CombatArena() {
     lastBossSummonRef.current = now;
     lastBossShieldAtRef.current = now;
     lastBossSweepAtRef.current = now;
+    lastBossProjectileShotRef.current = now;
+    enemyProjectilesRef.current = [];
+    setEnemyProjectiles([]);
     bossShieldUntilRef.current = 0;
     bossRageUntilRef.current = 0;
     rageTriggeredTierRef.current = null;
@@ -601,6 +689,44 @@ export function CombatArena() {
     setTimeout(() => {
       setDamageFloats((items) => items.filter((item) => item.id !== id));
     }, 760);
+  }, []);
+
+  const pushDodgeFloat = useCallback((x: number, y: number) => {
+    const point = clampArenaVec({ x, y }, playerRef.current);
+    const id = dodgeFloatId++;
+    const cap = lowDensityRef.current ? ARENA_PERF.mobileDodgeFloatCap : ARENA_PERF.desktopDodgeFloatCap;
+    setDodgeFloats((items) => [
+      ...items.slice(-(cap - 1)),
+      { id, x: point.x, y: point.y, bornAt: Date.now() },
+    ]);
+    setTimeout(() => {
+      setDodgeFloats((items) => items.filter((item) => item.id !== id));
+    }, 720);
+  }, []);
+
+  const fireEnemyProjectile = useCallback((origin: Vec, target: Vec, kind: EnemyProjectileKind, damageScale = 1, angleOffset = 0) => {
+    const spec = ENEMY_PROJECTILES[kind];
+    const cap = lowDensityRef.current ? ARENA_PERF.mobileEnemyProjectileCap : ARENA_PERF.desktopEnemyProjectileCap;
+    if (enemyProjectilesRef.current.length >= cap) return;
+    const safeOrigin = clampArenaVec(origin, bossArenaPoint(Date.now(), bossPhaseInfo(bossRef.current.tier).progress));
+    const safeTarget = clampArenaVec(target, playerRef.current);
+    const angle = Math.atan2(safeTarget.y - safeOrigin.y, safeTarget.x - safeOrigin.x) + angleOffset;
+    const projectile: EnemyProjectile = {
+      id: enemyProjectileId++,
+      x: safeOrigin.x,
+      y: safeOrigin.y,
+      vx: Math.cos(angle) * spec.speed,
+      vy: Math.sin(angle) * spec.speed,
+      angle,
+      bornAt: Date.now(),
+      kind,
+      damage: COMBAT.contactDamage * spec.damageMult * damageScale,
+      manaDamage: spec.manaDamage,
+      color: spec.color,
+      size: spec.size,
+      nearMissed: false,
+    };
+    enemyProjectilesRef.current = [...enemyProjectilesRef.current, projectile].slice(-cap);
   }, []);
 
   const triggerArenaPulse = useCallback((kind: ArenaPulseKind, durationMs = 520) => {
@@ -713,6 +839,7 @@ export function CombatArena() {
         damageMult: variant.damageMult * wave.damageMult,
         rewardMult: variant.rewardMult * wave.rewardMult,
         splitDepth: 0,
+        lastShotAt: now + 1500 + Math.random() * 3000,
       });
     }
     waveRef.current += 1;
@@ -1043,6 +1170,7 @@ export function CombatArena() {
         const x = clamp(enemy.x + (toPlayer.x / length) * step + wobble * (dt / 1000), 4, 96);
         const y = clamp(enemy.y + (toPlayer.y / length) * step, 8, 96);
         let lastContactAt = enemy.lastContactAt;
+        let lastShotAt = finiteNumber(enemy.lastShotAt) ? enemy.lastShotAt : now + 1400;
         let hitUntil = enemy.hitUntil;
         if (
           checkCollision &&
@@ -1064,7 +1192,43 @@ export function CombatArena() {
             }));
           }
         }
-        return { ...enemy, x, y, weakUntil, nextWeakAt, lastContactAt, hitUntil };
+        const projectileKind = enemyProjectileKind(enemy.variantId);
+        const projectileInterval = enemyProjectileInterval(activeChapter.id, enemy.variantId, activePhaseTuning.info.progress);
+        const enemyProjectileCap = lowDensityFrame ? ARENA_PERF.mobileEnemyProjectileCap : ARENA_PERF.desktopEnemyProjectileCap;
+        const distanceToPlayer = dist({ x, y }, p);
+        if (
+          projectileKind &&
+          projectileInterval &&
+          enemyProjectilesRef.current.length < enemyProjectileCap &&
+          distanceToPlayer > 20 &&
+          distanceToPlayer < 76 &&
+          now - lastShotAt > projectileInterval
+        ) {
+          lastShotAt = now;
+          const chapterShotChance = activeChapter.id === 'mars'
+            ? 0.36
+            : activeChapter.id === 'saturn'
+              ? 0.46
+              : activeChapter.id === 'uranus'
+                ? 0.58
+                : activeChapter.id === 'neptune'
+                  ? 0.7
+                  : 0.08;
+          const waveBonus = activeWaveTypeRef.current === 'elite' || activeWaveTypeRef.current === 'anomaly' ? 0.12 : 0;
+          const mobileMult = lowDensityFrame ? 0.72 : 1;
+          if (Math.random() < (chapterShotChance + activePhaseTuning.info.progress * 0.12 + waveBonus) * mobileMult) {
+            const aimLead = lowDensityFrame ? 0 : Math.sin((now + enemy.id * 43) / 900) * 0.1;
+            fireEnemyProjectile(
+              { x, y },
+              { x: p.x + (p.x - enemy.x) * 0.06, y: p.y + (p.y - enemy.y) * 0.04 },
+              projectileKind,
+              enemy.damageMult * activePhaseTuning.enemyDamageMult,
+              aimLead,
+            );
+            hitUntil = Math.max(hitUntil, now + 160);
+          }
+        }
+        return { ...enemy, x, y, weakUntil, nextWeakAt, lastContactAt, hitUntil, lastShotAt };
       });
       enemiesRef.current = updatedEnemies;
 
@@ -1371,15 +1535,98 @@ export function CombatArena() {
       pulsesRef.current = pulsesRef.current
         .map((pulse) => {
           if (pulse.canceled || now < pulse.fireAt) return pulse;
+          let nextPulse = pulse;
+          if (!pulse.projectilesEmitted) {
+            const bossPoint = bossArenaPoint(now, activePhaseTuning.info.progress);
+            if (pulse.kind === 'sweep') {
+              const shots = lowDensityFrame ? [-0.34, 0.34] : [-0.48, 0, 0.48];
+              shots.forEach((offset) => fireEnemyProjectile(bossPoint, p, 'basic', 0.72 * activePhaseTuning.pulseDamageMult, offset));
+              nextPulse = { ...nextPulse, projectilesEmitted: true };
+            } else if (pulse.kind === 'corrupted') {
+              const shots = lowDensityFrame ? [-0.26, 0.26] : [-0.34, 0, 0.34];
+              shots.forEach((offset) => fireEnemyProjectile(bossPoint, p, 'anomaly', 0.86 * activePhaseTuning.pulseDamageMult, offset));
+              nextPulse = { ...nextPulse, projectilesEmitted: true };
+            }
+          }
           const radius = ((now - pulse.fireAt) * pulse.speed) / anomalyMult(activeAnomalies, 'bossSlow');
           const distance = dist(bossArenaPoint(now, activePhaseTuning.info.progress), p);
           if (!pulse.hit && Math.abs(distance - radius) < COMBAT.bossPulseDamageBand) {
             damagePlayer(COMBAT.bossPulseDamage * activePhaseTuning.pulseDamageMult * pulse.damageMult * anomalyMult(activeAnomalies, 'bossRage') * (1 + activeArtifacts.bossPulseDamagePct));
-            return { ...pulse, hit: true };
+            return { ...nextPulse, hit: true };
           }
-          return pulse;
+          return nextPulse;
         })
         .filter((pulse) => now - pulse.bornAt < 3600);
+
+      const bossPointForShots = bossArenaPoint(now, activePhaseTuning.info.progress);
+      if (
+        activeChapter.id === 'mars' &&
+        rageActive &&
+        now - lastBossProjectileShotRef.current > (lowDensityFrame ? 2600 : 2100)
+      ) {
+        lastBossProjectileShotRef.current = now;
+        const shots = lowDensityFrame ? [-0.16, 0.16] : [-0.24, 0, 0.24];
+        shots.forEach((offset) => fireEnemyProjectile(bossPointForShots, p, 'basic', 0.62 * activePhaseTuning.pulseDamageMult, offset));
+        setBossHitUntil(now + 420);
+      }
+      if (
+        activeChapter.id === 'uranus' &&
+        now <= bossShieldUntilRef.current &&
+        now - lastBossProjectileShotRef.current > (lowDensityFrame ? 3300 : 2600)
+      ) {
+        lastBossProjectileShotRef.current = now;
+        const shots = lowDensityFrame ? [0] : [-0.18, 0.18];
+        shots.forEach((offset) => fireEnemyProjectile(bossPointForShots, p, 'heavy', 0.64 * activePhaseTuning.pulseDamageMult, offset));
+        setBossHitUntil(now + 420);
+      }
+
+      if (enemyProjectilesRef.current.length > 0) {
+        const enemyProjectileSurvivors: EnemyProjectile[] = [];
+        for (const projectile of enemyProjectilesRef.current) {
+          const spec = ENEMY_PROJECTILES[projectile.kind];
+          if (
+            !finiteNumber(projectile.x) ||
+            !finiteNumber(projectile.y) ||
+            !finiteNumber(projectile.vx) ||
+            !finiteNumber(projectile.vy) ||
+            !finiteNumber(projectile.damage) ||
+            !finiteNumber(projectile.bornAt) ||
+            now - projectile.bornAt > spec.lifeMs
+          ) {
+            continue;
+          }
+          const nx = projectile.x + projectile.vx * dt;
+          const ny = projectile.y + projectile.vy * dt;
+          if (nx < -6 || nx > 106 || ny < -6 || ny > 106) continue;
+          const distanceToCore = dist({ x: nx, y: ny }, p);
+          if (distanceToCore <= spec.hitRadius) {
+            damagePlayer(projectile.damage);
+            if (now >= invulnerableUntilRef.current && projectile.manaDamage > 0) {
+              restoreCombatManaRef.current(-projectile.manaDamage);
+              if (projectile.kind === 'leech') {
+                useGame.setState((state) => ({
+                  activeBuffs: [
+                    ...state.activeBuffs.filter((buff) => buff.id !== 'enemy_projectile_mana_leech' && buff.expiresAt > now),
+                    { id: 'enemy_projectile_mana_leech', expiresAt: now + 5_000, mult: 0.72, type: 'manaRegen', labelKey: 'manaLeech' },
+                  ],
+                }));
+              }
+            }
+            emitParticles(nx, ny, projectile.color, projectile.kind === 'heavy' || projectile.kind === 'anomaly' ? 10 : 6, 0.9);
+            continue;
+          }
+          let nearMissed = projectile.nearMissed;
+          if (!nearMissed && distanceToCore <= spec.hitRadius + 5.8) {
+            nearMissed = true;
+            pushDodgeFloat(p.x, p.y - 7);
+            boostCombatComboRef.current(2.4);
+            restoreCombatManaRef.current(2);
+          }
+          enemyProjectileSurvivors.push({ ...projectile, x: nx, y: ny, nearMissed });
+        }
+        const enemyProjectileCap = lowDensityFrame ? ARENA_PERF.mobileEnemyProjectileCap : ARENA_PERF.desktopEnemyProjectileCap;
+        enemyProjectilesRef.current = enemyProjectileSurvivors.slice(-enemyProjectileCap);
+      }
 
       if (now >= nextBossWeakAtRef.current) {
         const weakTiming = activeProfile.weakPointTiming;
@@ -1435,6 +1682,7 @@ export function CombatArena() {
         setEnemies(enemiesRef.current);
         setPulses(pulsesRef.current);
         setProjectiles(projectilesRef.current);
+        setEnemyProjectiles(enemyProjectilesRef.current);
         setParticles(particlesRef.current);
         setAbilityEffects(abilityEffectsRef.current);
       }
@@ -1442,7 +1690,7 @@ export function CombatArena() {
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [bossDamageGuardMult, damagePlayer, emitParticles, pushDamageFloat, spawnWave, triggerArenaPulse]);
+  }, [bossDamageGuardMult, damagePlayer, emitParticles, fireEnemyProjectile, pushDamageFloat, pushDodgeFloat, spawnWave, triggerArenaPulse]);
 
   useEffect(() => {
     if (!comboFlash) return;
@@ -1551,9 +1799,11 @@ export function CombatArena() {
   const weakPointY = Math.sin(weakPointAngle) * weakPointRadius;
   const playerGlow = lowDensity ? 0.62 : 1;
   const renderedPulses = lowDensity ? pulses.slice(-1) : pulses;
+  const renderedEnemyProjectiles = lowDensity ? enemyProjectiles.slice(-ARENA_PERF.mobileEnemyProjectileCap) : enemyProjectiles;
   const renderedParticles = lowDensity ? particles.slice(-ARENA_PERF.mobileParticleCap) : particles;
   const renderedHpFloats = lowDensity ? hpFloats.slice(-ARENA_PERF.mobileHpFloatCap) : hpFloats;
   const renderedDamageFloats = lowDensity ? damageFloats.slice(-5) : damageFloats;
+  const renderedDodgeFloats = lowDensity ? dodgeFloats.slice(-ARENA_PERF.mobileDodgeFloatCap) : dodgeFloats;
   const renderedTargetLines = enemies
     .map((enemy) => {
       const dx = player.x - enemy.x;
@@ -1937,6 +2187,48 @@ export function CombatArena() {
         </div>
       ))}
 
+      {renderedEnemyProjectiles.map((projectile) => {
+        const spec = ENEMY_PROJECTILES[projectile.kind];
+        const age = renderNow - projectile.bornAt;
+        const opacity = Math.max(0.22, 1 - age / spec.lifeMs);
+        return (
+          <div
+            key={projectile.id}
+            className="pointer-events-none absolute z-[29] -translate-x-1/2 -translate-y-1/2 rounded-full border"
+            style={{
+              left: `${projectile.x}%`,
+              top: `${projectile.y}%`,
+              width: projectile.size,
+              height: projectile.size,
+              borderColor: projectile.color,
+              background: projectile.kind === 'heavy'
+                ? 'rgba(255,209,102,0.32)'
+                : projectile.kind === 'leech'
+                  ? 'rgba(184,122,255,0.34)'
+                  : projectile.kind === 'anomaly'
+                    ? 'rgba(255,92,232,0.34)'
+                    : 'rgba(255,107,74,0.34)',
+              opacity,
+              transform: `translate(-50%, -50%) rotate(${projectile.angle}rad)`,
+              boxShadow: lowDensity ? undefined : `0 0 ${projectile.kind === 'heavy' || projectile.kind === 'anomaly' ? 18 : 12}px ${projectile.color}`,
+            }}
+          >
+            {!lowDensity && (
+              <span
+                className="absolute right-full top-1/2 h-px -translate-y-1/2 rounded-full"
+                style={{
+                  width: projectile.kind === 'heavy' ? 24 : 18,
+                  background: `linear-gradient(90deg, transparent, ${projectile.color})`,
+                }}
+              />
+            )}
+            {projectile.kind === 'anomaly' && !lowDensity && (
+              <span className="absolute inset-[-3px] rounded-full border border-pink/35 opacity-60" />
+            )}
+          </div>
+        );
+      })}
+
       {renderedTargetLines.map(({ enemy, distance, angle }) => (
         <div
           key={`target-${enemy.id}`}
@@ -2154,6 +2446,23 @@ export function CombatArena() {
             }}
           >
             {item.crit ? 'CRIT ' : ''}{fmt(item.value)}
+          </div>
+        );
+      })}
+
+      {renderedDodgeFloats.map((item) => {
+        const age = Date.now() - item.bornAt;
+        return (
+          <div
+            key={item.id}
+            className="pointer-events-none absolute z-50 -translate-x-1/2 font-space text-[9px] uppercase tracking-[0.18em] text-cyan drop-shadow-[0_0_10px_rgba(92,246,255,0.75)]"
+            style={{
+              left: `${item.x}%`,
+              top: `${item.y - age * 0.012}%`,
+              opacity: Math.max(0, 1 - age / 680),
+            }}
+          >
+            {t('combat.nearMiss')}
           </div>
         );
       })}

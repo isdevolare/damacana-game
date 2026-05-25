@@ -242,6 +242,7 @@
     "chainReady": "chain ready",
     "cosmicChain": "cosmic chain",
     "criticalRupture": "critical rupture",
+    "nearMiss": "near miss",
     "coreCollapsed": "CORE COLLAPSED",
     "recovering": "Core recovering…",
     "invulnerable": "Brief invulnerability active.",
