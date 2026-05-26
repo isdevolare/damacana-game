@@ -26,6 +26,46 @@ export interface UpgradeDef {
   unlockLevel: number;
 }
 
+export interface UpgradeIdentityBonuses {
+  activeDamagePct: number;
+  burstDamagePct: number;
+  bossChipPct: number;
+  passiveProductionPct: number;
+  passiveProjectileDamagePct: number;
+  projectileDamagePct: number;
+  projectileFireRatePct: number;
+  projectileSpeedPct: number;
+  projectileImpactPct: number;
+  comboGainPct: number;
+  comboDecayPct: number;
+  critChancePct: number;
+  critDamagePct: number;
+  weakPointDamagePct: number;
+  orbitDamagePct: number;
+  orbitRadiusPct: number;
+  aoeDamagePct: number;
+}
+
+export const EMPTY_UPGRADE_IDENTITY_BONUSES: UpgradeIdentityBonuses = {
+  activeDamagePct: 0,
+  burstDamagePct: 0,
+  bossChipPct: 0,
+  passiveProductionPct: 0,
+  passiveProjectileDamagePct: 0,
+  projectileDamagePct: 0,
+  projectileFireRatePct: 0,
+  projectileSpeedPct: 0,
+  projectileImpactPct: 0,
+  comboGainPct: 0,
+  comboDecayPct: 0,
+  critChancePct: 0,
+  critDamagePct: 0,
+  weakPointDamagePct: 0,
+  orbitDamagePct: 0,
+  orbitRadiusPct: 0,
+  aoeDamagePct: 0,
+};
+
 export const UPGRADES: UpgradeDef[] = [
   { id: 'bigSip', key: 'bigSip', kind: 'tap', identity: 'activeAttack', icon: '⌁', rarity: 'common', baseCost: 15, growth: 1.18, amount: 1.18, unlockLevel: 0 },
   { id: 'cosmicSip', key: 'cosmicSip', kind: 'tap', identity: 'tapBurst', icon: '✦', rarity: 'rare', baseCost: 120, growth: 1.21, amount: 6.2, unlockLevel: 1 },
@@ -86,4 +126,77 @@ export function affordableUpgradeCount(def: UpgradeDef, currentLevel: number, cu
 
 export function upgradeById(id: string) {
   return UPGRADES.find((u) => u.id === id);
+}
+
+function addCapped(current: number, add: number, cap: number) {
+  return Math.min(cap, current + add);
+}
+
+function identityPower(def: UpgradeDef, level: number) {
+  const total = upgradeTotalAmount(def, level);
+  return Math.log1p(Math.max(0, total));
+}
+
+export function summarizeUpgradeIdentityBonuses(upgrades: Record<string, number> = {}): UpgradeIdentityBonuses {
+  const out: UpgradeIdentityBonuses = { ...EMPTY_UPGRADE_IDENTITY_BONUSES };
+  for (const def of UPGRADES) {
+    const level = upgrades[def.id] ?? 0;
+    if (level <= 0) continue;
+    const power = identityPower(def, level);
+    switch (def.identity) {
+      case 'activeAttack':
+        out.activeDamagePct = addCapped(out.activeDamagePct, power * 0.024, 0.68);
+        out.burstDamagePct = addCapped(out.burstDamagePct, power * 0.014, 0.38);
+        out.bossChipPct = addCapped(out.bossChipPct, power * 0.012, 0.32);
+        break;
+      case 'tapBurst':
+        out.activeDamagePct = addCapped(out.activeDamagePct, power * 0.014, 0.68);
+        out.burstDamagePct = addCapped(out.burstDamagePct, power * 0.033, 0.78);
+        out.projectileDamagePct = addCapped(out.projectileDamagePct, power * 0.011, 0.7);
+        break;
+      case 'criticalPressure':
+        out.comboGainPct = addCapped(out.comboGainPct, power * 0.022, 0.55);
+        out.comboDecayPct = addCapped(out.comboDecayPct, power * 0.014, 0.42);
+        out.critChancePct = addCapped(out.critChancePct, power * 0.006, 0.16);
+        out.critDamagePct = addCapped(out.critDamagePct, power * 0.043, 0.95);
+        break;
+      case 'weakPointDamage':
+        out.weakPointDamagePct = addCapped(out.weakPointDamagePct, power * 0.048, 1.15);
+        out.critDamagePct = addCapped(out.critDamagePct, power * 0.024, 0.95);
+        out.bossChipPct = addCapped(out.bossChipPct, power * 0.02, 0.32);
+        break;
+      case 'comboPressure':
+        out.comboGainPct = addCapped(out.comboGainPct, power * 0.032, 0.55);
+        out.comboDecayPct = addCapped(out.comboDecayPct, power * 0.026, 0.42);
+        break;
+      case 'passiveFlow':
+        out.passiveProductionPct = addCapped(out.passiveProductionPct, power * 0.02, 0.72);
+        out.passiveProjectileDamagePct = addCapped(out.passiveProjectileDamagePct, power * 0.016, 0.58);
+        out.bossChipPct = addCapped(out.bossChipPct, power * 0.008, 0.32);
+        break;
+      case 'autoFire':
+        out.projectileFireRatePct = addCapped(out.projectileFireRatePct, power * 0.018, 0.36);
+        out.projectileSpeedPct = addCapped(out.projectileSpeedPct, power * 0.01, 0.28);
+        out.passiveProjectileDamagePct = addCapped(out.passiveProjectileDamagePct, power * 0.014, 0.58);
+        break;
+      case 'orbitDamage':
+        out.orbitDamagePct = addCapped(out.orbitDamagePct, power * 0.036, 0.9);
+        out.orbitRadiusPct = addCapped(out.orbitRadiusPct, power * 0.01, 0.22);
+        out.aoeDamagePct = addCapped(out.aoeDamagePct, power * 0.018, 0.5);
+        break;
+      case 'projectilePressure':
+        out.projectileDamagePct = addCapped(out.projectileDamagePct, power * 0.025, 0.7);
+        out.projectileFireRatePct = addCapped(out.projectileFireRatePct, power * 0.022, 0.36);
+        out.projectileSpeedPct = addCapped(out.projectileSpeedPct, power * 0.014, 0.28);
+        out.projectileImpactPct = addCapped(out.projectileImpactPct, power * 0.05, 1);
+        break;
+      case 'beamCadence':
+        out.projectileDamagePct = addCapped(out.projectileDamagePct, power * 0.024, 0.7);
+        out.projectileFireRatePct = addCapped(out.projectileFireRatePct, power * 0.028, 0.36);
+        out.projectileSpeedPct = addCapped(out.projectileSpeedPct, power * 0.016, 0.28);
+        out.bossChipPct = addCapped(out.bossChipPct, power * 0.02, 0.32);
+        break;
+    }
+  }
+  return out;
 }

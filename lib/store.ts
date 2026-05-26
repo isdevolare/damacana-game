@@ -5,7 +5,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { BALANCE } from './config/balance';
 import { prestigePermanentBonuses, prestigeShardGain } from './config/prestige';
 import { LEVELS, activeLevels, levelForTotal } from './config/levels';
-import { UPGRADES, affordableUpgradeCount, upgradeBulkCost, upgradeById, upgradeTotalAmount, type UpgradeBuyMode } from './config/upgrades';
+import { UPGRADES, affordableUpgradeCount, summarizeUpgradeIdentityBonuses, upgradeBulkCost, upgradeById, upgradeTotalAmount, type UpgradeBuyMode } from './config/upgrades';
 import { bossHp, bossNameKey, bossReward, isMegaBoss, shardDropChance, eliteBossHp } from './config/bosses';
 import { nodeById, previousNode, skillTierUnlocked } from './config/skillTree';
 import { AbsurdEvent, AnomalyEffectType, EventReward, pickRandomEvent } from './config/events';
@@ -285,6 +285,7 @@ function derivedPerTap(state: Persisted): number {
     const lvl = state.upgrades[def.id] ?? 0;
     base += upgradeTotalAmount(def, lvl);
   }
+  const upgradeIdentity = summarizeUpgradeIdentityBonuses(state.upgrades);
   let mult = 1 + state.perRunPerTapPctBonus;
   for (const id of Object.keys(state.tree)) {
     if (!state.tree[id]) continue;
@@ -297,6 +298,7 @@ function derivedPerTap(state: Persisted): number {
   mult *= 1 + prestigePermanentBonuses(state.totalPrestiges).globalProductionPct;
   mult *= 1 + (state.totalPrestiges > 0 ? researchBonuses(state).postPrestigeProductionPct : 0);
   mult *= 1 + buildBonuses(state).unstableRewardPct;
+  mult *= 1 + upgradeIdentity.activeDamagePct;
   const now = Date.now();
   for (const b of state.activeBuffs) {
     if (b.type === 'tap' && b.expiresAt > now) mult *= b.mult;
@@ -310,6 +312,7 @@ function derivedPerSec(state: Persisted): number {
     const lvl = state.upgrades[def.id] ?? 0;
     base += upgradeTotalAmount(def, lvl);
   }
+  const upgradeIdentity = summarizeUpgradeIdentityBonuses(state.upgrades);
   let mult = 1;
   for (const id of Object.keys(state.tree)) {
     if (!state.tree[id]) continue;
@@ -324,6 +327,7 @@ function derivedPerSec(state: Persisted): number {
   mult *= 1 + (state.totalPrestiges > 0 ? researchBonuses(state).postPrestigeProductionPct : 0);
   mult *= 1 + buildBonuses(state).passiveProductionPct;
   mult *= 1 + artifactBonuses(state).passiveProductionPct;
+  mult *= 1 + upgradeIdentity.passiveProductionPct;
   const now = Date.now();
   for (const b of state.activeBuffs) {
     if (b.type === 'flow' && b.expiresAt > now) mult *= b.mult;
@@ -427,7 +431,7 @@ function legacySkillChance(state: Persisted, id: string, fallback = 0): number {
 }
 
 function bossDamageMultiplier(state: Persisted): number {
-  return 1 + legacySkillValue(state, 'bossKiller', 0);
+  return 1 + legacySkillValue(state, 'bossKiller', 0) + summarizeUpgradeIdentityBonuses(state.upgrades).bossChipPct;
 }
 
 function shardDoubleChance(state: Persisted): number {
@@ -481,14 +485,17 @@ function effectiveComboPower(combo: number): number {
 }
 
 function tapHasCrit(state: Persisted): { crit: boolean; mult: number } {
+  const upgradeIdentity = summarizeUpgradeIdentityBonuses(state.upgrades);
   let chance = BALANCE.crit.baseChance;
   for (const id of Object.keys(state.tree)) {
     if (!state.tree[id]) continue;
     const node = nodeById(id);
     if (node?.effect === 'critChance') chance += node.value ?? 0;
   }
+  chance += upgradeIdentity.critChancePct;
   let m = BALANCE.crit.critMult;
   if (state.tree['voidClaw']) m = Math.max(m, BALANCE.crit.voidClawCritMult + 2);
+  m *= 1 + upgradeIdentity.critDamagePct;
   return { crit: Math.random() < chance, mult: m };
 }
 
@@ -829,9 +836,10 @@ export const useGame = create<GameState>()(
         const s = get();
         const now = Date.now();
         const artifacts = artifactBonuses(s);
+        const upgradeIdentity = summarizeUpgradeIdentityBonuses(s.upgrades);
         let combo = s.combo;
         if (!options.passive) {
-          const step = (BALANCE.combo.step * (options.comboBoost ?? 1) * activeBuffMult(s, 'comboGain') * (1 + buildBonuses(s).comboGainPct + artifacts.comboGainPct)) + (options.comboFlatBonus ?? 0);
+          const step = (BALANCE.combo.step * (options.comboBoost ?? 1) * activeBuffMult(s, 'comboGain') * (1 + buildBonuses(s).comboGainPct + artifacts.comboGainPct + upgradeIdentity.comboGainPct)) + (options.comboFlatBonus ?? 0);
           if (now - s.lastTapAt <= BALANCE.combo.window) {
             combo = Math.min(comboMax(s), combo + step);
           } else {
@@ -841,9 +849,10 @@ export const useGame = create<GameState>()(
         const perTap = derivedPerTap(s);
         const roll = tapHasCrit(s);
         const crit = options.forceCrit || roll.crit;
-        const critMult = options.forceCrit ? Math.max(roll.mult, BALANCE.crit.critMult) * (1 + buildBonuses(s).weakPointDamagePct + artifacts.weakPointDamagePct) : roll.mult;
+        const critMult = options.forceCrit ? Math.max(roll.mult, BALANCE.crit.critMult) * (1 + buildBonuses(s).weakPointDamagePct + artifacts.weakPointDamagePct + upgradeIdentity.weakPointDamagePct) : roll.mult;
         let multiplier = effectiveComboPower(combo) * (crit ? critMult : 1);
         multiplier *= options.damageMult ?? 1;
+        if (!options.passive) multiplier *= 1 + upgradeIdentity.burstDamagePct;
         const newTapsCount = options.passive ? s.tapsThisRun : s.tapsThisRun + 1;
         const lucky = !options.passive && s.tree['luckyTap'] && newTapsCount % BALANCE.luckyTap.interval === 0;
         if (lucky) multiplier *= legacySkillValue(s, 'luckyTap', BALANCE.luckyTap.mult);
@@ -1065,7 +1074,7 @@ export const useGame = create<GameState>()(
         ];
 
         let combo = s.combo;
-        if (now - s.lastTapAt > BALANCE.combo.decay * (1 + researchBonuses(s).comboDecayPct + buildBonuses(s).comboDecayPct) * activeBuffMult({ ...s, activeBuffs: buffs }, 'comboDecay')) combo = 0;
+        if (now - s.lastTapAt > BALANCE.combo.decay * (1 + researchBonuses(s).comboDecayPct + buildBonuses(s).comboDecayPct + summarizeUpgradeIdentityBonuses(s.upgrades).comboDecayPct) * activeBuffMult({ ...s, activeBuffs: buffs }, 'comboDecay')) combo = 0;
 
         let fastestLevel6Ms = s.fastestLevel6Ms;
         if (leveledUp && newLevelIdx >= 6) {
@@ -1402,7 +1411,7 @@ export const useGame = create<GameState>()(
       boostCombatCombo: (amount) => {
         const s = get();
         const now = Date.now();
-        const next = Math.min(comboMax(s), Math.max(0, s.combo) + amount);
+        const next = Math.min(comboMax(s), Math.max(0, s.combo) + amount * (1 + summarizeUpgradeIdentityBonuses(s.upgrades).comboGainPct));
         set({
           combo: next,
           bestCombo: Math.max(s.bestCombo, next),
@@ -1412,7 +1421,7 @@ export const useGame = create<GameState>()(
 
       reduceCombatCombo: (pct) => {
         const s = get();
-        const preserve = Math.min(0.8, Math.max(0, buildBonuses(s).damageComboPreservePct + prestigePermanentBonuses(s.totalPrestiges).comboRetentionPct));
+        const preserve = Math.min(0.8, Math.max(0, buildBonuses(s).damageComboPreservePct + prestigePermanentBonuses(s.totalPrestiges).comboRetentionPct + summarizeUpgradeIdentityBonuses(s.upgrades).comboDecayPct));
         const next = Math.max(0, s.combo * (1 - pct * (1 - preserve)));
         set({
           combo: next,
