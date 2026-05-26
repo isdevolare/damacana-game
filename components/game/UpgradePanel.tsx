@@ -20,10 +20,12 @@ const BUY_MODES: UpgradeBuyMode[] = ['x1', 'x10', 'max'];
 const UPGRADE_MILESTONES = [10, 25, 50, 100, 250, 1000];
 
 const RARITY_STYLE = {
-  common: { border: 'border-white/15', text: 'text-white/70', bg: 'bg-white/[0.03]' },
-  rare: { border: 'border-cyan/30', text: 'text-cyan', bg: 'bg-cyan/[0.06]' },
-  epic: { border: 'border-purple/35', text: 'text-purple', bg: 'bg-purple/[0.07]' },
-  legendary: { border: 'border-gold/40', text: 'text-gold', bg: 'bg-gold/[0.06]' },
+  common: { border: 'border-white/15', text: 'text-white/70', bg: 'bg-white/[0.03]', glow: 'shadow-none', icon: 'bg-white/[0.04]' },
+  rare: { border: 'border-cyan/35', text: 'text-cyan', bg: 'bg-cyan/[0.06]', glow: 'shadow-[0_0_14px_rgba(92,246,255,0.12)]', icon: 'bg-cyan/[0.08]' },
+  epic: { border: 'border-purple/40', text: 'text-purple', bg: 'bg-purple/[0.07]', glow: 'shadow-[0_0_16px_rgba(184,122,255,0.14)]', icon: 'bg-purple/[0.09]' },
+  legendary: { border: 'border-gold/45', text: 'text-gold', bg: 'bg-gold/[0.07]', glow: 'shadow-[0_0_18px_rgba(255,209,102,0.16)]', icon: 'bg-gold/[0.09]' },
+  cosmic: { border: 'border-pink/45', text: 'text-pink', bg: 'bg-pink/[0.07]', glow: 'shadow-[0_0_20px_rgba(255,92,232,0.16)]', icon: 'bg-pink/[0.09]' },
+  singularity: { border: 'border-white/45', text: 'text-white', bg: 'bg-white/[0.06]', glow: 'shadow-[0_0_22px_rgba(255,255,255,0.16)]', icon: 'bg-white/[0.1]' },
 } as const;
 
 export function UpgradePanel() {
@@ -65,9 +67,13 @@ export function UpgradePanel() {
         : upgradeCost(u, lvl);
     const can = !locked && (buyMode === 'max' ? count > 0 : count >= requested);
     const rarity = RARITY_STYLE[u.rarity];
-    const nextGain = upgradeTotalAmount(u, lvl + Math.max(1, count || 1)) - upgradeTotalAmount(u, lvl);
-    const nextLevel = lvl + count;
+    const currentEffect = upgradeTotalAmount(u, lvl);
+    const previewCount = buyMode === 'max' ? Math.max(1, count) : requested;
+    const nextGain = upgradeTotalAmount(u, lvl + 1) - currentEffect;
+    const buyGain = upgradeTotalAmount(u, lvl + previewCount) - currentEffect;
+    const nextLevel = lvl + (can ? purchaseCount : 0);
     const reachedMilestone = UPGRADE_MILESTONES.filter((mark) => lvl < mark && nextLevel >= mark).pop();
+    const unit = u.kind === 'tap' ? ui('tap') : ui('sec');
     return (
       <div
         key={u.id}
@@ -75,12 +81,13 @@ export function UpgradePanel() {
           'rounded-md border px-2 py-1.5 transition duration-150',
           rarity.border,
           rarity.bg,
+          rarity.glow,
           locked ? 'opacity-45' : 'hover:-translate-y-0.5',
           flashedId === u.id && 'scale-[1.015] ring-1 ring-cyan/60 shadow-[0_0_18px_rgba(92,246,255,0.22)]',
         )}
       >
         <div className="flex min-w-0 items-start gap-2">
-          <div className={clsx('flex h-7 w-7 shrink-0 items-center justify-center rounded border bg-black/35 font-vt text-sm', rarity.border, rarity.text)}>
+          <div className={clsx('flex h-7 w-7 shrink-0 items-center justify-center rounded border font-vt text-sm', rarity.border, rarity.text, rarity.icon)}>
             {u.icon}
           </div>
           <div className="min-w-0 flex-1">
@@ -90,10 +97,24 @@ export function UpgradePanel() {
               </span>
               <span className={clsx('font-vt text-[10px]', rarity.text)}>x{fmt(lvl)}</span>
             </div>
-            <div className="mt-0.5 flex items-center justify-between gap-2 text-[9px] font-space text-white/48">
-              <span>+{fmt(nextGain)}/{u.kind === 'tap' ? ui('tap') : ui('sec')}</span>
+            <div className="mt-0.5 flex items-center justify-between gap-2 text-[8px] font-space uppercase tracking-[0.08em] text-white/48">
+              <span className="truncate">{t(`identity.${u.identity}` as any)}</span>
               <span className={rarity.text}>{t(`rarity.${u.rarity}` as any)}</span>
             </div>
+          </div>
+        </div>
+        <div className="mt-1.5 grid grid-cols-3 gap-1 rounded border border-white/10 bg-black/25 px-1.5 py-1">
+          <div className="min-w-0">
+            <div className="truncate font-space text-[7px] uppercase tracking-[0.12em] text-white/35">{t('preview.current')}</div>
+            <div className="truncate font-vt text-[10px] text-white/70">{fmt(currentEffect)}/{unit}</div>
+          </div>
+          <div className="min-w-0">
+            <div className="truncate font-space text-[7px] uppercase tracking-[0.12em] text-white/35">{t('preview.next')}</div>
+            <div className={clsx('truncate font-vt text-[10px]', rarity.text)}>+{fmt(nextGain)}</div>
+          </div>
+          <div className="min-w-0">
+            <div className="truncate font-space text-[7px] uppercase tracking-[0.12em] text-white/35">{t('preview.buy')}</div>
+            <div className={clsx('truncate font-vt text-[10px]', can ? rarity.text : 'text-white/35')}>+{fmt(buyGain)}</div>
           </div>
         </div>
         <div className="mt-1.5 flex items-center gap-1">

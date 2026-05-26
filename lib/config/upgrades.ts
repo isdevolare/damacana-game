@@ -1,11 +1,23 @@
 export type UpgradeKind = 'tap' | 'auto';
-export type UpgradeRarity = 'common' | 'rare' | 'epic' | 'legendary';
+export type UpgradeRarity = 'common' | 'rare' | 'epic' | 'legendary' | 'cosmic' | 'singularity';
 export type UpgradeBuyMode = 'x1' | 'x10' | 'max';
+export type UpgradeIdentity =
+  | 'activeAttack'
+  | 'tapBurst'
+  | 'criticalPressure'
+  | 'weakPointDamage'
+  | 'comboPressure'
+  | 'projectilePressure'
+  | 'passiveFlow'
+  | 'autoFire'
+  | 'orbitDamage'
+  | 'beamCadence';
 
 export interface UpgradeDef {
   id: string;
   key: string;
   kind: UpgradeKind;
+  identity: UpgradeIdentity;
   icon: string;
   rarity: UpgradeRarity;
   baseCost: number;
@@ -15,15 +27,15 @@ export interface UpgradeDef {
 }
 
 export const UPGRADES: UpgradeDef[] = [
-  { id: 'bigSip', key: 'bigSip', kind: 'tap', icon: '+', rarity: 'common', baseCost: 15, growth: 1.18, amount: 1.18, unlockLevel: 0 },
-  { id: 'cosmicSip', key: 'cosmicSip', kind: 'tap', icon: '*', rarity: 'rare', baseCost: 120, growth: 1.21, amount: 6.2, unlockLevel: 1 },
-  { id: 'voidLip', key: 'voidLip', kind: 'tap', icon: '◆', rarity: 'epic', baseCost: 1500, growth: 1.245, amount: 39, unlockLevel: 3 },
-  { id: 'axiomKiss', key: 'axiomKiss', kind: 'tap', icon: '◇', rarity: 'legendary', baseCost: 20_000, growth: 1.255, amount: 295, unlockLevel: 4 },
-  { id: 'faucet', key: 'faucet', kind: 'auto', icon: 'I', rarity: 'common', baseCost: 50, growth: 1.19, amount: 1.16, unlockLevel: 0 },
-  { id: 'damacanaPump', key: 'damacanaPump', kind: 'auto', icon: 'II', rarity: 'rare', baseCost: 400, growth: 1.21, amount: 6.2, unlockLevel: 1 },
-  { id: 'cosmicPipe', key: 'cosmicPipe', kind: 'auto', icon: 'III', rarity: 'rare', baseCost: 4000, growth: 1.225, amount: 38, unlockLevel: 2 },
-  { id: 'voidFlow', key: 'voidFlow', kind: 'auto', icon: 'V', rarity: 'epic', baseCost: 30_000, growth: 1.24, amount: 220, unlockLevel: 3 },
-  { id: 'flowEngine', key: 'flowEngine', kind: 'auto', icon: 'X', rarity: 'legendary', baseCost: 180_000, growth: 1.255, amount: 1280, unlockLevel: 5 },
+  { id: 'bigSip', key: 'bigSip', kind: 'tap', identity: 'activeAttack', icon: '⌁', rarity: 'common', baseCost: 15, growth: 1.18, amount: 1.18, unlockLevel: 0 },
+  { id: 'cosmicSip', key: 'cosmicSip', kind: 'tap', identity: 'tapBurst', icon: '✦', rarity: 'rare', baseCost: 120, growth: 1.21, amount: 6.2, unlockLevel: 1 },
+  { id: 'voidLip', key: 'voidLip', kind: 'tap', identity: 'criticalPressure', icon: '◆', rarity: 'epic', baseCost: 1500, growth: 1.245, amount: 39, unlockLevel: 3 },
+  { id: 'axiomKiss', key: 'axiomKiss', kind: 'tap', identity: 'weakPointDamage', icon: '◇', rarity: 'legendary', baseCost: 20_000, growth: 1.255, amount: 295, unlockLevel: 4 },
+  { id: 'faucet', key: 'faucet', kind: 'auto', identity: 'passiveFlow', icon: 'Ⅰ', rarity: 'common', baseCost: 50, growth: 1.19, amount: 1.16, unlockLevel: 0 },
+  { id: 'damacanaPump', key: 'damacanaPump', kind: 'auto', identity: 'autoFire', icon: 'Ⅱ', rarity: 'rare', baseCost: 400, growth: 1.21, amount: 6.2, unlockLevel: 1 },
+  { id: 'cosmicPipe', key: 'cosmicPipe', kind: 'auto', identity: 'orbitDamage', icon: 'Ⅲ', rarity: 'rare', baseCost: 4000, growth: 1.225, amount: 38, unlockLevel: 2 },
+  { id: 'voidFlow', key: 'voidFlow', kind: 'auto', identity: 'projectilePressure', icon: 'Ⅴ', rarity: 'epic', baseCost: 30_000, growth: 1.24, amount: 220, unlockLevel: 3 },
+  { id: 'flowEngine', key: 'flowEngine', kind: 'auto', identity: 'beamCadence', icon: '✺', rarity: 'cosmic', baseCost: 180_000, growth: 1.255, amount: 1280, unlockLevel: 5 },
 ];
 
 export function upgradeCost(def: UpgradeDef, currentLevel: number): number {

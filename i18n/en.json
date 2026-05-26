@@ -94,7 +94,9 @@
     "powerChanged": "power changed",
     "powerFeedback": {
       "damageIncreased": "Damage increased",
+      "activeAttackIncreased": "Active attack increased",
       "passiveFlowIncreased": "Passive flow increased",
+      "projectilePressureIncreased": "Projectile pressure increased",
       "maxHpIncreased": "Max HP increased",
       "manaRegenIncreased": "Mana regen increased",
       "orbitDamageIncreased": "Orbit damage increased",
@@ -835,7 +837,26 @@
       "common": "common",
       "rare": "rare",
       "epic": "epic",
-      "legendary": "legendary"
+      "legendary": "legendary",
+      "cosmic": "cosmic",
+      "singularity": "singularity"
+    },
+    "identity": {
+      "activeAttack": "active attack",
+      "tapBurst": "tap burst",
+      "criticalPressure": "critical pressure",
+      "weakPointDamage": "weak point damage",
+      "comboPressure": "combo pressure",
+      "projectilePressure": "projectile pressure",
+      "passiveFlow": "passive flow",
+      "autoFire": "auto-fire pressure",
+      "orbitDamage": "orbit damage",
+      "beamCadence": "beam cadence"
+    },
+    "preview": {
+      "current": "current",
+      "next": "next",
+      "buy": "buy"
     },
     "bigSip": { "name": "big sip" },
     "cosmicSip": { "name": "cosmic sip" },

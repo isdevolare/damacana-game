@@ -641,6 +641,13 @@ function bonusPowerLabel(type: string) {
   return 'powerChanged';
 }
 
+function upgradePowerLabel(identity: string, kind: string) {
+  if (identity === 'projectilePressure' || identity === 'autoFire' || identity === 'beamCadence') return 'projectilePressureIncreased';
+  if (identity === 'passiveFlow' || identity === 'orbitDamage') return 'passiveFlowIncreased';
+  if (identity === 'criticalPressure' || identity === 'weakPointDamage' || identity === 'comboPressure') return 'comboGainIncreased';
+  return kind === 'tap' ? 'activeAttackIncreased' : 'passiveFlowIncreased';
+}
+
 function addArtifactPatch(
   state: Persisted,
   source: ArtifactSource,
@@ -1128,7 +1135,7 @@ export const useGame = create<GameState>()(
           damacana: free ? s.damacana : s.damacana - cost,
           upgrades: { ...s.upgrades, [id]: lvl + count },
           shake: { intensity: 'small', at: Date.now() },
-          powerToast: powerToast(def.kind === 'tap' ? 'damageIncreased' : 'passiveFlowIncreased', formatPowerAmount(gainedPower)),
+          powerToast: powerToast(upgradePowerLabel(def.identity, def.kind), formatPowerAmount(gainedPower)),
         });
       },
 

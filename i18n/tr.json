@@ -94,7 +94,9 @@
     "powerChanged": "güç değişti",
     "powerFeedback": {
       "damageIncreased": "Hasar arttı",
+      "activeAttackIncreased": "Aktif saldırı güçlendi",
       "passiveFlowIncreased": "Pasif akış arttı",
+      "projectilePressureIncreased": "Mermi baskısı arttı",
       "maxHpIncreased": "Maks HP arttı",
       "manaRegenIncreased": "Mana yenilenmesi arttı",
       "orbitDamageIncreased": "Yörünge hasarı arttı",
@@ -835,7 +837,26 @@
       "common": "yaygın",
       "rare": "nadir",
       "epic": "epik",
-      "legendary": "efsanevi"
+      "legendary": "efsanevi",
+      "cosmic": "kozmik",
+      "singularity": "tekillik"
+    },
+    "identity": {
+      "activeAttack": "aktif saldırı",
+      "tapBurst": "dokunma patlaması",
+      "criticalPressure": "kritik baskı",
+      "weakPointDamage": "zayıf nokta hasarı",
+      "comboPressure": "combo baskısı",
+      "projectilePressure": "mermi baskısı",
+      "passiveFlow": "pasif akış",
+      "autoFire": "otomatik ateş",
+      "orbitDamage": "yörünge hasarı",
+      "beamCadence": "ışın ritmi"
+    },
+    "preview": {
+      "current": "mevcut",
+      "next": "sonraki",
+      "buy": "alım"
     },
     "bigSip": { "name": "büyük yudum" },
     "cosmicSip": { "name": "kozmik yudum" },
