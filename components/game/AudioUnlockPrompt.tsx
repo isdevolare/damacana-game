@@ -24,6 +24,11 @@ export function AudioUnlockPrompt() {
       const ok = await audio.unlock(levelIdx, settings);
       setUnlocked(ok);
       if (ok) audio.sfxUpgrade();
+    } catch (error) {
+      setUnlocked(false);
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('Audio unlock skipped', error);
+      }
     } finally {
       inFlight.current = false;
     }

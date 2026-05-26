@@ -1499,6 +1499,20 @@ export const useGame = create<GameState>()(
         if (s.levelIdx < BALANCE.prestige.requiredLevelIdx) return;
         const gain = prestigeShardGain(s.totalEarned, s.totalPrestiges, researchBonuses(s).prestigeGainPct, Boolean(s.tree['guaranteedShards']));
         const now = Date.now();
+        const nextPermanentArtifacts = s.permanentArtifacts ?? [];
+        const nextResearchBonuses = s.researchBonuses ?? summarizeResearchBonuses(s.claimedResearchIds ?? []);
+        const nextBuildBonuses = s.buildBonuses ?? summarizeBuildBonuses(s.ownedBuildNodeIds ?? []);
+        const nextArtifactBonuses = summarizeArtifactBonuses([], nextPermanentArtifacts);
+        const nextStats = derivedCombatStats({
+          ...s,
+          totalPrestiges: s.totalPrestiges + 1,
+          runArtifacts: [],
+          permanentArtifacts: nextPermanentArtifacts,
+          artifactBonuses: nextArtifactBonuses,
+          researchBonuses: nextResearchBonuses,
+          buildBonuses: nextBuildBonuses,
+          combatStatBonuses: s.combatStatBonuses ?? EMPTY_COMBAT_STAT_BONUSES,
+        });
         set({
           ...initialState,
           shards: s.shards + gain,
@@ -1521,8 +1535,8 @@ export const useGame = create<GameState>()(
           discoveredEnemyTypeIds: s.discoveredEnemyTypeIds ?? ['basic'],
           knowledgeBulbsCollected: s.knowledgeBulbsCollected,
           nextKnowledgeBulbAt: now + randomKnowledgeDelayMs(),
-          playerHp: Math.min(s.playerHp ?? BASE_COMBAT_STATS.maxHp, derivedCombatStats(s).maxHp),
-          playerMana: Math.min(s.playerMana ?? BASE_COMBAT_STATS.maxMana, derivedCombatStats(s).maxMana),
+          playerHp: nextStats.maxHp,
+          playerMana: nextStats.maxMana,
           combatStatBonuses: s.combatStatBonuses ?? EMPTY_COMBAT_STAT_BONUSES,
           combatAbilityCooldowns: s.combatAbilityCooldowns ?? {},
           completedResearchIds: s.completedResearchIds ?? [],
@@ -1530,12 +1544,12 @@ export const useGame = create<GameState>()(
           activeResearchId: s.activeResearchId ?? null,
           activeResearchStartAt: s.activeResearchStartAt ?? 0,
           activeResearchEndAt: s.activeResearchEndAt ?? 0,
-          researchBonuses: s.researchBonuses ?? summarizeResearchBonuses(s.claimedResearchIds ?? []),
+          researchBonuses: nextResearchBonuses,
           ownedBuildNodeIds: s.ownedBuildNodeIds ?? [],
-          buildBonuses: s.buildBonuses ?? summarizeBuildBonuses(s.ownedBuildNodeIds ?? []),
+          buildBonuses: nextBuildBonuses,
           runArtifacts: [],
-          permanentArtifacts: s.permanentArtifacts ?? [],
-          artifactBonuses: summarizeArtifactBonuses([], s.permanentArtifacts ?? []),
+          permanentArtifacts: nextPermanentArtifacts,
+          artifactBonuses: nextArtifactBonuses,
           shop: s.shop,
           audio: s.audio,
           hasStarted: s.hasStarted,

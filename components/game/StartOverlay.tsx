@@ -27,7 +27,13 @@ export function StartOverlay() {
       </div>
       <button
         onClick={async () => {
-          await audio.start(levelIdx, settings);
+          try {
+            await audio.start(levelIdx, settings);
+          } catch (error) {
+            if (process.env.NODE_ENV !== 'production') {
+              console.warn('Audio start skipped', error);
+            }
+          }
           start();
         }}
         className="mt-10 max-w-[88vw] rounded-md border border-purple/60 bg-purple/15 px-5 py-3 font-space text-[11px] uppercase tracking-[0.24em] text-purple animate-pulse2 hover:bg-purple/25 sm:px-6 sm:text-xs sm:tracking-[0.3em]"
