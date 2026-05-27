@@ -832,6 +832,15 @@
     "bossOfBosses": "neptün fırtına hükümdarı",
     "unnamedLiquid": "dış karanlık anomalisi"
   },
+  "weaponEvolutions": {
+    "unlocked": "Silah Evrimi Açıldı",
+    "multishot": { "name": "Çoklu Atış", "desc": "ek yan mermiler" },
+    "chainArc": { "name": "Zincir Arkı", "desc": "isabetler yakındaki düşmana sıçrayabilir" },
+    "explosiveCore": { "name": "Patlayıcı Çekirdek", "desc": "mermi isabetleri dışa patlar" },
+    "orbitCannon": { "name": "Yörünge Topu", "desc": "yörünge halkası baskı atışları yapar" },
+    "beamPulse": { "name": "Işın Darbesi", "desc": "periyodik kısa ışın vuruşu" },
+    "corruptedAmmo": { "name": "Bozulmuş Cephane", "desc": "daha güçlü dengesiz atışlar" }
+  },
   "upgrades": {
     "rarity": {
       "common": "yaygın",

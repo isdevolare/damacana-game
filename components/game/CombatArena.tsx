@@ -15,6 +15,7 @@ import { planetThemeForChapter } from '@/lib/config/planetThemes';
 import { prestigePermanentBonuses } from '@/lib/config/prestige';
 import { nodeById } from '@/lib/config/skillTree';
 import { summarizeUpgradeIdentityBonuses, type UpgradeIdentityBonuses } from '@/lib/config/upgrades';
+import { unlockedWeaponEvolutions, weaponEvolutionById, type WeaponEvolutionId } from '@/lib/config/weaponEvolutions';
 import { pickWaveType, waveTypeById, waveVariantsForChapter, type WaveTypeId } from '@/lib/config/waves';
 import {
   EnemyVariantId,
@@ -105,6 +106,10 @@ interface Projectile {
   bornAt: number;
   color: string;
   hitUntil: number;
+  evolution?: WeaponEvolutionId;
+  chainLeft?: number;
+  explosiveRadius?: number;
+  source?: 'core' | 'orbit' | 'beam';
 }
 
 type EnemyProjectileKind = 'basic' | 'heavy' | 'leech' | 'anomaly';
@@ -139,6 +144,17 @@ interface DodgeFloat {
   x: number;
   y: number;
   bornAt: number;
+}
+
+interface BeamEffect {
+  id: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  bornAt: number;
+  until: number;
+  color: string;
 }
 
 interface WaveStatus {
@@ -213,6 +229,17 @@ const ARENA_PERF = {
   mobileEnemyProjectileCap: 9,
   desktopDodgeFloatCap: 4,
   mobileDodgeFloatCap: 2,
+  desktopMultishotExtraCap: 4,
+  mobileMultishotExtraCap: 2,
+  desktopChainCap: 3,
+  mobileChainCap: 1,
+};
+
+const WEAPON_EVOLUTION_TIMING = {
+  orbitCannonMs: 1650,
+  orbitCannonMobileMs: 2200,
+  beamPulseMs: 5600,
+  beamPulseMobileMs: 7200,
 };
 
 const ENEMY_PROJECTILES: Record<EnemyProjectileKind, {
@@ -344,10 +371,13 @@ function projectileStats(args: {
   artifacts: ReturnType<typeof selectArtifactBonuses>;
   prestige: ReturnType<typeof prestigePermanentBonuses>;
   upgrades: UpgradeIdentityBonuses;
+  evolutions: ReadonlySet<WeaponEvolutionId>;
   combo: number;
   lowDensity: boolean;
   burstActive: boolean;
 }) {
+  const corruptedAmmo = args.evolutions.has('corruptedAmmo');
+  const chainArc = args.evolutions.has('chainArc');
   const comboPressure = Math.min(2.75, 1 + comboCombatPressure(args.combo) * 0.006);
   const damage =
     (
@@ -355,7 +385,8 @@ function projectileStats(args: {
       args.perSec * CORE_DEFENSE.projectilePassiveDamageMult * (1 + args.upgrades.passiveProjectileDamagePct)
     ) *
     comboPressure *
-    (1 + args.upgrades.projectileDamagePct + args.build.orbitDamagePct + args.research.orbitDamagePct + args.artifacts.orbitDamagePct + args.prestige.orbitDamagePct);
+    (1 + args.upgrades.projectileDamagePct + args.build.orbitDamagePct + args.research.orbitDamagePct + args.artifacts.orbitDamagePct + args.prestige.orbitDamagePct) *
+    (corruptedAmmo ? 1.24 + Math.min(0.14, args.build.unstableRewardPct * 0.35) : 1);
   const cooldownMult = Math.max(0.34, 1 - args.upgrades.projectileFireRatePct - args.build.cooldownReductionPct - args.artifacts.cooldownReductionPct - args.artifacts.projectileFireRatePct - args.prestige.cooldownReductionPct);
   return {
     intervalMs: (args.lowDensity ? CORE_DEFENSE.mobileAttackIntervalMs : CORE_DEFENSE.baseAttackIntervalMs) *
@@ -363,8 +394,8 @@ function projectileStats(args: {
       (args.burstActive ? CORE_DEFENSE.burstAttackIntervalMult : 1),
     damage: Math.max(1, Math.floor(damage * (args.burstActive ? 1.22 : 1))),
     speed: (args.lowDensity ? CORE_DEFENSE.mobileProjectileSpeed : CORE_DEFENSE.projectileSpeed) * (1 + args.upgrades.projectileSpeedPct),
-    critChance: Math.min(0.5, CORE_DEFENSE.projectileCritChance + args.upgrades.critChancePct + args.build.weakPointDamagePct * 0.35),
-    critDamage: CORE_DEFENSE.projectileCritDamage + args.upgrades.critDamagePct + args.upgrades.weakPointDamagePct + args.build.weakPointDamagePct + args.artifacts.weakPointDamagePct + args.prestige.rewardGainPct,
+    critChance: Math.min(0.5, CORE_DEFENSE.projectileCritChance + args.upgrades.critChancePct + args.build.weakPointDamagePct * 0.35 + (chainArc ? Math.min(0.08, comboCombatPressure(args.combo) * 0.00018) : 0)),
+    critDamage: CORE_DEFENSE.projectileCritDamage + args.upgrades.critDamagePct + args.upgrades.weakPointDamagePct + args.build.weakPointDamagePct + args.artifacts.weakPointDamagePct + args.prestige.rewardGainPct + (chainArc ? 0.16 : 0),
     extraProjectileChance: args.artifacts.extraProjectileChancePct,
   };
 }
@@ -378,6 +409,7 @@ let projectileId = 1;
 let enemyProjectileId = 1;
 let damageFloatId = 1;
 let dodgeFloatId = 1;
+let beamEffectId = 1;
 
 export function CombatArena() {
   const t = useTranslations();
@@ -395,6 +427,13 @@ export function CombatArena() {
   const buildBonuses = useGame(selectBuildBonuses);
   const artifactBonuses = useGame(selectArtifactBonuses);
   const upgradeLevels = useGame((s) => s.upgrades);
+  const ownedBuildNodeIds = useGame((s) => s.ownedBuildNodeIds);
+  const runArtifacts = useGame((s) => s.runArtifacts);
+  const permanentArtifacts = useGame((s) => s.permanentArtifacts);
+  const seenWeaponEvolutionIds = useGame((s) => s.seenWeaponEvolutionIds);
+  const weaponEvolutionToast = useGame((s) => s.weaponEvolutionToast);
+  const discoverWeaponEvolution = useGame((s) => s.discoverWeaponEvolution);
+  const dismissWeaponEvolutionToast = useGame((s) => s.dismissWeaponEvolutionToast);
   const powerToast = useGame((s) => s.powerToast);
   const playerHp = useGame((s) => s.playerHp);
   const playerMana = useGame((s) => s.playerMana);
@@ -421,6 +460,19 @@ export function CombatArena() {
   const planetTheme = useMemo(() => planetThemeForChapter(chapter.id), [chapter.id]);
   const bossProfile = useMemo(() => bossProfileForChapter(chapter.id), [chapter.id]);
   const upgradeBonuses = useMemo(() => summarizeUpgradeIdentityBonuses(upgradeLevels), [upgradeLevels]);
+  const activeWeaponEvolutions = useMemo(() => unlockedWeaponEvolutions({
+    bossTier: boss.tier,
+    totalPrestiges,
+    completedChapters,
+    ownedBuildNodeIds,
+    upgrades: upgradeLevels,
+    runArtifacts,
+    permanentArtifacts,
+  }), [boss.tier, completedChapters, ownedBuildNodeIds, permanentArtifacts, runArtifacts, totalPrestiges, upgradeLevels]);
+  const activeWeaponEvolutionSet = useMemo(
+    () => new Set<WeaponEvolutionId>(activeWeaponEvolutions.map((evolution) => evolution.id)),
+    [activeWeaponEvolutions],
+  );
   const finalBoss = boss.tier === chapter.finalBossTier;
   const mega = isMegaBoss(boss.tier);
   const phaseInfo = bossPhaseInfo(boss.tier);
@@ -436,9 +488,12 @@ export function CombatArena() {
   const abilityEffectsRef = useRef<AbilityEffect[]>([]);
   const projectilesRef = useRef<Projectile[]>([]);
   const enemyProjectilesRef = useRef<EnemyProjectile[]>([]);
+  const beamEffectsRef = useRef<BeamEffect[]>([]);
   const lastSpawnRef = useRef(0);
   const lastProjectileShotRef = useRef(0);
   const lastBossProjectileShotRef = useRef(0);
+  const lastOrbitCannonShotRef = useRef(0);
+  const lastBeamPulseShotRef = useRef(0);
   const burstFireUntilRef = useRef(0);
   const waveRef = useRef(1);
   const pendingWaveRef = useRef<PendingWave | null>(null);
@@ -472,6 +527,7 @@ export function CombatArena() {
   const [abilityEffects, setAbilityEffects] = useState<AbilityEffect[]>([]);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const [enemyProjectiles, setEnemyProjectiles] = useState<EnemyProjectile[]>([]);
+  const [beamEffects, setBeamEffects] = useState<BeamEffect[]>([]);
   const [damageFloats, setDamageFloats] = useState<DamageFloat[]>([]);
   const [dodgeFloats, setDodgeFloats] = useState<DodgeFloat[]>([]);
   const [burstFireUntil, setBurstFireUntil] = useState(0);
@@ -514,6 +570,7 @@ export function CombatArena() {
   const buildBonusesRef = useRef(buildBonuses);
   const artifactBonusesRef = useRef(artifactBonuses);
   const upgradeBonusesRef = useRef(upgradeBonuses);
+  const activeWeaponEvolutionSetRef = useRef(activeWeaponEvolutionSet);
   const legacyTreeRef = useRef(legacyTree);
   const totalPrestigesRef = useRef(totalPrestiges);
   const discoverEnemyTypeRef = useRef(discoverEnemyType);
@@ -542,6 +599,7 @@ export function CombatArena() {
   useEffect(() => { buildBonusesRef.current = buildBonuses; }, [buildBonuses]);
   useEffect(() => { artifactBonusesRef.current = artifactBonuses; }, [artifactBonuses]);
   useEffect(() => { upgradeBonusesRef.current = upgradeBonuses; }, [upgradeBonuses]);
+  useEffect(() => { activeWeaponEvolutionSetRef.current = activeWeaponEvolutionSet; }, [activeWeaponEvolutionSet]);
   useEffect(() => { legacyTreeRef.current = legacyTree; }, [legacyTree]);
   useEffect(() => { totalPrestigesRef.current = totalPrestiges; }, [totalPrestiges]);
   useEffect(() => { discoverEnemyTypeRef.current = discoverEnemyType; }, [discoverEnemyType]);
@@ -567,6 +625,21 @@ export function CombatArena() {
   }, []);
 
   useEffect(() => {
+    for (const evolution of activeWeaponEvolutions) {
+      if (!(seenWeaponEvolutionIds ?? []).includes(evolution.id)) {
+        discoverWeaponEvolution(evolution.id);
+        break;
+      }
+    }
+  }, [activeWeaponEvolutions, discoverWeaponEvolution, seenWeaponEvolutionIds]);
+
+  useEffect(() => {
+    if (!weaponEvolutionToast) return;
+    const id = setTimeout(() => dismissWeaponEvolutionToast(), 3200);
+    return () => clearTimeout(id);
+  }, [dismissWeaponEvolutionToast, weaponEvolutionToast]);
+
+  useEffect(() => {
     const now = Date.now();
     const startPlayer = { x: 50, y: 70, hitUntil: 0, healUntil: now + 450 };
     keysRef.current.clear();
@@ -579,9 +652,12 @@ export function CombatArena() {
     abilityEffectsRef.current = [];
     projectilesRef.current = [];
     enemyProjectilesRef.current = [];
+    beamEffectsRef.current = [];
     lastSpawnRef.current = now;
     lastProjectileShotRef.current = now;
     lastBossProjectileShotRef.current = now;
+    lastOrbitCannonShotRef.current = now;
+    lastBeamPulseShotRef.current = now;
     burstFireUntilRef.current = 0;
     waveRef.current = 1;
     pendingWaveRef.current = null;
@@ -613,6 +689,7 @@ export function CombatArena() {
     setAbilityEffects([]);
     setProjectiles([]);
     setEnemyProjectiles([]);
+    setBeamEffects([]);
     setDamageFloats([]);
     setDodgeFloats([]);
     setHpFloats([]);
@@ -1160,9 +1237,13 @@ export function CombatArena() {
       const activeArtifacts = artifactBonusesRef.current;
       const activeLegacyTree = legacyTreeRef.current;
       const activePrestige = prestigePermanentBonuses(totalPrestigesRef.current);
+      const activeWeaponEvolutionsFrame = activeWeaponEvolutionSetRef.current;
       const legacyProjectileCrit = activeLegacyTree['critDrop'] ? nodeById('critDrop')?.value ?? 0 : 0;
       const legacyProjectileCritDamage = activeLegacyTree['voidClaw'] ? 2 : 0;
       const orbitJammerMult = enemiesRef.current.some((enemy) => enemy.variantId === 'orbitJammer') ? 0.62 : 1;
+      const corruptedPressureMult = activeWeaponEvolutionsFrame.has('corruptedAmmo')
+        ? 1.06 + Math.min(0.08, activeBuild.enemyAggressionPct * 0.4)
+        : 1;
       const updatedEnemies = enemiesRef.current.filter((enemy) => (
         finiteNumber(enemy.x) &&
         finiteNumber(enemy.y) &&
@@ -1182,7 +1263,7 @@ export function CombatArena() {
         const length = Math.hypot(toPlayer.x, toPlayer.y) || 1;
         const wobble = activeChapter.id === 'saturn' ? Math.sin((now + enemy.id * 311) / 520) * 0.75 : 0;
         const orbitSlow = activeBuild.orbitSlowPct > 0 && dist(enemy, p) < 28 ? 1 - Math.min(0.35, activeBuild.orbitSlowPct) : 1;
-        const step = enemy.speed * activeStyle.aggression * anomalyMult(activeAnomalies, 'enemySpeed') * (1 + activeBuild.enemyAggressionPct) * orbitSlow * (dt / 1000);
+        const step = enemy.speed * activeStyle.aggression * anomalyMult(activeAnomalies, 'enemySpeed') * (1 + activeBuild.enemyAggressionPct) * corruptedPressureMult * orbitSlow * (dt / 1000);
         const x = clamp(enemy.x + (toPlayer.x / length) * step + wobble * (dt / 1000), 4, 96);
         const y = clamp(enemy.y + (toPlayer.y / length) * step, 8, 96);
         let lastContactAt = enemy.lastContactAt;
@@ -1272,6 +1353,7 @@ export function CombatArena() {
         artifacts: activeArtifacts,
         prestige: activePrestige,
         upgrades: upgradeBonusesRef.current,
+        evolutions: activeWeaponEvolutionsFrame,
         combo: comboRef.current,
         lowDensity: lowDensityFrame,
         burstActive,
@@ -1291,6 +1373,19 @@ export function CombatArena() {
         const targetPoint = targetEnemy ?? bossPoint;
         const angle = Math.atan2(targetPoint.y - p.y, targetPoint.x - p.x);
         const crit = Math.random() < shotStats.critChance;
+        const hasMultishot = activeWeaponEvolutionsFrame.has('multishot');
+        const hasChainArc = activeWeaponEvolutionsFrame.has('chainArc');
+        const hasExplosiveCore = activeWeaponEvolutionsFrame.has('explosiveCore');
+        const hasCorruptedAmmo = activeWeaponEvolutionsFrame.has('corruptedAmmo');
+        const chainLeft = hasChainArc
+          ? Math.min(
+            lowDensityFrame ? ARENA_PERF.mobileChainCap : ARENA_PERF.desktopChainCap,
+            1 + (crit ? 1 : 0) + (!lowDensityFrame && comboRef.current >= 250 ? 1 : 0),
+          )
+          : 0;
+        const explosiveRadius = hasExplosiveCore
+          ? (lowDensityFrame ? 6.8 : 8.8) * (1 + Math.min(0.42, activeBuild.aoeDamagePct + activeBuild.orbitDamagePct * 0.35))
+          : 0;
         const baseProjectile: Projectile = {
             id: projectileId++,
             x: p.x,
@@ -1302,10 +1397,42 @@ export function CombatArena() {
             speed: shotStats.speed,
             angle,
             bornAt: now,
-            color: crit ? '#ffd166' : burstActive ? '#ff5ce8' : activeTheme.particleColor,
+            color: hasCorruptedAmmo ? '#b87aff' : crit ? '#ffd166' : burstActive ? '#ff5ce8' : activeTheme.particleColor,
             hitUntil: 0,
+            evolution: hasCorruptedAmmo ? 'corruptedAmmo' : undefined,
+            chainLeft,
+            explosiveRadius,
+            source: 'core',
           };
         const shots: Projectile[] = [baseProjectile];
+        if (hasMultishot) {
+          const extraCap = lowDensityFrame ? ARENA_PERF.mobileMultishotExtraCap : ARENA_PERF.desktopMultishotExtraCap;
+          const extraCount = Math.min(extraCap, 2 + (!lowDensityFrame && comboRef.current >= 120 ? 1 : 0) + (!lowDensityFrame && comboRef.current >= 500 ? 1 : 0));
+          const sideTargets = enemiesRef.current
+            .map((enemy) => ({ enemy, distance: dist(enemy, p) }))
+            .filter((item) => item.distance < 68 && item.enemy.id !== targetEnemy?.id)
+            .sort((a, b) => a.distance - b.distance);
+          for (let i = 0; i < extraCount && projectilesRef.current.length + shots.length < projectileCap; i += 1) {
+            const sideTarget = sideTargets[i]?.enemy ?? targetEnemy;
+            const offset = (i % 2 === 0 ? 1 : -1) * (0.18 + Math.floor(i / 2) * 0.12);
+            const sideTargetPoint = sideTarget ?? bossPoint;
+            const sideAngle = Math.atan2(sideTargetPoint.y - p.y, sideTargetPoint.x - p.x) + offset;
+            shots.push({
+              ...baseProjectile,
+              id: projectileId++,
+              x: clamp(p.x + Math.cos(angle + Math.PI / 2) * offset * 6, 5, 95),
+              y: clamp(p.y + Math.sin(angle + Math.PI / 2) * offset * 6, 8, 95),
+              targetId: sideTarget?.id ?? bossRef.current.tier,
+              targetType: sideTarget ? 'enemy' : 'boss',
+              damage: Math.max(1, Math.floor(baseProjectile.damage * 0.58)),
+              angle: sideAngle,
+              color: hasCorruptedAmmo ? '#b87aff' : burstActive ? '#ff5ce8' : '#bffcff',
+              evolution: 'multishot',
+              chainLeft: 0,
+              explosiveRadius: hasExplosiveCore && !lowDensityFrame ? explosiveRadius * 0.72 : 0,
+            });
+          }
+        }
         if (
           projectilesRef.current.length + shots.length < projectileCap &&
           Math.random() < shotStats.extraProjectileChance
@@ -1316,11 +1443,100 @@ export function CombatArena() {
             angle: angle + (Math.random() > 0.5 ? 0.16 : -0.16),
             damage: Math.max(1, Math.floor(baseProjectile.damage * 0.72)),
             color: burstActive ? '#ff5ce8' : '#bffcff',
+            chainLeft: Math.min(baseProjectile.chainLeft ?? 0, 1),
+            explosiveRadius: hasExplosiveCore ? explosiveRadius * 0.76 : 0,
           });
         }
         projectilesRef.current = [...projectilesRef.current, ...shots].slice(-projectileCap);
         lastProjectileShotRef.current = now;
         if (!lowDensityFrame) emitParticles(p.x, p.y, burstActive ? '#ff5ce8' : activeTheme.particleColor, burstActive ? 5 : 3, 0.45);
+      }
+
+      if (
+        activeWeaponEvolutionsFrame.has('orbitCannon') &&
+        now - lastOrbitCannonShotRef.current > (lowDensityFrame ? WEAPON_EVOLUTION_TIMING.orbitCannonMobileMs : WEAPON_EVOLUTION_TIMING.orbitCannonMs) &&
+        projectilesRef.current.length < projectileCap
+      ) {
+        lastOrbitCannonShotRef.current = now;
+        const orbitTargets = enemiesRef.current
+          .map((enemy) => ({ enemy, distance: dist(enemy, p) }))
+          .filter((item) => item.distance < 72)
+          .sort((a, b) => a.distance - b.distance)
+          .slice(0, lowDensityFrame ? 1 : 3);
+        const targets = orbitTargets.length > 0 ? orbitTargets.map((item) => item.enemy) : [undefined];
+        const orbitDamage = Math.max(1, Math.floor(shotStats.damage * (0.34 + Math.min(0.38, activeBuild.orbitDamagePct * 0.35 + upgradeBonusesRef.current.orbitDamagePct * 0.28))));
+        for (let i = 0; i < targets.length && projectilesRef.current.length < projectileCap; i += 1) {
+          const target = targets[i];
+          const targetPoint = target ?? bossArenaPoint(now, activePhaseTuning.info.progress);
+          const orbitAngle = (now / 520 + i * 2.1) % (Math.PI * 2);
+          const origin = {
+            x: clamp(p.x + Math.cos(orbitAngle) * 5.8, 5, 95),
+            y: clamp(p.y + Math.sin(orbitAngle) * 5.8, 8, 95),
+          };
+          projectilesRef.current.push({
+            id: projectileId++,
+            x: origin.x,
+            y: origin.y,
+            targetId: target?.id ?? bossRef.current.tier,
+            targetType: target ? 'enemy' : 'boss',
+            damage: orbitDamage,
+            crit: false,
+            speed: shotStats.speed * 0.92,
+            angle: Math.atan2(targetPoint.y - origin.y, targetPoint.x - origin.x),
+            bornAt: now,
+            color: '#ff5ce8',
+            hitUntil: 0,
+            evolution: 'orbitCannon',
+            chainLeft: 0,
+            explosiveRadius: 0,
+            source: 'orbit',
+          });
+        }
+        if (!lowDensityFrame) emitParticles(p.x, p.y, '#ff5ce8', 4, 0.46);
+      }
+
+      if (
+        activeWeaponEvolutionsFrame.has('beamPulse') &&
+        now - lastBeamPulseShotRef.current > (lowDensityFrame ? WEAPON_EVOLUTION_TIMING.beamPulseMobileMs : WEAPON_EVOLUTION_TIMING.beamPulseMs)
+      ) {
+        lastBeamPulseShotRef.current = now;
+        const beamTarget = enemiesRef.current
+          .map((enemy) => ({ enemy, distance: dist(enemy, p) }))
+          .filter((item) => item.distance < 78)
+          .sort((a, b) => a.distance - b.distance)[0]?.enemy;
+        const targetPoint = beamTarget ? { x: beamTarget.x, y: beamTarget.y } : bossArenaPoint(now, activePhaseTuning.info.progress);
+        const beamDamage = Math.max(1, Math.floor(shotStats.damage * (0.62 + Math.min(0.42, activeBuild.passiveProductionPct * 0.35 + activeBuild.cooldownReductionPct * 0.7))));
+        beamEffectsRef.current = [
+          ...beamEffectsRef.current.slice(lowDensityFrame ? -1 : -2),
+          { id: beamEffectId++, x1: p.x, y1: p.y, x2: targetPoint.x, y2: targetPoint.y, bornAt: now, until: now + (lowDensityFrame ? 150 : 220), color: '#80fff4' },
+        ];
+        setBeamEffects(beamEffectsRef.current);
+        if (beamTarget) {
+          const killedEnemies: Enemy[] = [];
+          enemiesRef.current = enemiesRef.current
+            .map((enemy) => {
+              if (enemy.id !== beamTarget.id) return enemy;
+              const result = applyEnemyDamage(enemy, beamDamage, now);
+              if (result.killed) killedEnemies.push(result.enemy);
+              return { ...result.enemy, hitUntil: now + 240 };
+            })
+            .filter((enemy) => enemy.hp > 0);
+          pushDamageFloat(beamDamage, targetPoint.x, targetPoint.y - 4, true);
+          if (killedEnemies.length > 0) {
+            boostCombatComboRef.current(8 + killedEnemies.length * 5);
+            tapRef.current(undefined, undefined, { damageMult: 0.12, rewardMult: 0.2 * beamTarget.rewardMult, passive: true, silent: true });
+          }
+        } else {
+          pushDamageFloat(beamDamage, targetPoint.x, targetPoint.y - 5, true);
+          tapRef.current(undefined, undefined, {
+            damageMult: 0.26 * bossDamageGuardMult(),
+            rewardMult: 0.1,
+            comboBoost: 1.8,
+            passive: true,
+            silent: true,
+          });
+        }
+        if (!lowDensityFrame) emitParticles(targetPoint.x, targetPoint.y, '#80fff4', 10, 0.9);
       }
 
       if (CORE_DEFENSE_HOOKS.projectileFiring && projectilesRef.current.length > 0) {
@@ -1360,7 +1576,46 @@ export function CombatArena() {
                   const pushY = clamp(result.enemy.y + (dyp / distance) * 0.8, 8, 96);
                   return { ...result.enemy, x: pushX, y: pushY, hitUntil: now + (projectile.crit ? 260 : 170) };
                 })
+                .map((enemy) => {
+                  if (!projectile.explosiveRadius || enemy.id === targetEnemy.id || enemy.hp <= 0) return enemy;
+                  const blastDistance = dist(enemy, targetPoint);
+                  if (blastDistance > projectile.explosiveRadius) return enemy;
+                  const blastDamage = Math.max(1, Math.floor(projectile.damage * (0.22 + Math.min(0.2, activeBuild.aoeDamagePct * 0.32 + activeBuild.maxHpPct * 0.12))));
+                  const result = applyEnemyDamage(enemy, blastDamage, now);
+                  if (result.killed) killedEnemies.push(result.enemy);
+                  return { ...result.enemy, hitUntil: now + 190 };
+                })
                 .filter((enemy) => enemy.hp > 0);
+              if (projectile.explosiveRadius) {
+                emitParticles(targetPoint.x, targetPoint.y, '#ff6b4a', lowDensityFrame ? 6 : 12, 1.02);
+              }
+              if ((projectile.chainLeft ?? 0) > 0) {
+                const chainTarget = nextEnemies
+                  .map((enemy) => ({ enemy, distance: dist(enemy, targetPoint) }))
+                  .filter((item) => item.enemy.id !== targetEnemy.id && item.distance < (lowDensityFrame ? 28 : 34))
+                  .sort((a, b) => a.distance - b.distance)[0]?.enemy;
+                if (chainTarget && survivors.length < projectileCap) {
+                  survivors.push({
+                    id: projectileId++,
+                    x: targetPoint.x,
+                    y: targetPoint.y,
+                    targetId: chainTarget.id,
+                    targetType: 'enemy',
+                    damage: Math.max(1, Math.floor(projectile.damage * (0.52 + Math.min(0.18, activeBuild.comboGainPct * 0.35 + activeBuild.weakPointDamagePct * 0.2)))),
+                    crit: projectile.crit,
+                    speed: projectile.speed * 1.12,
+                    angle: Math.atan2(chainTarget.y - targetPoint.y, chainTarget.x - targetPoint.x),
+                    bornAt: now,
+                    color: '#ffd166',
+                    hitUntil: 0,
+                    evolution: 'chainArc',
+                    chainLeft: (projectile.chainLeft ?? 0) - 1,
+                    explosiveRadius: 0,
+                    source: 'core',
+                  });
+                  if (!lowDensityFrame) emitParticles(targetPoint.x, targetPoint.y, '#ffd166', 5, 0.58);
+                }
+              }
               for (const enemy of killedEnemies) {
                 nextEnemies = [
                   ...nextEnemies,
@@ -1693,6 +1948,8 @@ export function CombatArena() {
       abilityEffectsRef.current = abilityEffectsRef.current
         .map((effect) => effect.kind === 'orbitSlash' ? { ...effect, x: p.x, y: p.y } : effect)
         .filter((effect) => effect.until > now && finiteNumber(effect.x) && finiteNumber(effect.y));
+      beamEffectsRef.current = beamEffectsRef.current
+        .filter((effect) => effect.until > now && finiteNumber(effect.x1) && finiteNumber(effect.y1) && finiteNumber(effect.x2) && finiteNumber(effect.y2));
 
       playerRef.current = p;
       const renderInterval = lowDensityFrame ? ARENA_PERF.mobileRenderMs : ARENA_PERF.desktopRenderMs;
@@ -1705,6 +1962,7 @@ export function CombatArena() {
         setEnemyProjectiles(enemyProjectilesRef.current);
         setParticles(particlesRef.current);
         setAbilityEffects(abilityEffectsRef.current);
+        setBeamEffects(beamEffectsRef.current);
       }
       raf = requestAnimationFrame(frame);
     };
@@ -1855,6 +2113,9 @@ export function CombatArena() {
   const renderedHpFloats = lowDensity ? hpFloats.slice(-ARENA_PERF.mobileHpFloatCap) : hpFloats;
   const renderedDamageFloats = lowDensity ? damageFloats.slice(-5) : damageFloats;
   const renderedDodgeFloats = lowDensity ? dodgeFloats.slice(-ARENA_PERF.mobileDodgeFloatCap) : dodgeFloats;
+  const renderedBeamEffects = lowDensity ? beamEffects.slice(-1) : beamEffects;
+  const activeEvolutionIndicators = activeWeaponEvolutions.slice(0, lowDensity ? 3 : 6);
+  const weaponEvolutionToastDef = weaponEvolutionToast ? weaponEvolutionById(weaponEvolutionToast) : undefined;
   const renderedTargetLines = enemies
     .map((enemy) => {
       const dx = player.x - enemy.x;
@@ -1990,6 +2251,47 @@ export function CombatArena() {
           </div>
         </div>
       </div>
+
+      {activeEvolutionIndicators.length > 0 && (
+        <div className="pointer-events-none absolute left-2 top-[4.8rem] z-20 flex max-w-[58%] flex-wrap gap-1 sm:left-3 sm:top-[5.2rem] sm:max-w-[70%]">
+          {activeEvolutionIndicators.map((evolution) => (
+            <span
+              key={evolution.id}
+              className="rounded border bg-black/58 px-1.5 py-0.5 font-space text-[7px] uppercase tracking-[0.14em] text-white/75 shadow-[0_0_10px_rgba(0,0,0,0.36)]"
+              style={{
+                borderColor: `${evolution.accent}66`,
+                color: evolution.accent,
+              }}
+            >
+              {evolution.symbol} {t(`weaponEvolutions.${evolution.i18nKey}.name` as any)}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {weaponEvolutionToastDef && (
+        <motion.div
+          key={weaponEvolutionToastDef.id}
+          initial={{ opacity: 0, y: 10, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0 }}
+          className="pointer-events-none absolute left-1/2 top-[26%] z-50 w-[min(88%,310px)] -translate-x-1/2 rounded-lg border bg-black/82 px-3 py-2 text-center shadow-[0_0_24px_rgba(92,246,255,0.16)] backdrop-blur-sm"
+          style={{
+            borderColor: `${weaponEvolutionToastDef.accent}88`,
+            boxShadow: lowDensity ? undefined : `0 0 24px ${weaponEvolutionToastDef.accent}33`,
+          }}
+        >
+          <div className="font-space text-[8px] uppercase tracking-[0.24em] text-white/55">
+            {t('weaponEvolutions.unlocked')}
+          </div>
+          <div className="mt-1 font-space text-[12px] uppercase tracking-[0.16em]" style={{ color: weaponEvolutionToastDef.accent }}>
+            {weaponEvolutionToastDef.symbol} {t(`weaponEvolutions.${weaponEvolutionToastDef.i18nKey}.name` as any)}
+          </div>
+          <div className="mt-0.5 font-space text-[8px] uppercase tracking-[0.14em] text-white/45">
+            {t(`weaponEvolutions.${weaponEvolutionToastDef.i18nKey}.desc` as any)}
+          </div>
+        </motion.div>
+      )}
 
       {showBossTarget && (
         <motion.div
@@ -2203,6 +2505,30 @@ export function CombatArena() {
               <div className="absolute inset-[14%] rounded-full border border-gold/35" />
             )}
           </div>
+        );
+      })}
+
+      {renderedBeamEffects.map((effect) => {
+        const age = renderNow - effect.bornAt;
+        const opacity = Math.max(0, 1 - age / Math.max(1, effect.until - effect.bornAt));
+        const dx = effect.x2 - effect.x1;
+        const dy = effect.y2 - effect.y1;
+        const length = Math.hypot(dx, dy);
+        const angle = Math.atan2(dy, dx);
+        return (
+          <div
+            key={effect.id}
+            className="pointer-events-none absolute z-[32] h-1 origin-left rounded-full"
+            style={{
+              left: `${effect.x1}%`,
+              top: `${effect.y1}%`,
+              width: `${length}%`,
+              opacity: lowDensity ? opacity * 0.58 : opacity,
+              background: `linear-gradient(90deg, ${effect.color}, rgba(255,255,255,0.86), transparent)`,
+              transform: `rotate(${angle}rad)`,
+              boxShadow: lowDensity ? undefined : `0 0 20px ${effect.color}`,
+            }}
+          />
         );
       })}
 

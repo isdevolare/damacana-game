@@ -832,6 +832,15 @@
     "bossOfBosses": "neptune storm sovereign",
     "unnamedLiquid": "outer dark anomaly"
   },
+  "weaponEvolutions": {
+    "unlocked": "Weapon Evolution Unlocked",
+    "multishot": { "name": "Multishot", "desc": "extra side projectiles" },
+    "chainArc": { "name": "Chain Arc", "desc": "hits can jump to nearby enemies" },
+    "explosiveCore": { "name": "Explosive Core", "desc": "projectile impacts burst outward" },
+    "orbitCannon": { "name": "Orbit Cannon", "desc": "orbit ring fires pressure shots" },
+    "beamPulse": { "name": "Beam Pulse", "desc": "periodic short beam strike" },
+    "corruptedAmmo": { "name": "Corrupted Ammo", "desc": "stronger unstable shots" }
+  },
   "upgrades": {
     "rarity": {
       "common": "common",

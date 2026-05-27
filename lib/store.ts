@@ -47,6 +47,7 @@ import {
   rollArtifactDrop,
   summarizeArtifactBonuses,
 } from './config/artifacts';
+import type { WeaponEvolutionId } from './config/weaponEvolutions';
 import { fmt } from './util';
 
 export interface Buff {
@@ -151,6 +152,7 @@ interface Persisted {
   runArtifacts: OwnedArtifact[];
   permanentArtifacts: OwnedArtifact[];
   artifactBonuses: ArtifactBonusSummary;
+  seenWeaponEvolutionIds: WeaponEvolutionId[];
   shop: { tapBoost: number; flowBoost: number; shardBoost: number };
   // audio settings
   audio: { master: number; music: number; sfx: number; muted: boolean };
@@ -192,6 +194,7 @@ export interface GameState extends Persisted {
   enemyDiscoveryToast: EnemyVariantId | null;
   powerToast: PowerToast | null;
   artifactToast: ArtifactToast | null;
+  weaponEvolutionToast: WeaponEvolutionId | null;
 
   // actions
   tapDamacana: (clientX?: number, clientY?: number, options?: CombatHitOptions) => void;
@@ -229,6 +232,8 @@ export interface GameState extends Persisted {
   dismissEnemyDiscoveryToast: () => void;
   dismissPowerToast: () => void;
   dismissArtifactToast: () => void;
+  discoverWeaponEvolution: (id: WeaponEvolutionId) => void;
+  dismissWeaponEvolutionToast: () => void;
   rollArtifactReward: (source: ArtifactSource) => void;
   buyBuildNode: (id: string) => void;
   claimOfflineProgress: () => void;
@@ -792,6 +797,7 @@ const initialState: Persisted = {
   runArtifacts: [],
   permanentArtifacts: [],
   artifactBonuses: EMPTY_ARTIFACT_BONUSES,
+  seenWeaponEvolutionIds: [],
   shop: { tapBoost: 0, flowBoost: 0, shardBoost: 0 },
   audio: { master: 0.7, music: 0.6, sfx: 0.8, muted: false },
   hasStarted: false,
@@ -831,6 +837,7 @@ export const useGame = create<GameState>()(
       enemyDiscoveryToast: null,
       powerToast: null,
       artifactToast: null,
+      weaponEvolutionToast: null,
 
       tapDamacana: (clientX, clientY, options = {}) => {
         const s = get();
@@ -1268,6 +1275,15 @@ export const useGame = create<GameState>()(
       dismissEnemyDiscoveryToast: () => set({ enemyDiscoveryToast: null }),
       dismissPowerToast: () => set({ powerToast: null }),
       dismissArtifactToast: () => set({ artifactToast: null }),
+      discoverWeaponEvolution: (id) => {
+        const s = get();
+        if ((s.seenWeaponEvolutionIds ?? []).includes(id)) return;
+        set({
+          seenWeaponEvolutionIds: [...(s.seenWeaponEvolutionIds ?? []), id],
+          weaponEvolutionToast: id,
+        });
+      },
+      dismissWeaponEvolutionToast: () => set({ weaponEvolutionToast: null }),
       rollArtifactReward: (source) => {
         const s = get();
         const patch = addArtifactPatch(s, source);
@@ -1566,6 +1582,7 @@ export const useGame = create<GameState>()(
           runArtifacts: [],
           permanentArtifacts: nextPermanentArtifacts,
           artifactBonuses: nextArtifactBonuses,
+          seenWeaponEvolutionIds: s.seenWeaponEvolutionIds ?? [],
           shop: s.shop,
           audio: s.audio,
           hasStarted: s.hasStarted,
@@ -1589,6 +1606,7 @@ export const useGame = create<GameState>()(
           enemyDiscoveryToast: null,
           powerToast: null,
           artifactToast: null,
+          weaponEvolutionToast: null,
           combo: 1,
           lastTapAt: 0,
         });
@@ -1645,6 +1663,7 @@ export const useGame = create<GameState>()(
           enemyDiscoveryToast: null,
           powerToast: null,
           artifactToast: null,
+          weaponEvolutionToast: null,
           currentEvent: null,
           floatingNumbers: [],
           shake: null,
@@ -1822,6 +1841,7 @@ export const useGame = create<GameState>()(
         runArtifacts: s.runArtifacts,
         permanentArtifacts: s.permanentArtifacts,
         artifactBonuses: s.artifactBonuses,
+        seenWeaponEvolutionIds: s.seenWeaponEvolutionIds,
         shop: s.shop,
         audio: s.audio,
         hasStarted: s.hasStarted,
