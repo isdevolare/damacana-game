@@ -164,10 +164,28 @@ interface WaveStatus {
 }
 
 type ArenaPulseKind = 'crit' | 'death' | 'phase' | 'wave' | 'elite' | 'anomaly' | 'shield';
+type ArenaHazardKind = 'gravityWell' | 'laserSweep' | 'pulseMine' | 'voidZone';
 
 interface PendingWave {
   type: WaveTypeId;
   dueAt: number;
+}
+
+interface ArenaHazard {
+  id: number;
+  kind: ArenaHazardKind;
+  x: number;
+  y: number;
+  bornAt: number;
+  fireAt: number;
+  until: number;
+  radius: number;
+  damage: number;
+  angle: number;
+  length: number;
+  width: number;
+  hit: boolean;
+  manaDrain: number;
 }
 
 function clamp(v: number, min: number, max: number) {
@@ -256,6 +274,22 @@ const ENEMY_PROJECTILES: Record<EnemyProjectileKind, {
   leech: { speed: 0.023, damageMult: 0.24, manaDamage: 16, color: '#b87aff', size: 9, lifeMs: 4500, hitRadius: 4.8 },
   anomaly: { speed: 0.024, damageMult: 0.78, manaDamage: 8, color: '#ff5ce8', size: 10, lifeMs: 4700, hitRadius: 5 },
 };
+
+const HAZARD_STYLE: Record<ArenaHazardKind, { color: string; labelKey: string }> = {
+  gravityWell: { color: '#b87aff', labelKey: 'gravityWell' },
+  laserSweep: { color: '#ffd166', labelKey: 'laserSweep' },
+  pulseMine: { color: '#ff6b4a', labelKey: 'dangerZone' },
+  voidZone: { color: '#ff5ce8', labelKey: 'voidZone' },
+};
+
+function pointLineDistance(point: Vec, origin: Vec, angle: number, halfLength: number) {
+  const dx = point.x - origin.x;
+  const dy = point.y - origin.y;
+  const along = dx * Math.cos(angle) + dy * Math.sin(angle);
+  const cross = Math.abs(-dx * Math.sin(angle) + dy * Math.cos(angle));
+  if (Math.abs(along) > halfLength) return Number.POSITIVE_INFINITY;
+  return cross;
+}
 
 function enemyProjectileKind(variantId: EnemyVariantId): EnemyProjectileKind | null {
   if (variantId === 'tank' || variantId === 'shield') return 'heavy';
@@ -410,6 +444,7 @@ let enemyProjectileId = 1;
 let damageFloatId = 1;
 let dodgeFloatId = 1;
 let beamEffectId = 1;
+let hazardId = 1;
 
 export function CombatArena() {
   const t = useTranslations();
@@ -489,6 +524,7 @@ export function CombatArena() {
   const projectilesRef = useRef<Projectile[]>([]);
   const enemyProjectilesRef = useRef<EnemyProjectile[]>([]);
   const beamEffectsRef = useRef<BeamEffect[]>([]);
+  const hazardsRef = useRef<ArenaHazard[]>([]);
   const lastSpawnRef = useRef(0);
   const lastProjectileShotRef = useRef(0);
   const lastBossProjectileShotRef = useRef(0);
@@ -503,6 +539,7 @@ export function CombatArena() {
   const lastBossSummonRef = useRef(0);
   const lastBossShieldAtRef = useRef(Date.now());
   const lastBossSweepAtRef = useRef(Date.now());
+  const lastBossHazardAtRef = useRef(Date.now());
   const lastGlobalContactRef = useRef(0);
   const lastResourceRegenRef = useRef(0);
   const lastOrbitSlashDamageRef = useRef(0);
@@ -528,6 +565,7 @@ export function CombatArena() {
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const [enemyProjectiles, setEnemyProjectiles] = useState<EnemyProjectile[]>([]);
   const [beamEffects, setBeamEffects] = useState<BeamEffect[]>([]);
+  const [hazards, setHazards] = useState<ArenaHazard[]>([]);
   const [damageFloats, setDamageFloats] = useState<DamageFloat[]>([]);
   const [dodgeFloats, setDodgeFloats] = useState<DodgeFloat[]>([]);
   const [burstFireUntil, setBurstFireUntil] = useState(0);
@@ -653,6 +691,7 @@ export function CombatArena() {
     projectilesRef.current = [];
     enemyProjectilesRef.current = [];
     beamEffectsRef.current = [];
+    hazardsRef.current = [];
     lastSpawnRef.current = now;
     lastProjectileShotRef.current = now;
     lastBossProjectileShotRef.current = now;
@@ -667,6 +706,7 @@ export function CombatArena() {
     lastBossSummonRef.current = now;
     lastBossShieldAtRef.current = now;
     lastBossSweepAtRef.current = now;
+    lastBossHazardAtRef.current = now;
     lastGlobalContactRef.current = 0;
     lastResourceRegenRef.current = now;
     lastOrbitSlashDamageRef.current = now;
@@ -690,6 +730,7 @@ export function CombatArena() {
     setProjectiles([]);
     setEnemyProjectiles([]);
     setBeamEffects([]);
+    setHazards([]);
     setDamageFloats([]);
     setDodgeFloats([]);
     setHpFloats([]);
@@ -715,8 +756,11 @@ export function CombatArena() {
     lastBossShieldAtRef.current = now;
     lastBossSweepAtRef.current = now;
     lastBossProjectileShotRef.current = now;
+    lastBossHazardAtRef.current = now;
     enemyProjectilesRef.current = [];
+    hazardsRef.current = [];
     setEnemyProjectiles([]);
+    setHazards([]);
     bossShieldUntilRef.current = 0;
     bossRageUntilRef.current = 0;
     rageTriggeredTierRef.current = null;
@@ -872,7 +916,9 @@ export function CombatArena() {
       playerRef.current = { ...p, hitUntil: now + COMBAT.collapseOverlayMs, healUntil: invulnerableUntilRef.current };
       targetRef.current = { x: 50, y: 70 };
       pulsesRef.current = [];
+      hazardsRef.current = [];
       setPulses([]);
+      setHazards([]);
       setPlayer(playerRef.current);
       useGame.setState({ shake: { intensity: 'hard', at: now } });
       useGame.setState((state) => ({ boss: healedBoss, combo: 0, lastTapAt: 0 }));
@@ -886,6 +932,64 @@ export function CombatArena() {
     const profile = bossProfileRef.current;
     return Date.now() <= bossShieldUntilRef.current ? profile.shieldWindow?.damageTakenMult ?? 0.42 : 1;
   }, []);
+
+  const addHazard = useCallback((kind: ArenaHazardKind, now: number, origin?: Partial<Vec>, power = 1) => {
+    const cap = lowDensityRef.current ? 3 : 5;
+    if (hazardsRef.current.length >= cap) return;
+    const playerPoint = playerRef.current;
+    const bossPoint = bossArenaPoint(now, bossPhaseInfo(bossRef.current.tier).progress);
+    const x = clamp(origin?.x ?? (kind === 'laserSweep' ? bossPoint.x : playerPoint.x + (Math.random() - 0.5) * 30), 12, 88);
+    const y = clamp(origin?.y ?? (kind === 'laserSweep' ? bossPoint.y + 10 : playerPoint.y + (Math.random() - 0.5) * 24), 18, 86);
+    const warningMs = lowDensityRef.current ? 760 : 980;
+    const radius = kind === 'gravityWell'
+      ? 16
+      : kind === 'voidZone'
+        ? 13
+        : kind === 'pulseMine'
+          ? 11
+          : 0;
+    const hazard: ArenaHazard = {
+      id: hazardId++,
+      kind,
+      x,
+      y,
+      bornAt: now,
+      fireAt: now + (kind === 'voidZone' || kind === 'gravityWell' ? Math.floor(warningMs * 0.55) : warningMs),
+      until: now + (kind === 'gravityWell' ? 4600 : kind === 'voidZone' ? 4200 : kind === 'laserSweep' ? warningMs + 760 : warningMs + 520),
+      radius,
+      damage: COMBAT.bossPulseDamage * (kind === 'laserSweep' ? 0.62 : kind === 'pulseMine' ? 0.54 : 0.18) * power,
+      angle: kind === 'laserSweep' ? Math.atan2(playerPoint.y - bossPoint.y, playerPoint.x - bossPoint.x) + (Math.random() - 0.5) * 0.32 : 0,
+      length: kind === 'laserSweep' ? 88 : 0,
+      width: kind === 'laserSweep' ? (lowDensityRef.current ? 3.4 : 4.2) : 0,
+      hit: false,
+      manaDrain: kind === 'voidZone' ? 5 * power : 0,
+    };
+    hazardsRef.current = [...hazardsRef.current, hazard].slice(-cap);
+    setHazards(hazardsRef.current);
+  }, []);
+
+  const addWaveHazard = useCallback((waveTypeId: WaveTypeId, now: number) => {
+    const chapter = chapterRef.current;
+    if (chapter.id === 'earth') return;
+    if (waveTypeId === 'rush' || (waveTypeId === 'elite' && chapter.id === 'mars')) {
+      addHazard('pulseMine', now, undefined, 0.9);
+      return;
+    }
+    if (chapter.id === 'saturn' && (waveTypeId === 'elite' || waveTypeId === 'splitter')) {
+      addHazard('laserSweep', now, undefined, 0.9);
+      return;
+    }
+    if (chapter.id === 'uranus' && (waveTypeId === 'elite' || waveTypeId === 'anomaly')) {
+      addHazard('voidZone', now, undefined, 0.95);
+      return;
+    }
+    if (chapter.id === 'neptune' && waveTypeId === 'anomaly') {
+      addHazard('gravityWell', now, { x: 50 + (Math.random() - 0.5) * 16, y: 48 + (Math.random() - 0.5) * 18 }, 1.05);
+      if (!lowDensityRef.current) addHazard('voidZone', now + 180, undefined, 0.9);
+      return;
+    }
+    if (waveTypeId === 'elite') addHazard(chapter.id === 'neptune' ? 'gravityWell' : 'pulseMine', now, undefined, 0.85);
+  }, [addHazard]);
 
   const spawnWave = useCallback((now: number, forcedCount = 0, forcedVariants?: EnemyVariantId[], waveTypeId: WaveTypeId = 'normal') => {
     const activeChapter = chapterRef.current;
@@ -934,11 +1038,12 @@ export function CombatArena() {
     waveRef.current += 1;
     activeWaveTypeRef.current = waveTypeId;
     setWaveStatus({ type: waveTypeId, incoming: false, until: now + (wave.special ? 4200 : 2600) });
+    if (wave.special && forcedCount <= 0) addWaveHazard(waveTypeId, now);
     if (waveTypeId === 'elite') rollArtifactRewardRef.current('eliteWave');
     if (waveTypeId === 'anomaly') rollArtifactRewardRef.current('anomalyWave');
     enemiesRef.current = nextEnemies;
     setEnemies(nextEnemies);
-  }, []);
+  }, [addWaveHazard]);
 
   const strikeEnemy = useCallback((id: number, e: PointerEvent) => {
     e.stopPropagation();
@@ -1209,6 +1314,12 @@ export function CombatArena() {
       const p = clampArenaVec(playerRef.current, { x: 50, y: 70 }) as typeof playerRef.current;
       p.hitUntil = finiteNumber(playerRef.current.hitUntil) ? playerRef.current.hitUntil : 0;
       p.healUntil = finiteNumber(playerRef.current.healUntil) ? playerRef.current.healUntil : 0;
+      const activeVoidSlow = hazardsRef.current.some((hazard) => (
+        hazard.kind === 'voidZone' &&
+        now >= hazard.fireAt &&
+        now < hazard.until &&
+        dist(hazard, p) < hazard.radius
+      ));
       const keys = keysRef.current;
       let dx = 0;
       let dy = 0;
@@ -1218,7 +1329,7 @@ export function CombatArena() {
       if (keys.has('s') || keys.has('arrowdown')) dy += 1;
       if (dx !== 0 || dy !== 0) {
         const mag = Math.hypot(dx, dy) || 1;
-        const speed = 38 * (dt / 1000);
+        const speed = 38 * (activeVoidSlow ? 0.64 : 1) * (dt / 1000);
         p.x = clamp(p.x + (dx / mag) * speed, 7, 93);
         p.y = clamp(p.y + (dy / mag) * speed, 16, 91);
         targetRef.current = { x: p.x, y: p.y };
@@ -1228,6 +1339,14 @@ export function CombatArena() {
         const lerp = dragRef.current ? Math.min(1, dt / 76) : Math.min(1, dt / 190);
         p.x = clamp(p.x + (target.x - p.x) * lerp, 7, 93);
         p.y = clamp(p.y + (target.y - p.y) * lerp, 16, 91);
+      }
+      for (const hazard of hazardsRef.current) {
+        if (hazard.kind !== 'gravityWell' || now < hazard.fireAt || now >= hazard.until) continue;
+        const pullDistance = dist(hazard, p);
+        if (pullDistance >= hazard.radius || pullDistance <= 0.1) continue;
+        const pull = (1 - pullDistance / hazard.radius) * (lowDensityFrame ? 7.5 : 9.5) * (dt / 1000);
+        p.x = clamp(p.x + ((hazard.x - p.x) / pullDistance) * pull, 7, 93);
+        p.y = clamp(p.y + ((hazard.y - p.y) / pullDistance) * pull, 16, 91);
       }
 
       const activeStyle = styleRef.current;
@@ -1855,6 +1974,64 @@ export function CombatArena() {
         setBossHitUntil(now + 420);
       }
 
+      const phase = activePhaseTuning.info.phase;
+      const finalPhase = activePhaseTuning.info.finalPhase;
+      const bossHazardInterval = finalPhase
+        ? (lowDensityFrame ? 5400 : 4300)
+        : phase >= 10
+          ? (lowDensityFrame ? 7200 : 6000)
+          : phase >= 5
+            ? (lowDensityFrame ? 9400 : 7800)
+            : Number.POSITIVE_INFINITY;
+      if (activeChapter.id !== 'earth' && now - lastBossHazardAtRef.current > bossHazardInterval) {
+        lastBossHazardAtRef.current = now;
+        if (activeChapter.id === 'mars') {
+          addHazard('pulseMine', now, undefined, finalPhase ? 1.18 : 0.95);
+        } else if (activeChapter.id === 'saturn') {
+          addHazard('laserSweep', now, bossPointForShots, finalPhase ? 1.18 : 1);
+        } else if (activeChapter.id === 'uranus') {
+          addHazard(now <= bossShieldUntilRef.current || phase >= 10 ? 'voidZone' : 'laserSweep', now, undefined, finalPhase ? 1.16 : 1);
+        } else if (activeChapter.id === 'neptune') {
+          addHazard(phase >= 10 ? 'gravityWell' : 'voidZone', now, { x: 50 + (Math.random() - 0.5) * 20, y: 46 + (Math.random() - 0.5) * 20 }, finalPhase ? 1.22 : 1.05);
+          if (finalPhase && !lowDensityFrame) addHazard('laserSweep', now + 240, bossPointForShots, 1.08);
+        }
+      }
+
+      if (hazardsRef.current.length > 0) {
+        hazardsRef.current = hazardsRef.current
+          .filter((hazard) => (
+            hazard.until > now &&
+            finiteNumber(hazard.x) &&
+            finiteNumber(hazard.y) &&
+            finiteNumber(hazard.fireAt)
+          ))
+          .map((hazard) => {
+            if (hazard.hit || now < hazard.fireAt) return hazard;
+            if (hazard.kind === 'laserSweep') {
+              if (pointLineDistance(p, hazard, hazard.angle, hazard.length / 2) <= hazard.width) {
+                damagePlayer(hazard.damage * activePhaseTuning.pulseDamageMult);
+                return { ...hazard, hit: true };
+              }
+              return hazard;
+            }
+            const distanceToHazard = dist(hazard, p);
+            if (hazard.kind === 'pulseMine' && distanceToHazard <= hazard.radius) {
+              damagePlayer(hazard.damage * activePhaseTuning.enemyDamageMult);
+              return { ...hazard, hit: true };
+            }
+            if (hazard.kind === 'voidZone' && distanceToHazard <= hazard.radius) {
+              restoreCombatManaRef.current(-hazard.manaDrain);
+              damagePlayer(hazard.damage * 0.35);
+              return { ...hazard, hit: true };
+            }
+            if (hazard.kind === 'gravityWell' && distanceToHazard <= 5.5) {
+              damagePlayer(hazard.damage * 0.45);
+              return { ...hazard, hit: true };
+            }
+            return hazard;
+          });
+      }
+
       if (enemyProjectilesRef.current.length > 0) {
         const enemyProjectileSurvivors: EnemyProjectile[] = [];
         for (const projectile of enemyProjectilesRef.current) {
@@ -1960,6 +2137,7 @@ export function CombatArena() {
         setPulses(pulsesRef.current);
         setProjectiles(projectilesRef.current);
         setEnemyProjectiles(enemyProjectilesRef.current);
+        setHazards(hazardsRef.current);
         setParticles(particlesRef.current);
         setAbilityEffects(abilityEffectsRef.current);
         setBeamEffects(beamEffectsRef.current);
@@ -1968,7 +2146,7 @@ export function CombatArena() {
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [bossDamageGuardMult, damagePlayer, emitParticles, fireEnemyProjectile, pushDamageFloat, pushDodgeFloat, spawnWave, triggerArenaPulse]);
+  }, [addHazard, bossDamageGuardMult, damagePlayer, emitParticles, fireEnemyProjectile, pushDamageFloat, pushDodgeFloat, spawnWave, triggerArenaPulse]);
 
   useEffect(() => {
     if (!comboFlash) return;
@@ -2108,6 +2286,7 @@ export function CombatArena() {
   const weakPointY = Math.sin(weakPointAngle) * weakPointRadius;
   const playerGlow = lowDensity ? 0.62 : 1;
   const renderedPulses = lowDensity ? pulses.slice(-1) : pulses;
+  const renderedHazards = lowDensity ? hazards.slice(-3) : hazards;
   const renderedEnemyProjectiles = lowDensity ? enemyProjectiles.slice(-ARENA_PERF.mobileEnemyProjectileCap) : enemyProjectiles;
   const renderedParticles = lowDensity ? particles.slice(-ARENA_PERF.mobileParticleCap) : particles;
   const renderedHpFloats = lowDensity ? hpFloats.slice(-ARENA_PERF.mobileHpFloatCap) : hpFloats;
@@ -2116,6 +2295,7 @@ export function CombatArena() {
   const renderedBeamEffects = lowDensity ? beamEffects.slice(-1) : beamEffects;
   const activeEvolutionIndicators = activeWeaponEvolutions.slice(0, lowDensity ? 3 : 6);
   const weaponEvolutionToastDef = weaponEvolutionToast ? weaponEvolutionById(weaponEvolutionToast) : undefined;
+  const activeHazardWarning = renderedHazards.find((hazard) => renderNow < hazard.fireAt) ?? renderedHazards.find((hazard) => renderNow < hazard.until);
   const renderedTargetLines = enemies
     .map((enemy) => {
       const dx = player.x - enemy.x;
@@ -2344,6 +2524,27 @@ export function CombatArena() {
         </motion.div>
       )}
 
+      {activeHazardWarning && (
+        <motion.div
+          key={`hazard-${activeHazardWarning.id}`}
+          initial={{ opacity: 0, y: 6, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0 }}
+          className="pointer-events-none absolute right-2 top-[16%] z-40 rounded-md border bg-black/72 px-2 py-1 text-center shadow-[0_0_18px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:right-3"
+          style={{
+            borderColor: HAZARD_STYLE[activeHazardWarning.kind].color,
+            boxShadow: lowDensity ? undefined : `0 0 18px ${HAZARD_STYLE[activeHazardWarning.kind].color}44`,
+          }}
+        >
+          <div
+            className="font-space text-[8px] uppercase tracking-[0.18em]"
+            style={{ color: HAZARD_STYLE[activeHazardWarning.kind].color }}
+          >
+            {t(`combat.hazards.${HAZARD_STYLE[activeHazardWarning.kind].labelKey}` as any)}
+          </div>
+        </motion.div>
+      )}
+
       {activeBossPhaseToast && (
         <motion.div
           key={activeBossPhaseToast.id}
@@ -2475,6 +2676,64 @@ export function CombatArena() {
         )}
         <div className="font-vt text-4xl">{chapter.planetGlyph}</div>
       </motion.button>
+
+      {renderedHazards.map((hazard) => {
+        const styleDef = HAZARD_STYLE[hazard.kind];
+        const warning = renderNow < hazard.fireAt;
+        const progress = warning
+          ? clamp((renderNow - hazard.bornAt) / Math.max(1, hazard.fireAt - hazard.bornAt), 0, 1)
+          : clamp((renderNow - hazard.fireAt) / Math.max(1, hazard.until - hazard.fireAt), 0, 1);
+        const opacity = warning ? 0.34 + progress * 0.34 : hazard.hit ? 0.22 : 0.48;
+        if (hazard.kind === 'laserSweep') {
+          return (
+            <div
+              key={hazard.id}
+              className="pointer-events-none absolute z-[18] h-1 origin-center -translate-x-1/2 -translate-y-1/2 rounded-full border-y"
+              style={{
+                left: `${hazard.x}%`,
+                top: `${hazard.y}%`,
+                width: `${hazard.length}%`,
+                height: warning ? 4 : lowDensity ? 7 : 9,
+                opacity,
+                borderColor: styleDef.color,
+                background: warning
+                  ? `repeating-linear-gradient(90deg, transparent 0 10px, ${styleDef.color}99 11px 17px, transparent 18px 28px)`
+                  : `linear-gradient(90deg, transparent, ${styleDef.color}bb, rgba(255,255,255,0.8), ${styleDef.color}bb, transparent)`,
+                boxShadow: lowDensity ? undefined : `0 0 ${warning ? 16 : 28}px ${styleDef.color}88`,
+                transform: `translate(-50%, -50%) rotate(${hazard.angle}rad) scaleY(${warning ? 1 : 1.12})`,
+              }}
+            />
+          );
+        }
+        const activeRadius = hazard.kind === 'pulseMine' && !warning
+          ? hazard.radius * (1 + progress * 0.35)
+          : hazard.radius;
+        return (
+          <div
+            key={hazard.id}
+            className="pointer-events-none absolute z-[18] -translate-x-1/2 -translate-y-1/2 rounded-full border"
+            style={{
+              left: `${hazard.x}%`,
+              top: `${hazard.y}%`,
+              width: `${activeRadius * 2}%`,
+              aspectRatio: '1 / 1',
+              opacity,
+              borderColor: styleDef.color,
+              borderStyle: warning ? 'dashed' : hazard.kind === 'gravityWell' ? 'double' : 'solid',
+              background: warning ? `${styleDef.color}10` : hazard.kind === 'voidZone' ? `${styleDef.color}18` : `${styleDef.color}0d`,
+              boxShadow: lowDensity ? undefined : `0 0 ${hazard.kind === 'gravityWell' ? 34 : 24}px ${styleDef.color}66`,
+              transform: `translate(-50%, -50%) scale(${warning ? 0.88 + progress * 0.12 : 1 + Math.sin(renderNow / 160 + hazard.id) * 0.02}) rotate(${hazard.kind === 'gravityWell' ? renderNow / 260 : 0}deg)`,
+            }}
+          >
+            {!lowDensity && (
+              <span
+                className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{ background: styleDef.color, boxShadow: `0 0 12px ${styleDef.color}` }}
+              />
+            )}
+          </div>
+        );
+      })}
 
       {renderedPulses.map((pulse) => {
         const warning = renderNow < pulse.fireAt;

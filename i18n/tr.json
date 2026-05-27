@@ -240,6 +240,12 @@
       "elite": "Elit",
       "anomaly": "Anomali"
     },
+    "hazards": {
+      "dangerZone": "Tehlike Alanı",
+      "laserSweep": "Lazer taraması",
+      "gravityWell": "Yerçekimi kuyusu",
+      "voidZone": "Boşluk bölgesi"
+    },
     "orbitDamage": "yörünge",
     "chainReady": "zincir hazır",
     "cosmicChain": "kozmik zincir",

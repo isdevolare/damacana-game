@@ -240,6 +240,12 @@
       "elite": "Elite",
       "anomaly": "Anomaly"
     },
+    "hazards": {
+      "dangerZone": "Danger Zone",
+      "laserSweep": "Laser Sweep",
+      "gravityWell": "Gravity Well",
+      "voidZone": "Void Zone"
+    },
     "orbitDamage": "orbit",
     "chainReady": "chain ready",
     "cosmicChain": "cosmic chain",
