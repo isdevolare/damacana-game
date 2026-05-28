@@ -7,7 +7,15 @@ import { prestigePermanentBonuses, prestigeShardGain } from './config/prestige';
 import { LEVELS, activeLevels, levelForTotal } from './config/levels';
 import { UPGRADES, affordableUpgradeCount, summarizeUpgradeIdentityBonuses, upgradeBulkCost, upgradeById, upgradeTotalAmount, type UpgradeBuyMode } from './config/upgrades';
 import { bossHp, bossNameKey, bossReward, isMegaBoss, shardDropChance, eliteBossHp } from './config/bosses';
-import { nodeById, previousNode, skillTierUnlocked } from './config/skillTree';
+import {
+  nodeById,
+  previousNode,
+  skillBranchOwnedCount,
+  skillBranchRequiredCount,
+  skillNodeCost,
+  skillTierUnlocked,
+  skillTotalRequiredCount,
+} from './config/skillTree';
 import { AbsurdEvent, AnomalyEffectType, EventReward, pickRandomEvent } from './config/events';
 import { CATEGORIES, categoryComplete, factById, pickFactForLevel, pickRandomBonusFact } from './config/facts';
 import { ELITE_NAME_KEYS, KNOWLEDGE_BULB_TIMING, OFFLINE_PROGRESS, SHOP_ITEMS, shouldBeElite } from './config/progression';
@@ -34,6 +42,7 @@ import {
   BuildBonusSummary,
   EMPTY_BUILD_BONUSES,
   buildNodeById,
+  buildNodeCost,
   buildTierUnlocked,
   previousBuildNode,
   summarizeBuildBonuses,
@@ -48,6 +57,15 @@ import {
   summarizeArtifactBonuses,
 } from './config/artifacts';
 import type { WeaponEvolutionId } from './config/weaponEvolutions';
+import {
+  EMPTY_ASCENSION_BONUSES,
+  ascensionPointGain,
+  ascensionUnlocked,
+  ascensionUpgradeById,
+  ascensionUpgradeCost,
+  summarizeAscensionBonuses,
+} from './config/ascension';
+import type { AscensionBonusSummary } from './config/ascension';
 import { fmt } from './util';
 
 export interface Buff {
@@ -153,6 +171,11 @@ interface Persisted {
   permanentArtifacts: OwnedArtifact[];
   artifactBonuses: ArtifactBonusSummary;
   seenWeaponEvolutionIds: WeaponEvolutionId[];
+  ascensionPoints: number;
+  totalAscensions: number;
+  ascensionUpgradeLevels: Record<string, number>;
+  ascensionBonuses: AscensionBonusSummary;
+  ascensionUnlockedAt: number;
   shop: { tapBoost: number; flowBoost: number; shardBoost: number };
   // audio settings
   audio: { master: number; music: number; sfx: number; muted: boolean };
@@ -176,6 +199,7 @@ export interface GameState extends Persisted {
   showResearch: boolean;
   showBuildTree: boolean;
   showArtifacts: boolean;
+  showAscension: boolean;
   currentEvent: AbsurdEvent | null;
   floatingNumbers: Array<{ id: number; value: number; x: number; y: number; crit?: boolean }>;
   shake: { intensity: 'small' | 'medium' | 'hard'; at: number } | null;
@@ -220,6 +244,7 @@ export interface GameState extends Persisted {
   setShowResearch: (v: boolean) => void;
   setShowBuildTree: (v: boolean) => void;
   setShowArtifacts: (v: boolean) => void;
+  setShowAscension: (v: boolean) => void;
   dismissEvolution: () => void;
   dismissChapterComplete: () => void;
   dismissOfflineReward: () => void;
@@ -241,6 +266,8 @@ export interface GameState extends Persisted {
   resolveEventChoice: (key: string) => void;
   dismissEvent: () => void;
   prestige: () => void;
+  ascend: () => void;
+  buyAscensionUpgrade: (id: string) => void;
   setAudioSetting: (partial: Partial<Persisted['audio']>) => void;
   start: () => void;
   reset: () => void;
@@ -301,6 +328,7 @@ function derivedPerTap(state: Persisted): number {
   mult *= 1 + state.shop.tapBoost * 0.1;
   mult *= 1 + codexBonuses(state).tap;
   mult *= 1 + prestigePermanentBonuses(state.totalPrestiges).globalProductionPct;
+  mult *= 1 + ascensionBonuses(state).globalProductionPct;
   mult *= 1 + (state.totalPrestiges > 0 ? researchBonuses(state).postPrestigeProductionPct : 0);
   mult *= 1 + buildBonuses(state).unstableRewardPct;
   mult *= 1 + upgradeIdentity.activeDamagePct;
@@ -328,6 +356,7 @@ function derivedPerSec(state: Persisted): number {
   mult *= 1 + state.shop.flowBoost * 0.1;
   mult *= 1 + codexBonuses(state).flow;
   mult *= 1 + prestigePermanentBonuses(state.totalPrestiges).globalProductionPct;
+  mult *= 1 + ascensionBonuses(state).globalProductionPct + ascensionBonuses(state).passiveProductionPct;
   mult *= 1 + researchBonuses(state).passiveProductionPct;
   mult *= 1 + (state.totalPrestiges > 0 ? researchBonuses(state).postPrestigeProductionPct : 0);
   mult *= 1 + buildBonuses(state).passiveProductionPct;
@@ -359,7 +388,7 @@ function activeBuffMax(state: Persisted, type: Buff['type']): number {
 }
 
 function shardGainMult(state: Persisted): number {
-  return (1 + state.shop.shardBoost * 0.1) * (1 + codexBonuses(state).shard) * (1 + buildBonuses(state).shardGainPct);
+  return (1 + state.shop.shardBoost * 0.1) * (1 + codexBonuses(state).shard) * (1 + buildBonuses(state).shardGainPct) * (1 + ascensionBonuses(state).shardGainPct);
 }
 
 function researchBonuses(state: Persisted): ResearchBonusSummary {
@@ -374,8 +403,32 @@ function artifactBonuses(state: Persisted): ArtifactBonusSummary {
   return state.artifactBonuses ?? summarizeArtifactBonuses(state.runArtifacts ?? [], state.permanentArtifacts ?? []);
 }
 
+function ascensionBonuses(state: Persisted): AscensionBonusSummary {
+  return state.ascensionBonuses ?? summarizeAscensionBonuses(state.ascensionUpgradeLevels ?? {});
+}
+
+function ascensionContext(state: Persisted) {
+  return {
+    totalPrestiges: state.totalPrestiges ?? 0,
+    shards: state.shards ?? 0,
+    bestBossTier: state.boss?.tier ?? 1,
+    completedChapters: state.completedChapters ?? [],
+    claimedResearchCount: (state.claimedResearchIds ?? []).length,
+    ownedBuildNodeCount: (state.ownedBuildNodeIds ?? []).length,
+    artifactCount: (state.runArtifacts ?? []).length + (state.permanentArtifacts ?? []).length,
+  };
+}
+
+function currentAscensionGain(state: Persisted): number {
+  return ascensionPointGain(ascensionContext(state));
+}
+
+function canAscend(state: Persisted): boolean {
+  return ascensionUnlocked(ascensionContext(state)) && currentAscensionGain(state) > 0;
+}
+
 function researchRewardMult(state: Persisted): number {
-  return 1 + researchBonuses(state).rewardMultiplierPct + prestigePermanentBonuses(state.totalPrestiges).rewardGainPct;
+  return 1 + researchBonuses(state).rewardMultiplierPct + prestigePermanentBonuses(state.totalPrestiges).rewardGainPct + ascensionBonuses(state).eliteRewardPct;
 }
 
 function researchShardChanceMult(state: Persisted): number {
@@ -402,8 +455,9 @@ function researchCostMet(state: Persisted, id: string): boolean {
 function buildCostMet(state: Persisted, id: string): boolean {
   const node = buildNodeById(id);
   if (!node) return false;
-  if (node.cost.currency === 'shards') return state.shards >= node.cost.amount;
-  return state.damacana >= node.cost.amount;
+  const cost = buildNodeCost(node, (state.ownedBuildNodeIds ?? []).length);
+  if (cost.currency === 'shards') return state.shards >= cost.amount;
+  return state.damacana >= cost.amount;
 }
 
 function buildRequirementMet(state: Persisted, id: string): boolean {
@@ -420,10 +474,17 @@ function legacySkillRequirementMet(state: Persisted, id: string): boolean {
   const node = nodeById(id);
   if (!node) return false;
   const prev = previousNode(node);
-  return (!prev || Boolean(state.tree[prev.id])) && skillTierUnlocked(node.tier, {
+  const totalOwned = Object.values(state.tree ?? {}).filter(Boolean).length;
+  const branchOwned = skillBranchOwnedCount(state.tree ?? {}, node.branch);
+  return (
+    (!prev || Boolean(state.tree[prev.id])) &&
+    branchOwned >= skillBranchRequiredCount(node.tier) &&
+    totalOwned >= skillTotalRequiredCount(node.tier) &&
+    skillTierUnlocked(node.tier, {
     bossTier: state.boss.tier,
     totalPrestiges: state.totalPrestiges,
-  });
+    })
+  );
 }
 
 function legacySkillValue(state: Persisted, id: string, fallback = 0): number {
@@ -462,6 +523,7 @@ function derivedCombatStats(state: Persisted): CombatStats {
   const build = buildBonuses(state);
   const artifact = artifactBonuses(state);
   const prestige = prestigePermanentBonuses(state.totalPrestiges);
+  const ascension = ascensionBonuses(state);
   const levelHp = state.bestLevel * COMBAT.playerHpPerLevel;
   const levelMana = state.bestLevel * COMBAT.playerManaPerLevel;
   const baseHp = BASE_COMBAT_STATS.maxHp + levelHp + bonuses.maxHp;
@@ -473,7 +535,7 @@ function derivedCombatStats(state: Persisted): CombatStats {
     hpRegen: baseHpRegen * (1 + build.hpRegenPct),
     manaRegen: baseManaRegen * (1 + research.manaRegenPct + build.manaRegenPct + artifact.manaRegenPct + prestige.manaRegenPct) * activeBuffMult(state, 'manaRegen'),
     armor: BASE_COMBAT_STATS.armor + bonuses.armor + build.armor,
-    damageReduction: Math.min(0.75, BASE_COMBAT_STATS.damageReduction + bonuses.damageReduction + build.damageReductionPct + artifact.damageReductionPct),
+    damageReduction: Math.min(0.82, BASE_COMBAT_STATS.damageReduction + bonuses.damageReduction + build.damageReductionPct + artifact.damageReductionPct + ascension.damageReductionPct),
   };
 }
 
@@ -510,7 +572,7 @@ function applyRewardToState(state: Persisted, reward: EventReward): Partial<Pers
   const artifacts = artifactBonuses(state);
   switch (reward.type) {
     case 'dmc': {
-      const amount = reward.amount > 0 ? reward.amount * (1 + artifacts.anomalyRewardPct) : reward.amount;
+      const amount = reward.amount > 0 ? reward.amount * (1 + artifacts.anomalyRewardPct + ascensionBonuses(state).anomalyRewardPct) : reward.amount;
       patch.damacana = Math.max(0, state.damacana + amount);
       patch.totalEarned = state.totalEarned + Math.max(0, amount);
       break;
@@ -536,7 +598,7 @@ function applyRewardToState(state: Persisted, reward: EventReward): Partial<Pers
         {
           id: `anomaly_${reward.effect}_${now}_${Math.random().toString(36).slice(2, 7)}`,
           expiresAt: now + reward.durationMs,
-          mult: reward.effect === 'reward' ? 1 + (reward.mult - 1) * (1 + artifacts.anomalyRewardPct) : reward.mult,
+          mult: reward.effect === 'reward' ? 1 + (reward.mult - 1) * (1 + artifacts.anomalyRewardPct + ascensionBonuses(state).anomalyRewardPct) : reward.mult,
           type: reward.effect,
           labelKey: reward.labelKey ?? reward.effect,
         },
@@ -801,6 +863,11 @@ const initialState: Persisted = {
   permanentArtifacts: [],
   artifactBonuses: EMPTY_ARTIFACT_BONUSES,
   seenWeaponEvolutionIds: [],
+  ascensionPoints: 0,
+  totalAscensions: 0,
+  ascensionUpgradeLevels: {},
+  ascensionBonuses: EMPTY_ASCENSION_BONUSES,
+  ascensionUnlockedAt: 0,
   shop: { tapBoost: 0, flowBoost: 0, shardBoost: 0 },
   audio: { master: 0.7, music: 0.6, sfx: 0.8, muted: false },
   hasStarted: false,
@@ -824,6 +891,7 @@ export const useGame = create<GameState>()(
       showResearch: false,
       showBuildTree: false,
       showArtifacts: false,
+      showAscension: false,
       currentEvent: null,
       floatingNumbers: [],
       shake: null,
@@ -1164,9 +1232,11 @@ export const useGame = create<GameState>()(
         if (!node) return;
         if (s.tree[id]) return;
         if (!legacySkillRequirementMet(s, id)) return;
-        if (s.shards < node.cost) return;
+        const ownedCount = Object.values(s.tree ?? {}).filter(Boolean).length;
+        const cost = skillNodeCost(node, ownedCount);
+        if (s.shards < cost) return;
         set({
-          shards: s.shards - node.cost,
+          shards: s.shards - cost,
           tree: { ...s.tree, [id]: true },
           shake: { intensity: 'small', at: Date.now() },
         });
@@ -1261,6 +1331,7 @@ export const useGame = create<GameState>()(
       setShowResearch: (v) => set({ showResearch: v }),
       setShowBuildTree: (v) => set({ showBuildTree: v }),
       setShowArtifacts: (v) => set({ showArtifacts: v }),
+      setShowAscension: (v) => set({ showAscension: v }),
 
       dismissEvolution: () => set({ showEvolution: null }),
       dismissChapterComplete: () => set({ showChapterComplete: null }),
@@ -1307,9 +1378,10 @@ export const useGame = create<GameState>()(
         const ownedBuildNodeIds = [...(s.ownedBuildNodeIds ?? []), id];
         const bonuses = summarizeBuildBonuses(ownedBuildNodeIds);
         const stats = derivedCombatStats({ ...s, ownedBuildNodeIds, buildBonuses: bonuses });
-        const costPatch = node.cost.currency === 'shards'
-          ? { shards: s.shards - node.cost.amount }
-          : { damacana: s.damacana - node.cost.amount };
+        const cost = buildNodeCost(node, (s.ownedBuildNodeIds ?? []).length);
+        const costPatch = cost.currency === 'shards'
+          ? { shards: s.shards - cost.amount }
+          : { damacana: s.damacana - cost.amount };
         set({
           ...costPatch,
           ownedBuildNodeIds,
@@ -1382,7 +1454,8 @@ export const useGame = create<GameState>()(
         const s = get();
         const stats = derivedCombatStats(s);
         const shield = Math.min(1, Math.max(0, activeBuffMax(s, 'shield')));
-        const incoming = amount * activeBuffMult(s, 'enemyDamage') * (1 + artifactBonuses(s).enemyDamagePct) * (1 - shield);
+        const stability = ascensionBonuses(s).instabilityReductionPct;
+        const incoming = amount * activeBuffMult(s, 'enemyDamage') * Math.max(0.45, 1 + artifactBonuses(s).enemyDamagePct - stability) * (1 - shield);
         const reduced = Math.max(0, Math.floor((incoming - stats.armor) * (1 - stats.damageReduction)));
         const hp = Math.max(0, Math.min(s.playerHp ?? stats.maxHp, stats.maxHp) - reduced);
         set({ playerHp: hp });
@@ -1459,10 +1532,11 @@ export const useGame = create<GameState>()(
         const research = researchBonuses(s);
         const build = buildBonuses(s);
         const artifacts = artifactBonuses(s);
+        const ascension = ascensionBonuses(s);
         const maxOfflineMs = (s.offlineMaxMs || OFFLINE_PROGRESS.defaultMaxMs) + research.offlineCapMs;
         const cappedMs = Math.min(awayMs, maxOfflineMs);
         const ps = derivedPerSec(s);
-        const gained = Math.floor(((ps * cappedMs) / 1000) * (1 + research.offlineEfficiencyPct + build.offlineEfficiencyPct + artifacts.offlineEfficiencyPct));
+        const gained = Math.floor(((ps * cappedMs) / 1000) * (1 + research.offlineEfficiencyPct + build.offlineEfficiencyPct + artifacts.offlineEfficiencyPct + ascension.offlineEfficiencyPct));
         if (awayMs < OFFLINE_PROGRESS.minNotifyMs || gained <= 0) {
           set({ lastActiveAt: now });
           return;
@@ -1612,6 +1686,134 @@ export const useGame = create<GameState>()(
           weaponEvolutionToast: null,
           combo: 1,
           lastTapAt: 0,
+        });
+      },
+
+      ascend: () => {
+        const s = get();
+        if (!canAscend(s)) return;
+        const now = Date.now();
+        const gain = currentAscensionGain(s);
+        const currentBonuses = ascensionBonuses(s);
+        const retainedPrestiges = Math.min(24, Math.floor((s.totalPrestiges ?? 0) * currentBonuses.retainedPrestigePct));
+        const retainedShards = Math.min(249, Math.floor((s.shards ?? 0) * currentBonuses.retainedShardPct));
+        const nextAscensionPoints = (s.ascensionPoints ?? 0) + gain;
+        const nextAscensionUpgradeLevels = s.ascensionUpgradeLevels ?? {};
+        const nextAscensionBonuses = summarizeAscensionBonuses(nextAscensionUpgradeLevels);
+        const nextPermanentArtifacts = s.permanentArtifacts ?? [];
+        const nextStats = derivedCombatStats({
+          ...s,
+          shards: retainedShards,
+          totalPrestiges: retainedPrestiges,
+          totalAscensions: (s.totalAscensions ?? 0) + 1,
+          ascensionPoints: nextAscensionPoints,
+          ascensionUpgradeLevels: nextAscensionUpgradeLevels,
+          ascensionBonuses: nextAscensionBonuses,
+          tree: {},
+          claimedResearchIds: [],
+          completedResearchIds: [],
+          researchBonuses: EMPTY_RESEARCH_BONUSES,
+          ownedBuildNodeIds: [],
+          buildBonuses: EMPTY_BUILD_BONUSES,
+          runArtifacts: [],
+          permanentArtifacts: nextPermanentArtifacts,
+          artifactBonuses: summarizeArtifactBonuses([], nextPermanentArtifacts),
+          combatStatBonuses: EMPTY_COMBAT_STAT_BONUSES,
+        });
+        set({
+          ...initialState,
+          shards: retainedShards,
+          crystals: 0,
+          tree: {},
+          totalPrestiges: retainedPrestiges,
+          prestigePromptDismissedRunAt: 0,
+          bestLevel: s.bestLevel,
+          bestBossTier: s.bestBossTier,
+          collectedFacts: s.collectedFacts,
+          achievements: s.achievements,
+          bossKillsLifetime: s.bossKillsLifetime,
+          bestCombo: s.bestCombo,
+          fastestLevel6Ms: s.fastestLevel6Ms,
+          totalPlayMs: s.totalPlayMs,
+          lastActiveAt: now,
+          offlineMaxMs: OFFLINE_PROGRESS.defaultMaxMs,
+          voidBurstUses: s.voidBurstUses,
+          completedChapters: [],
+          discoveredEnemyTypeIds: s.discoveredEnemyTypeIds ?? ['basic'],
+          knowledgeBulbsCollected: s.knowledgeBulbsCollected,
+          nextKnowledgeBulbAt: now + randomKnowledgeDelayMs(),
+          playerHp: nextStats.maxHp,
+          playerMana: nextStats.maxMana,
+          combatStatBonuses: EMPTY_COMBAT_STAT_BONUSES,
+          combatAbilityCooldowns: {},
+          completedResearchIds: [],
+          claimedResearchIds: [],
+          activeResearchId: null,
+          activeResearchStartAt: 0,
+          activeResearchEndAt: 0,
+          researchBonuses: EMPTY_RESEARCH_BONUSES,
+          ownedBuildNodeIds: [],
+          buildBonuses: EMPTY_BUILD_BONUSES,
+          runArtifacts: [],
+          permanentArtifacts: nextPermanentArtifacts,
+          artifactBonuses: summarizeArtifactBonuses([], nextPermanentArtifacts),
+          seenWeaponEvolutionIds: [],
+          ascensionPoints: nextAscensionPoints,
+          totalAscensions: (s.totalAscensions ?? 0) + 1,
+          ascensionUpgradeLevels: nextAscensionUpgradeLevels,
+          ascensionBonuses: nextAscensionBonuses,
+          ascensionUnlockedAt: s.ascensionUnlockedAt || now,
+          shop: { tapBoost: 0, flowBoost: 0, shardBoost: 0 },
+          audio: s.audio,
+          hasStarted: s.hasStarted,
+          boss: freshBoss(1, 0, retainedPrestiges >= 5),
+          runStartAt: now,
+          showPrestige: false,
+          showAscension: false,
+          showEvolution: null,
+          shake: { intensity: 'hard', at: now },
+          floatingNumbers: [],
+          recentEarnings: [],
+          currentEvent: null,
+          currentBulb: null,
+          lastBulbAt: s.lastBulbAt,
+          pendingBulbLevel: null,
+          currentFact: null,
+          showChapterComplete: null,
+          offlineReward: null,
+          researchCompletedNotice: null,
+          bossPhaseToast: null,
+          enemyDiscoveryToast: null,
+          powerToast: powerToast('powerChanged'),
+          artifactToast: null,
+          weaponEvolutionToast: null,
+          combo: 1,
+          lastTapAt: 0,
+        });
+      },
+
+      buyAscensionUpgrade: (id) => {
+        const s = get();
+        const upgrade = ascensionUpgradeById(id);
+        if (!upgrade) return;
+        const currentLevel = s.ascensionUpgradeLevels?.[id] ?? 0;
+        if (currentLevel >= upgrade.maxLevel) return;
+        const cost = ascensionUpgradeCost(upgrade.id, currentLevel);
+        if ((s.ascensionPoints ?? 0) < cost) return;
+        const ascensionUpgradeLevels = {
+          ...(s.ascensionUpgradeLevels ?? {}),
+          [id]: currentLevel + 1,
+        };
+        const bonuses = summarizeAscensionBonuses(ascensionUpgradeLevels);
+        const stats = derivedCombatStats({ ...s, ascensionUpgradeLevels, ascensionBonuses: bonuses });
+        set({
+          ascensionPoints: (s.ascensionPoints ?? 0) - cost,
+          ascensionUpgradeLevels,
+          ascensionBonuses: bonuses,
+          playerHp: Math.min(stats.maxHp, s.playerHp ?? stats.maxHp),
+          playerMana: Math.min(stats.maxMana, s.playerMana ?? stats.maxMana),
+          shake: { intensity: 'medium', at: Date.now() },
+          powerToast: powerToast('powerChanged'),
         });
       },
 
@@ -1845,6 +2047,11 @@ export const useGame = create<GameState>()(
         permanentArtifacts: s.permanentArtifacts,
         artifactBonuses: s.artifactBonuses,
         seenWeaponEvolutionIds: s.seenWeaponEvolutionIds,
+        ascensionPoints: s.ascensionPoints,
+        totalAscensions: s.totalAscensions,
+        ascensionUpgradeLevels: s.ascensionUpgradeLevels,
+        ascensionBonuses: s.ascensionBonuses,
+        ascensionUnlockedAt: s.ascensionUnlockedAt,
         shop: s.shop,
         audio: s.audio,
         hasStarted: s.hasStarted,
@@ -1878,4 +2085,16 @@ export function selectBuildBonuses(s: GameState) {
 }
 export function selectArtifactBonuses(s: GameState) {
   return artifactBonuses(s);
+}
+export function selectAscensionBonuses(s: GameState) {
+  return ascensionBonuses(s);
+}
+export function selectAscensionContext(s: GameState) {
+  return ascensionContext(s);
+}
+export function selectAscensionGain(s: GameState) {
+  return currentAscensionGain(s);
+}
+export function selectCanAscend(s: GameState) {
+  return canAscend(s);
 }

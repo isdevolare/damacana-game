@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
-import { useGame, selectArtifactBonuses, selectBuildBonuses, selectCombatStats, selectPerSec, selectPerTap, selectResearchBonuses } from '@/lib/store';
+import { useGame, selectArtifactBonuses, selectAscensionBonuses, selectBuildBonuses, selectCombatStats, selectPerSec, selectPerTap, selectResearchBonuses } from '@/lib/store';
 import type { Buff } from '@/lib/store';
 import { currentChapter } from '@/lib/config/chapters';
 import { bossPhaseCombatTuning, bossPhaseInfo } from '@/lib/config/bossMissions';
@@ -418,6 +418,7 @@ function projectileStats(args: {
   build: ReturnType<typeof selectBuildBonuses>;
   research: ReturnType<typeof selectResearchBonuses>;
   artifacts: ReturnType<typeof selectArtifactBonuses>;
+  ascension: ReturnType<typeof selectAscensionBonuses>;
   prestige: ReturnType<typeof prestigePermanentBonuses>;
   upgrades: UpgradeIdentityBonuses;
   evolutions: ReadonlySet<WeaponEvolutionId>;
@@ -427,6 +428,8 @@ function projectileStats(args: {
 }) {
   const corruptedAmmo = args.evolutions.has('corruptedAmmo');
   const chainArc = args.evolutions.has('chainArc');
+  const evolutionScale = args.evolutions.size > 0 ? args.ascension.weaponEvolutionDamagePct : 0;
+  const evolutionFireRate = args.evolutions.size > 0 ? args.ascension.weaponEvolutionFireRatePct : 0;
   const comboPressure = Math.min(2.75, 1 + comboCombatPressure(args.combo) * 0.006);
   const damage =
     (
@@ -434,9 +437,9 @@ function projectileStats(args: {
       args.perSec * CORE_DEFENSE.projectilePassiveDamageMult * (1 + args.upgrades.passiveProjectileDamagePct)
     ) *
     comboPressure *
-    (1 + args.upgrades.projectileDamagePct + args.build.orbitDamagePct + args.research.orbitDamagePct + args.artifacts.orbitDamagePct + args.prestige.orbitDamagePct) *
+    (1 + args.upgrades.projectileDamagePct + args.build.orbitDamagePct + args.research.orbitDamagePct + args.artifacts.orbitDamagePct + args.prestige.orbitDamagePct + evolutionScale) *
     (corruptedAmmo ? 1.24 + Math.min(0.14, args.build.unstableRewardPct * 0.35) : 1);
-  const cooldownMult = Math.max(0.34, 1 - args.upgrades.projectileFireRatePct - args.build.cooldownReductionPct - args.artifacts.cooldownReductionPct - args.artifacts.projectileFireRatePct - args.prestige.cooldownReductionPct);
+  const cooldownMult = Math.max(0.3, 1 - args.upgrades.projectileFireRatePct - args.build.cooldownReductionPct - args.artifacts.cooldownReductionPct - args.artifacts.projectileFireRatePct - args.prestige.cooldownReductionPct - evolutionFireRate);
   return {
     intervalMs: (args.lowDensity ? CORE_DEFENSE.mobileAttackIntervalMs : CORE_DEFENSE.baseAttackIntervalMs) *
       cooldownMult *
@@ -476,6 +479,7 @@ export function CombatArena() {
   const researchBonuses = useGame(selectResearchBonuses);
   const buildBonuses = useGame(selectBuildBonuses);
   const artifactBonuses = useGame(selectArtifactBonuses);
+  const ascensionBonuses = useGame(selectAscensionBonuses);
   const upgradeLevels = useGame((s) => s.upgrades);
   const ownedBuildNodeIds = useGame((s) => s.ownedBuildNodeIds);
   const runArtifacts = useGame((s) => s.runArtifacts);
@@ -622,6 +626,7 @@ export function CombatArena() {
   const researchBonusesRef = useRef(researchBonuses);
   const buildBonusesRef = useRef(buildBonuses);
   const artifactBonusesRef = useRef(artifactBonuses);
+  const ascensionBonusesRef = useRef(ascensionBonuses);
   const upgradeBonusesRef = useRef(upgradeBonuses);
   const activeWeaponEvolutionSetRef = useRef(activeWeaponEvolutionSet);
   const legacyTreeRef = useRef(legacyTree);
@@ -651,6 +656,7 @@ export function CombatArena() {
   useEffect(() => { researchBonusesRef.current = researchBonuses; }, [researchBonuses]);
   useEffect(() => { buildBonusesRef.current = buildBonuses; }, [buildBonuses]);
   useEffect(() => { artifactBonusesRef.current = artifactBonuses; }, [artifactBonuses]);
+  useEffect(() => { ascensionBonusesRef.current = ascensionBonuses; }, [ascensionBonuses]);
   useEffect(() => { upgradeBonusesRef.current = upgradeBonuses; }, [upgradeBonuses]);
   useEffect(() => { activeWeaponEvolutionSetRef.current = activeWeaponEvolutionSet; }, [activeWeaponEvolutionSet]);
   useEffect(() => { legacyTreeRef.current = legacyTree; }, [legacyTree]);
@@ -1511,6 +1517,7 @@ export function CombatArena() {
         build: activeBuild,
         research: researchBonusesRef.current,
         artifacts: activeArtifacts,
+        ascension: ascensionBonusesRef.current,
         prestige: activePrestige,
         upgrades: upgradeBonusesRef.current,
         evolutions: activeWeaponEvolutionsFrame,

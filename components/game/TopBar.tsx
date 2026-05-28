@@ -5,6 +5,7 @@ import { activeLevels } from '@/lib/config/levels';
 import { currentChapter } from '@/lib/config/chapters';
 import { systemRequirementKey, systemUnlocked } from '@/lib/config/systemUnlocks';
 import { skillTierRequirementKey, skillTierUnlocked } from '@/lib/config/skillTree';
+import { ascensionPointGain, ascensionUnlocked } from '@/lib/config/ascension';
 import { useTranslations } from 'next-intl';
 
 export function TopBar() {
@@ -16,10 +17,15 @@ export function TopBar() {
   const setShowResearch = useGame((s) => s.setShowResearch);
   const setShowBuildTree = useGame((s) => s.setShowBuildTree);
   const setShowArtifacts = useGame((s) => s.setShowArtifacts);
+  const setShowAscension = useGame((s) => s.setShowAscension);
   const totalPrestiges = useGame((s) => s.totalPrestiges);
   const completedChapters = useGame((s) => s.completedChapters);
   const boss = useGame((s) => s.boss);
   const shards = useGame((s) => s.shards);
+  const claimedResearchIds = useGame((s) => s.claimedResearchIds);
+  const ownedBuildNodeIds = useGame((s) => s.ownedBuildNodeIds);
+  const runArtifacts = useGame((s) => s.runArtifacts);
+  const permanentArtifacts = useGame((s) => s.permanentArtifacts);
   const t = useTranslations();
 
   const levels = activeLevels(totalPrestiges);
@@ -31,12 +37,24 @@ export function TopBar() {
   const researchUnlocked = systemUnlocked('research', unlockCtx);
   const buildUnlocked = systemUnlocked('buildTree', unlockCtx);
   const skillTreeUnlocked = skillTierUnlocked(1, { bossTier: boss.tier, totalPrestiges });
+  const ascensionCtx = {
+    totalPrestiges,
+    shards,
+    bestBossTier: boss.tier,
+    completedChapters,
+    claimedResearchCount: claimedResearchIds.length,
+    ownedBuildNodeCount: ownedBuildNodeIds.length,
+    artifactCount: runArtifacts.length + permanentArtifacts.length,
+  };
+  const ascensionReady = ascensionUnlocked(ascensionCtx);
+  const ascensionGain = ascensionPointGain(ascensionCtx);
   const coreSystems = [
     { key: 'ascension', icon: '⟐', label: t('ui.prestigeManualEntry'), unlocked: true, onClick: () => setShowPrestige(true), accent: 'pink' },
     { key: 'skill', icon: '✦', label: t('ui.skillTree'), unlocked: skillTreeUnlocked, onClick: () => setShowTree(true), accent: 'purple', requirement: `tree.${skillTierRequirementKey(1)}` },
     { key: 'build', icon: '◆', label: t('ui.buildTree'), unlocked: buildUnlocked, onClick: () => setShowBuildTree(true), accent: 'gold', requirement: `ui.${systemRequirementKey('buildTree')}` },
     { key: 'research', icon: '⌬', label: t('ui.research'), unlocked: researchUnlocked, onClick: () => setShowResearch(true), accent: 'purple', requirement: `ui.${systemRequirementKey('research')}` },
     { key: 'artifacts', icon: '✶', label: t('ui.artifacts'), unlocked: true, onClick: () => setShowArtifacts(true), accent: 'cyan' },
+    { key: 'mega', icon: '◎', label: ascensionReady && ascensionGain > 0 ? `${t('ui.megaPrestige')} +${ascensionGain}` : t('ui.megaPrestige'), unlocked: ascensionReady, onClick: () => setShowAscension(true), accent: 'pink', requirement: 'ascension.unlockRequirement' },
   ] as const;
 
   return (

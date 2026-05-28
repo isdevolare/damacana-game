@@ -105,44 +105,43 @@ export const BUILD_BRANCHES: BuildBranchMeta[] = [
   { id: 'flow', i18nKey: 'flow', accent: '#80fff4', symbol: '≈' },
 ];
 
-const dmc = (amount: number): BuildCost => ({ currency: 'damacana', amount });
 const shard = (amount: number): BuildCost => ({ currency: 'shards', amount });
 
 export const BUILD_TREE: BuildNode[] = [
-  { id: 'comboPrimer', branch: 'combo', tier: 1, i18nKey: 'comboPrimer', cost: dmc(600), bonuses: [{ type: 'comboGainPct', value: 0.18 }] },
-  { id: 'heldRhythm', branch: 'combo', tier: 2, i18nKey: 'heldRhythm', cost: dmc(4000), bonuses: [{ type: 'comboDecayPct', value: 0.16 }] },
-  { id: 'ruptureFocus', branch: 'combo', tier: 3, i18nKey: 'ruptureFocus', cost: dmc(18000), bonuses: [{ type: 'weakPointDamagePct', value: 0.26 }] },
-  { id: 'impactMemory', branch: 'combo', tier: 4, i18nKey: 'impactMemory', cost: shard(3), bonuses: [{ type: 'damageComboPreservePct', value: 0.28 }] },
-  { id: 'chainConductor', branch: 'combo', tier: 5, i18nKey: 'chainConductor', cost: shard(7), bonuses: [{ type: 'comboGainPct', value: 0.26 }, { type: 'comboDecayPct', value: 0.12 }] },
-  { id: 'criticalCascade', branch: 'combo', tier: 6, i18nKey: 'criticalCascade', cost: shard(14), bonuses: [{ type: 'weakPointDamagePct', value: 0.4 }] },
+  { id: 'comboPrimer', branch: 'combo', tier: 1, i18nKey: 'comboPrimer', cost: shard(4), bonuses: [{ type: 'comboGainPct', value: 0.28 }] },
+  { id: 'heldRhythm', branch: 'combo', tier: 2, i18nKey: 'heldRhythm', cost: shard(12), bonuses: [{ type: 'comboDecayPct', value: 0.24 }] },
+  { id: 'ruptureFocus', branch: 'combo', tier: 3, i18nKey: 'ruptureFocus', cost: shard(35), bonuses: [{ type: 'weakPointDamagePct', value: 0.42 }] },
+  { id: 'impactMemory', branch: 'combo', tier: 4, i18nKey: 'impactMemory', cost: shard(110), bonuses: [{ type: 'damageComboPreservePct', value: 0.42 }] },
+  { id: 'chainConductor', branch: 'combo', tier: 5, i18nKey: 'chainConductor', cost: shard(360), bonuses: [{ type: 'comboGainPct', value: 0.42 }, { type: 'comboDecayPct', value: 0.22 }] },
+  { id: 'criticalCascade', branch: 'combo', tier: 6, i18nKey: 'criticalCascade', cost: shard(900), bonuses: [{ type: 'weakPointDamagePct', value: 0.72 }] },
 
-  { id: 'denseCore', branch: 'tank', tier: 1, i18nKey: 'denseCore', cost: dmc(600), bonuses: [{ type: 'maxHpPct', value: 0.18 }] },
-  { id: 'mineralShell', branch: 'tank', tier: 2, i18nKey: 'mineralShell', cost: dmc(4000), bonuses: [{ type: 'armor', value: 4 }] },
-  { id: 'slowBleed', branch: 'tank', tier: 3, i18nKey: 'slowBleed', cost: dmc(18000), bonuses: [{ type: 'hpRegenPct', value: 0.35 }] },
-  { id: 'pulseInsulation', branch: 'tank', tier: 4, i18nKey: 'pulseInsulation', cost: shard(3), bonuses: [{ type: 'damageReductionPct', value: 0.08 }] },
-  { id: 'recoveryField', branch: 'tank', tier: 5, i18nKey: 'recoveryField', cost: shard(7), bonuses: [{ type: 'collapseRecoveryMs', value: 1600 }] },
-  { id: 'planetaryCore', branch: 'tank', tier: 6, i18nKey: 'planetaryCore', cost: shard(14), bonuses: [{ type: 'maxHpPct', value: 0.28 }, { type: 'armor', value: 6 }] },
+  { id: 'denseCore', branch: 'tank', tier: 1, i18nKey: 'denseCore', cost: shard(4), bonuses: [{ type: 'maxHpPct', value: 0.32 }] },
+  { id: 'mineralShell', branch: 'tank', tier: 2, i18nKey: 'mineralShell', cost: shard(12), bonuses: [{ type: 'armor', value: 9 }] },
+  { id: 'slowBleed', branch: 'tank', tier: 3, i18nKey: 'slowBleed', cost: shard(35), bonuses: [{ type: 'hpRegenPct', value: 0.55 }] },
+  { id: 'pulseInsulation', branch: 'tank', tier: 4, i18nKey: 'pulseInsulation', cost: shard(110), bonuses: [{ type: 'damageReductionPct', value: 0.14 }] },
+  { id: 'recoveryField', branch: 'tank', tier: 5, i18nKey: 'recoveryField', cost: shard(360), bonuses: [{ type: 'collapseRecoveryMs', value: 2500 }] },
+  { id: 'planetaryCore', branch: 'tank', tier: 6, i18nKey: 'planetaryCore', cost: shard(900), bonuses: [{ type: 'maxHpPct', value: 0.55 }, { type: 'armor', value: 16 }] },
 
-  { id: 'orbitEdge', branch: 'orbit', tier: 1, i18nKey: 'orbitEdge', cost: dmc(600), bonuses: [{ type: 'orbitDamagePct', value: 0.2 }] },
-  { id: 'wideSlash', branch: 'orbit', tier: 2, i18nKey: 'wideSlash', cost: dmc(4000), bonuses: [{ type: 'orbitSlashRadiusPct', value: 0.2 }] },
-  { id: 'clearanceWave', branch: 'orbit', tier: 3, i18nKey: 'clearanceWave', cost: dmc(18000), bonuses: [{ type: 'aoeDamagePct', value: 0.24 }] },
-  { id: 'gravityDrag', branch: 'orbit', tier: 4, i18nKey: 'gravityDrag', cost: shard(3), bonuses: [{ type: 'orbitSlowPct', value: 0.16 }] },
-  { id: 'calibratedRing', branch: 'orbit', tier: 5, i18nKey: 'calibratedRing', cost: shard(7), bonuses: [{ type: 'orbitDamagePct', value: 0.3 }] },
-  { id: 'debrisStorm', branch: 'orbit', tier: 6, i18nKey: 'debrisStorm', cost: shard(14), bonuses: [{ type: 'orbitSlashRadiusPct', value: 0.3 }, { type: 'aoeDamagePct', value: 0.28 }] },
+  { id: 'orbitEdge', branch: 'orbit', tier: 1, i18nKey: 'orbitEdge', cost: shard(4), bonuses: [{ type: 'orbitDamagePct', value: 0.34 }] },
+  { id: 'wideSlash', branch: 'orbit', tier: 2, i18nKey: 'wideSlash', cost: shard(12), bonuses: [{ type: 'orbitSlashRadiusPct', value: 0.32 }] },
+  { id: 'clearanceWave', branch: 'orbit', tier: 3, i18nKey: 'clearanceWave', cost: shard(35), bonuses: [{ type: 'aoeDamagePct', value: 0.42 }] },
+  { id: 'gravityDrag', branch: 'orbit', tier: 4, i18nKey: 'gravityDrag', cost: shard(110), bonuses: [{ type: 'orbitSlowPct', value: 0.25 }] },
+  { id: 'calibratedRing', branch: 'orbit', tier: 5, i18nKey: 'calibratedRing', cost: shard(360), bonuses: [{ type: 'orbitDamagePct', value: 0.55 }] },
+  { id: 'debrisStorm', branch: 'orbit', tier: 6, i18nKey: 'debrisStorm', cost: shard(900), bonuses: [{ type: 'orbitSlashRadiusPct', value: 0.48 }, { type: 'aoeDamagePct', value: 0.5 }] },
 
-  { id: 'voidReceiver', branch: 'void', tier: 1, i18nKey: 'voidReceiver', cost: dmc(600), bonuses: [{ type: 'anomalyFrequencyPct', value: 0.16 }] },
-  { id: 'fractureLuck', branch: 'void', tier: 2, i18nKey: 'fractureLuck', cost: dmc(4000), bonuses: [{ type: 'shardGainPct', value: 0.16 }] },
-  { id: 'unstableHarvest', branch: 'void', tier: 3, i18nKey: 'unstableHarvest', cost: dmc(18000), bonuses: [{ type: 'unstableRewardPct', value: 0.2 }, { type: 'enemyAggressionPct', value: 0.06 }] },
-  { id: 'corruptedLens', branch: 'void', tier: 4, i18nKey: 'corruptedLens', cost: shard(3), bonuses: [{ type: 'anomalyFrequencyPct', value: 0.22 }, { type: 'enemyAggressionPct', value: 0.06 }] },
-  { id: 'shardMagnetism', branch: 'void', tier: 5, i18nKey: 'shardMagnetism', cost: shard(7), bonuses: [{ type: 'shardGainPct', value: 0.28 }] },
-  { id: 'riskEngine', branch: 'void', tier: 6, i18nKey: 'riskEngine', cost: shard(14), bonuses: [{ type: 'unstableRewardPct', value: 0.32 }, { type: 'enemyAggressionPct', value: 0.1 }] },
+  { id: 'voidReceiver', branch: 'void', tier: 1, i18nKey: 'voidReceiver', cost: shard(4), bonuses: [{ type: 'anomalyFrequencyPct', value: 0.26 }] },
+  { id: 'fractureLuck', branch: 'void', tier: 2, i18nKey: 'fractureLuck', cost: shard(12), bonuses: [{ type: 'shardGainPct', value: 0.28 }] },
+  { id: 'unstableHarvest', branch: 'void', tier: 3, i18nKey: 'unstableHarvest', cost: shard(35), bonuses: [{ type: 'unstableRewardPct', value: 0.34 }, { type: 'enemyAggressionPct', value: 0.06 }] },
+  { id: 'corruptedLens', branch: 'void', tier: 4, i18nKey: 'corruptedLens', cost: shard(110), bonuses: [{ type: 'anomalyFrequencyPct', value: 0.36 }, { type: 'enemyAggressionPct', value: 0.06 }] },
+  { id: 'shardMagnetism', branch: 'void', tier: 5, i18nKey: 'shardMagnetism', cost: shard(360), bonuses: [{ type: 'shardGainPct', value: 0.48 }] },
+  { id: 'riskEngine', branch: 'void', tier: 6, i18nKey: 'riskEngine', cost: shard(900), bonuses: [{ type: 'unstableRewardPct', value: 0.58 }, { type: 'enemyAggressionPct', value: 0.1 }] },
 
-  { id: 'quietPump', branch: 'flow', tier: 1, i18nKey: 'quietPump', cost: dmc(600), bonuses: [{ type: 'passiveProductionPct', value: 0.18 }] },
-  { id: 'nightShift', branch: 'flow', tier: 2, i18nKey: 'nightShift', cost: dmc(4000), bonuses: [{ type: 'offlineEfficiencyPct', value: 0.18 }] },
-  { id: 'cleanChannel', branch: 'flow', tier: 3, i18nKey: 'cleanChannel', cost: dmc(18000), bonuses: [{ type: 'manaRegenPct', value: 0.18 }] },
-  { id: 'coolantLoop', branch: 'flow', tier: 4, i18nKey: 'coolantLoop', cost: shard(3), bonuses: [{ type: 'cooldownReductionPct', value: 0.11 }] },
-  { id: 'pressurePipeline', branch: 'flow', tier: 5, i18nKey: 'pressurePipeline', cost: shard(7), bonuses: [{ type: 'passiveProductionPct', value: 0.28 }] },
-  { id: 'deepReservoir', branch: 'flow', tier: 6, i18nKey: 'deepReservoir', cost: shard(14), bonuses: [{ type: 'offlineEfficiencyPct', value: 0.28 }, { type: 'manaRegenPct', value: 0.18 }] },
+  { id: 'quietPump', branch: 'flow', tier: 1, i18nKey: 'quietPump', cost: shard(4), bonuses: [{ type: 'passiveProductionPct', value: 0.3 }] },
+  { id: 'nightShift', branch: 'flow', tier: 2, i18nKey: 'nightShift', cost: shard(12), bonuses: [{ type: 'offlineEfficiencyPct', value: 0.32 }] },
+  { id: 'cleanChannel', branch: 'flow', tier: 3, i18nKey: 'cleanChannel', cost: shard(35), bonuses: [{ type: 'manaRegenPct', value: 0.32 }] },
+  { id: 'coolantLoop', branch: 'flow', tier: 4, i18nKey: 'coolantLoop', cost: shard(110), bonuses: [{ type: 'cooldownReductionPct', value: 0.18 }] },
+  { id: 'pressurePipeline', branch: 'flow', tier: 5, i18nKey: 'pressurePipeline', cost: shard(360), bonuses: [{ type: 'passiveProductionPct', value: 0.52 }] },
+  { id: 'deepReservoir', branch: 'flow', tier: 6, i18nKey: 'deepReservoir', cost: shard(900), bonuses: [{ type: 'offlineEfficiencyPct', value: 0.5 }, { type: 'manaRegenPct', value: 0.34 }] },
 ];
 
 export function buildNodeById(id: string) {
@@ -174,6 +173,21 @@ export function buildTierRequirementKey(tier: number): string {
   if (tier === 4) return 'requirements.tier4';
   if (tier === 5) return 'requirements.tier5';
   return 'requirements.tier6';
+}
+
+export function buildTreeSurchargeMultiplier(ownedCount: number): number {
+  if (ownedCount >= 18) return 4;
+  if (ownedCount >= 12) return 2.5;
+  if (ownedCount >= 8) return 1.75;
+  if (ownedCount >= 4) return 1.25;
+  return 1;
+}
+
+export function buildNodeCost(node: BuildNode, ownedCount: number): BuildCost {
+  return {
+    currency: node.cost.currency,
+    amount: Math.ceil(node.cost.amount * buildTreeSurchargeMultiplier(ownedCount)),
+  };
 }
 
 export function summarizeBuildBonuses(ids: string[]): BuildBonusSummary {

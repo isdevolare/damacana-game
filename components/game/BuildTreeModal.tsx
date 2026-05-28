@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMessages, useTranslations } from 'next-intl';
 import { useGame } from '@/lib/store';
-import { BUILD_BRANCHES, BuildBranch, buildNodesOfBranch, buildTierRequirementKey, buildTierUnlocked, previousBuildNode } from '@/lib/config/buildTree';
+import { BUILD_BRANCHES, BuildBranch, buildNodeCost, buildNodesOfBranch, buildTierRequirementKey, buildTierUnlocked, buildTreeSurchargeMultiplier, previousBuildNode } from '@/lib/config/buildTree';
 import { clsx, fmt } from '@/lib/util';
 import { audio } from '@/lib/audio/AudioEngine';
 
@@ -36,6 +36,7 @@ export function BuildTreeModal() {
   const ownedSet = useMemo(() => new Set(owned), [owned]);
   const activeBranch = BUILD_BRANCHES.find((item) => item.id === branch) ?? BUILD_BRANCHES[0]!;
   const nodes = buildNodesOfBranch(activeBranch.id);
+  const surcharge = buildTreeSurchargeMultiplier(owned.length);
 
   return (
     <AnimatePresence>
@@ -60,6 +61,11 @@ export function BuildTreeModal() {
                   <div className="mt-1 font-space text-[10px] uppercase tracking-[0.18em] text-white/45">
                     {text('subtitle', 'Choose a combat identity')}
                   </div>
+                  {surcharge > 1 && (
+                    <div className="mt-1 font-space text-[9px] uppercase tracking-[0.14em] text-pink/70">
+                      {text('requirements.surcharge', `Global surcharge +${Math.round((surcharge - 1) * 100)}%`).replace('{pct}', String(Math.round((surcharge - 1) * 100)))}
+                    </div>
+                  )}
                 </div>
                 <div className="shrink-0 text-right font-space text-[10px] uppercase tracking-widest text-white/55">
                   <div>{fmt(damacana)}</div>
@@ -118,7 +124,8 @@ export function BuildTreeModal() {
                   const tierOpen = buildTierUnlocked(node.tier, { bossTier, totalPrestiges });
                   const chainOpen = !prev || ownedSet.has(prev.id);
                   const unlocked = tierOpen && chainOpen;
-                  const canPay = node.cost.currency === 'shards' ? shards >= node.cost.amount : damacana >= node.cost.amount;
+                  const cost = buildNodeCost(node, owned.length);
+                  const canPay = cost.currency === 'shards' ? shards >= cost.amount : damacana >= cost.amount;
                   const affordable = unlocked && canPay && !nodeOwned;
                   const status = nodeOwned ? 'owned' : unlocked ? 'available' : 'locked';
                   const lockText = !tierOpen
@@ -172,9 +179,16 @@ export function BuildTreeModal() {
                         <div className="mt-2 flex items-center justify-between gap-2 font-space text-[9px] uppercase tracking-widest">
                           <span className="text-cyan">{text(`nodes.${node.i18nKey}.bonus`, '')}</span>
                           <span className={canPay || nodeOwned ? 'text-white/70' : 'text-danger'}>
-                            {nodeOwned ? '✓' : `${node.cost.currency === 'shards' ? '◇ ' : ''}${fmt(node.cost.amount)}`}
+                            {nodeOwned ? '✓' : `${cost.currency === 'shards' ? '◇ ' : ''}${fmt(cost.amount)}`}
                           </span>
                         </div>
+                        {!nodeOwned && (
+                          <div className="mt-1 font-space text-[8px] uppercase tracking-wider text-white/35">
+                            {cost.currency === 'shards'
+                              ? text('requirements.shards', '{current}/{required} shards').replace('{current}', fmt(shards)).replace('{required}', fmt(cost.amount))
+                              : text('requirements.currency', '{current}/{required} damacana').replace('{current}', fmt(damacana)).replace('{required}', fmt(cost.amount))}
+                          </div>
+                        )}
                       </div>
                     </button>
                   );

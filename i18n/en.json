@@ -112,7 +112,58 @@
       "prestige": "Reach Neptune pressure",
       "default": "Locked"
     },
-    "megaPrestige": "mega-prestige"
+    "megaPrestige": "mega prestige"
+  },
+  "ascension": {
+    "kicker": "mega prestige layer",
+    "title": "Ascension",
+    "subtitle": "Reset prestige-layer progress for account-level cosmic power.",
+    "layer": "Ascension Layer",
+    "unlocked": "Ascension Layer Unlocked",
+    "locked": "Ascension locked",
+    "ap": "Ascension Points",
+    "available": "available",
+    "count": "ascensions",
+    "unlockRequirement": "Reach Supernova final tiers, complete the Star Arc, reach 25 prestiges, or hold 250 void shards.",
+    "resetSummary": "major reset summary",
+    "youLose": "you reset",
+    "youKeep": "you keep",
+    "lose": {
+      "run": "current run and combat state",
+      "chapters": "chapter and boss phase progression",
+      "prestige": "prestige shards, crystals, and prestige count",
+      "systems": "research, build tree, old skill tree, and run artifacts"
+    },
+    "keep": {
+      "ap": "ascension points",
+      "upgrades": "ascension upgrades",
+      "discoveries": "codex, enemy, and weapon discoveries",
+      "achievements": "achievements and lifetime records",
+      "permanent": "permanent artifacts and future challenge flags"
+    },
+    "upgrades": "ascension upgrades",
+    "maxed": "maxed",
+    "modifierHooks": "reality modifier hooks",
+    "decisionSummary": "Ascension is a major optional reset. Use it when you want permanent account-level power.",
+    "lockedSummary": "Ascension is not ready yet. Continue pushing Star Arc, prestiges, or shard depth.",
+    "continue": "continue",
+    "reset": "mega prestige",
+    "progressReady": "+{gain} AP ready · {points} AP owned",
+    "upgrade": {
+      "realityCompression": { "name": "Reality Compression", "desc": "Compresses scaling so each cycle grows more efficiently.", "bonus": "+8% global scaling / level" },
+      "eternalFlow": { "name": "Eternal Flow", "desc": "Turns idle pressure and offline gains into account-level momentum.", "bonus": "+9% passive, +8% offline / level" },
+      "weaponMutation": { "name": "Weapon Mutation", "desc": "Strengthens weapon evolution damage and cadence.", "bonus": "+8% evolution damage / level" },
+      "cosmicMemory": { "name": "Cosmic Memory", "desc": "Retains a small part of prestige power after ascension.", "bonus": "retain shards and prestige count" },
+      "dimensionalPressure": { "name": "Dimensional Pressure", "desc": "Improves elite, anomaly, and shard pressure rewards.", "bonus": "+10% elite/anomaly reward / level" },
+      "singularityStability": { "name": "Singularity Stability", "desc": "Reduces instability downsides and incoming pressure.", "bonus": "less instability damage / level" }
+    },
+    "hooks": {
+      "enemySpeed": "enemy speed",
+      "hazardStrength": "hazard strength",
+      "healingPressure": "lower healing",
+      "rewardAmplification": "stronger rewards",
+      "anomalyFrequency": "more anomalies"
+    }
   },
   "categories": {
     "cosmos": { "name": "cosmos" },
@@ -359,7 +410,10 @@
       "tier4": "Reach Uranus or prestige once",
       "tier5": "Reach Uranus phase 8 or Prestige 2",
       "tier6": "Reach Neptune or Prestige 3",
-      "previous": "Unlock the previous node first"
+      "previous": "Unlock the previous node first",
+      "surcharge": "Global build surcharge +{pct}%",
+      "shards": "shards {current}/{required}",
+      "currency": "damacana {current}/{required}"
     },
     "branches": {
       "combo": { "name": "Combo Build", "identity": "Pressure, weak points, and long chains." },
@@ -369,36 +423,36 @@
       "flow": { "name": "Flow Build", "identity": "Idle flow, offline gain, mana, and cooldown rhythm." }
     },
     "nodes": {
-      "comboPrimer": { "name": "Combo Primer", "desc": "Clicks build chain pressure faster.", "bonus": "+18% combo gain" },
-      "heldRhythm": { "name": "Held Rhythm", "desc": "The chain drains slower between hits.", "bonus": "-16% combo decay" },
-      "ruptureFocus": { "name": "Rupture Focus", "desc": "Weak point ruptures hit harder.", "bonus": "+26% weak point damage" },
-      "impactMemory": { "name": "Impact Memory", "desc": "Taking damage preserves more chain momentum.", "bonus": "+28% combo preserved" },
-      "chainConductor": { "name": "Chain Conductor", "desc": "Chain pressure rises and holds longer.", "bonus": "+26% gain, -12% decay" },
-      "criticalCascade": { "name": "Critical Cascade", "desc": "Ruptures cascade through boss armor.", "bonus": "+40% weak point damage" },
-      "denseCore": { "name": "Dense Core", "desc": "Condense the liquid core shell.", "bonus": "+18% max HP" },
-      "mineralShell": { "name": "Mineral Shell", "desc": "A harder layer absorbs incoming hits.", "bonus": "+4 armor" },
-      "slowBleed": { "name": "Slow Bleed", "desc": "The core re-forms during combat.", "bonus": "+35% HP regen" },
-      "pulseInsulation": { "name": "Pulse Insulation", "desc": "Boss pulses lose some force.", "bonus": "+8% damage reduction" },
-      "recoveryField": { "name": "Recovery Field", "desc": "Collapse recovery lasts longer.", "bonus": "+1.6s recovery shield" },
-      "planetaryCore": { "name": "Planetary Core", "desc": "The core takes on planet-scale density.", "bonus": "+28% HP, +6 armor" },
-      "orbitEdge": { "name": "Orbit Edge", "desc": "Passive orbit strikes cut deeper.", "bonus": "+20% orbit damage" },
-      "wideSlash": { "name": "Wide Slash", "desc": "Orbit Slash reaches a wider ring.", "bonus": "+20% slash radius" },
-      "clearanceWave": { "name": "Clearance Wave", "desc": "Area bursts clear dense waves better.", "bonus": "+24% AoE damage" },
-      "gravityDrag": { "name": "Gravity Drag", "desc": "Enemies slow near the orbit field.", "bonus": "+16% orbit slow" },
-      "calibratedRing": { "name": "Calibrated Ring", "desc": "The passive ring keeps a sharper edge.", "bonus": "+30% orbit damage" },
-      "debrisStorm": { "name": "Debris Storm", "desc": "Orbit Slash grows into a clearing storm.", "bonus": "+30% radius, +28% AoE" },
-      "voidReceiver": { "name": "Void Receiver", "desc": "Anomalies find the arena more often.", "bonus": "+16% anomaly frequency" },
-      "fractureLuck": { "name": "Fracture Luck", "desc": "Shard-bearing fractures are easier to pull.", "bonus": "+16% shard gain" },
-      "unstableHarvest": { "name": "Unstable Harvest", "desc": "Rewards rise, but enemies press harder.", "bonus": "+20% rewards, +6% aggression" },
-      "corruptedLens": { "name": "Corrupted Lens", "desc": "The void route sees more unstable signals.", "bonus": "+22% anomalies, +6% aggression" },
-      "shardMagnetism": { "name": "Shard Magnetism", "desc": "Void shards drift closer to the core.", "bonus": "+28% shard gain" },
-      "riskEngine": { "name": "Risk Engine", "desc": "Unstable combat produces more at higher danger.", "bonus": "+32% rewards, +10% aggression" },
-      "quietPump": { "name": "Quiet Pump", "desc": "Passive flow runs more efficiently.", "bonus": "+18% passive production" },
-      "nightShift": { "name": "Night Shift", "desc": "Offline reservoirs waste less pressure.", "bonus": "+18% offline efficiency" },
-      "cleanChannel": { "name": "Clean Channel", "desc": "Mana returns through a cleaner route.", "bonus": "+18% mana regen" },
-      "coolantLoop": { "name": "Coolant Loop", "desc": "Abilities vent heat faster.", "bonus": "-11% ability cooldown" },
-      "pressurePipeline": { "name": "Pressure Pipeline", "desc": "The idle engine keeps stronger pressure.", "bonus": "+28% passive production" },
-      "deepReservoir": { "name": "Deep Reservoir", "desc": "The flow build stores deeper reserves.", "bonus": "+28% offline, +18% mana" }
+      "comboPrimer": { "name": "Combo Primer", "desc": "Clicks build chain pressure faster.", "bonus": "+28% combo gain" },
+      "heldRhythm": { "name": "Held Rhythm", "desc": "The chain drains slower between hits.", "bonus": "-24% combo decay" },
+      "ruptureFocus": { "name": "Rupture Focus", "desc": "Weak point ruptures hit harder.", "bonus": "+42% weak point damage" },
+      "impactMemory": { "name": "Impact Memory", "desc": "Taking damage preserves more chain momentum.", "bonus": "+42% combo preserved" },
+      "chainConductor": { "name": "Chain Conductor", "desc": "Chain pressure rises and holds longer.", "bonus": "+42% gain, -22% decay" },
+      "criticalCascade": { "name": "Critical Cascade", "desc": "Ruptures cascade through boss armor.", "bonus": "+72% weak point damage" },
+      "denseCore": { "name": "Dense Core", "desc": "Condense the liquid core shell.", "bonus": "+32% max HP" },
+      "mineralShell": { "name": "Mineral Shell", "desc": "A harder layer absorbs incoming hits.", "bonus": "+9 armor" },
+      "slowBleed": { "name": "Slow Bleed", "desc": "The core re-forms during combat.", "bonus": "+55% HP regen" },
+      "pulseInsulation": { "name": "Pulse Insulation", "desc": "Boss pulses lose some force.", "bonus": "+14% damage reduction" },
+      "recoveryField": { "name": "Recovery Field", "desc": "Collapse recovery lasts longer.", "bonus": "+2.5s recovery shield" },
+      "planetaryCore": { "name": "Planetary Core", "desc": "The core takes on planet-scale density.", "bonus": "+55% HP, +16 armor" },
+      "orbitEdge": { "name": "Orbit Edge", "desc": "Passive orbit strikes cut deeper.", "bonus": "+34% orbit damage" },
+      "wideSlash": { "name": "Wide Slash", "desc": "Orbit Slash reaches a wider ring.", "bonus": "+32% slash radius" },
+      "clearanceWave": { "name": "Clearance Wave", "desc": "Area bursts clear dense waves better.", "bonus": "+42% AoE damage" },
+      "gravityDrag": { "name": "Gravity Drag", "desc": "Enemies slow near the orbit field.", "bonus": "+25% orbit slow" },
+      "calibratedRing": { "name": "Calibrated Ring", "desc": "The passive ring keeps a sharper edge.", "bonus": "+55% orbit damage" },
+      "debrisStorm": { "name": "Debris Storm", "desc": "Orbit Slash grows into a clearing storm.", "bonus": "+48% radius, +50% AoE" },
+      "voidReceiver": { "name": "Void Receiver", "desc": "Anomalies find the arena more often.", "bonus": "+26% anomaly frequency" },
+      "fractureLuck": { "name": "Fracture Luck", "desc": "Shard-bearing fractures are easier to pull.", "bonus": "+28% shard gain" },
+      "unstableHarvest": { "name": "Unstable Harvest", "desc": "Rewards rise, but enemies press harder.", "bonus": "+34% rewards, +6% aggression" },
+      "corruptedLens": { "name": "Corrupted Lens", "desc": "The void route sees more unstable signals.", "bonus": "+36% anomalies, +6% aggression" },
+      "shardMagnetism": { "name": "Shard Magnetism", "desc": "Void shards drift closer to the core.", "bonus": "+48% shard gain" },
+      "riskEngine": { "name": "Risk Engine", "desc": "Unstable combat produces more at higher danger.", "bonus": "+58% rewards, +10% aggression" },
+      "quietPump": { "name": "Quiet Pump", "desc": "Passive flow runs more efficiently.", "bonus": "+30% passive production" },
+      "nightShift": { "name": "Night Shift", "desc": "Offline reservoirs waste less pressure.", "bonus": "+32% offline efficiency" },
+      "cleanChannel": { "name": "Clean Channel", "desc": "Mana returns through a cleaner route.", "bonus": "+32% mana regen" },
+      "coolantLoop": { "name": "Coolant Loop", "desc": "Abilities vent heat faster.", "bonus": "-18% ability cooldown" },
+      "pressurePipeline": { "name": "Pressure Pipeline", "desc": "The idle engine keeps stronger pressure.", "bonus": "+52% passive production" },
+      "deepReservoir": { "name": "Deep Reservoir", "desc": "The flow build stores deeper reserves.", "bonus": "+50% offline, +34% mana" }
     }
   },
   "bossDrops": {
@@ -923,43 +977,47 @@
       "tier4": "Unlock Saturn",
       "tier5": "Reach Saturn phase 10",
       "tier6": "Unlock Uranus or Prestige 1",
-      "previous": "Unlock the previous node first"
+      "previous": "Unlock the previous node first",
+      "branchNodes": "{current}/{required} nodes in this branch",
+      "totalNodes": "{current}/{required} total skill nodes",
+      "shards": "shards {current}/{required}",
+      "surcharge": "global tree surcharge +{pct}%"
     },
     "offense": {
       "title": "OFFENSE",
-      "sharpDrop": { "name": "sharp drop", "desc": "+55% tap and projectile base power" },
-      "cosmicFang": { "name": "cosmic fang", "desc": "+115% tap and projectile base power" },
-      "critDrop": { "name": "crit drop", "desc": "20% click crit chance, projectile crit boost" },
-      "bossKiller": { "name": "boss killer", "desc": "+175% boss damage" },
+      "sharpDrop": { "name": "sharp drop", "desc": "+80% tap and projectile base power" },
+      "cosmicFang": { "name": "cosmic fang", "desc": "+165% tap and projectile base power" },
+      "critDrop": { "name": "crit drop", "desc": "28% click crit chance, projectile crit boost" },
+      "bossKiller": { "name": "boss killer", "desc": "+235% boss damage" },
       "voidBurst": { "name": "void burst", "desc": "active: massive boss hit" },
-      "voidClaw": { "name": "void claw", "desc": "tap ×5.2, stronger crit projectiles" }
+      "voidClaw": { "name": "void claw", "desc": "tap ×6.8, stronger crit projectiles" }
     },
     "flow": {
       "title": "FLOW",
-      "wideFaucet": { "name": "wide faucet", "desc": "+65% passive flow" },
-      "flowChannel": { "name": "flow channel", "desc": "+125% passive flow" },
-      "autoTap": { "name": "auto-tap", "desc": "1.2 silent taps/sec" },
-      "fastPump": { "name": "fast pump", "desc": "+190% flow, auto-tap ×2.5" },
+      "wideFaucet": { "name": "wide faucet", "desc": "+90% passive flow" },
+      "flowChannel": { "name": "flow channel", "desc": "+175% passive flow" },
+      "autoTap": { "name": "auto-tap", "desc": "1.8 silent taps/sec" },
+      "fastPump": { "name": "fast pump", "desc": "+265% flow, auto-tap ×2.5" },
       "flood": { "name": "flood", "desc": "active: 10s ×10 flow" },
-      "infiniteFlow": { "name": "infinite flow", "desc": "flow ×5.5, auto-tap 3/s" }
+      "infiniteFlow": { "name": "infinite flow", "desc": "flow ×7.2, auto-tap 3/s" }
     },
     "void": {
       "title": "VOID",
-      "shardAttractor": { "name": "shard attractor", "desc": "+95% shard drop" },
+      "shardAttractor": { "name": "shard attractor", "desc": "+125% shard drop" },
       "halo": { "name": "halo", "desc": "a slow rotating ring" },
-      "doubleShard": { "name": "double shard", "desc": "45% chance ×2 shards" },
-      "evolutionShock": { "name": "evolution shock", "desc": "evolutions give ×3 dmc" },
+      "doubleShard": { "name": "double shard", "desc": "55% chance ×2 shards" },
+      "evolutionShock": { "name": "evolution shock", "desc": "evolutions give ×4 dmc" },
       "crown": { "name": "crown", "desc": "a glowing particle crown" },
-      "guaranteedShards": { "name": "guaranteed shards", "desc": "+5 shards per prestige" }
+      "guaranteedShards": { "name": "guaranteed shards", "desc": "+12 shards per prestige" }
     },
     "chaos": {
       "title": "CHAOS",
-      "startingGift": { "name": "starting gift", "desc": "start each run +1000" },
-      "comboMaster": { "name": "combo master", "desc": "combo cap rises to x3500" },
-      "luckyTap": { "name": "lucky tap", "desc": "every 10th tap ×9" },
+      "startingGift": { "name": "starting gift", "desc": "start each run +5000" },
+      "comboMaster": { "name": "combo master", "desc": "combo cap rises to x5000" },
+      "luckyTap": { "name": "lucky tap", "desc": "every 10th tap ×12" },
       "eventMagnet": { "name": "event magnet", "desc": "events ×2 more often" },
       "timeLoop": { "name": "time loop", "desc": "active: replay last 15s" },
-      "chaosCore": { "name": "chaos core", "desc": "22% free upgrade chance" }
+      "chaosCore": { "name": "chaos core", "desc": "28% free upgrade chance" }
     }
   },
   "events": {

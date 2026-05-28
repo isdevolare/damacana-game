@@ -6,14 +6,22 @@ import { useTranslations } from 'next-intl';
 import { TIERS, nextTier } from '@/lib/config/progression';
 import { CHAPTERS, FUTURE_ARCS, currentChapter } from '@/lib/config/chapters';
 import { bossPhaseInfo } from '@/lib/config/bossMissions';
+import { ascensionPointGain, ascensionUnlocked, nextAscensionPointTarget } from '@/lib/config/ascension';
 
 export function ProgressionPanel() {
   const show = useGame((s) => s.showProgression);
   const setShow = useGame((s) => s.setShowProgression);
   const setShowShop = useGame((s) => s.setShowShop);
+  const setShowAscension = useGame((s) => s.setShowAscension);
   const prestiges = useGame((s) => s.totalPrestiges);
+  const shards = useGame((s) => s.shards);
   const boss = useGame((s) => s.boss);
   const completedChapters = useGame((s) => s.completedChapters);
+  const claimedResearchIds = useGame((s) => s.claimedResearchIds);
+  const ownedBuildNodeIds = useGame((s) => s.ownedBuildNodeIds);
+  const runArtifacts = useGame((s) => s.runArtifacts);
+  const permanentArtifacts = useGame((s) => s.permanentArtifacts);
+  const ascensionPoints = useGame((s) => s.ascensionPoints ?? 0);
   const t = useTranslations();
 
   const next = nextTier(prestiges);
@@ -25,6 +33,18 @@ export function ProgressionPanel() {
     { id: 'star', chapters: CHAPTERS.filter((chapter) => chapter.arcId === 'star') },
   ] as const;
   const currentArcName = t(`arcs.${current.arcId}.name` as any);
+  const ascensionCtx = {
+    totalPrestiges: prestiges,
+    shards,
+    bestBossTier: boss.tier,
+    completedChapters,
+    claimedResearchCount: claimedResearchIds.length,
+    ownedBuildNodeCount: ownedBuildNodeIds.length,
+    artifactCount: runArtifacts.length + permanentArtifacts.length,
+  };
+  const ascensionReady = ascensionUnlocked(ascensionCtx);
+  const ascensionGain = ascensionPointGain(ascensionCtx);
+  const ascensionTarget = nextAscensionPointTarget(ascensionCtx);
 
   return (
     <AnimatePresence>
@@ -147,6 +167,38 @@ export function ProgressionPanel() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              <div className="mt-4 rounded-md border border-pink/30 bg-pink/10 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-space text-[9px] uppercase tracking-widest text-pink/80">
+                      {t('ascension.layer')}
+                    </div>
+                    <div className="mt-1 font-space text-[11px] text-white">
+                      {ascensionReady ? t('ascension.unlocked') : t('ascension.locked')}
+                    </div>
+                    <div className="mt-1 font-space text-[9px] leading-relaxed text-white/50">
+                      {ascensionReady
+                        ? t('ascension.progressReady', { gain: ascensionGain, points: ascensionPoints })
+                        : t('ascension.unlockRequirement')}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShow(false);
+                      setShowAscension(true);
+                    }}
+                    className="shrink-0 rounded-md border border-pink/45 bg-pink/10 px-2 py-1.5 font-space text-[9px] uppercase tracking-[0.12em] text-pink"
+                  >
+                    {t('ui.megaPrestige')}
+                  </button>
+                </div>
+                {!ascensionReady && (
+                  <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full rounded-full bg-pink" style={{ width: `${Math.max(0, Math.min(1, ascensionTarget.progress)) * 100}%` }} />
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 border-t border-white/10 pt-3">

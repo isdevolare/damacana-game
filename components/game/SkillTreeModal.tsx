@@ -2,9 +2,21 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from '@/lib/store';
-import { BRANCHES, nodesOfBranch, previousNode, SkillBranch, skillTierRequirementKey, skillTierUnlocked } from '@/lib/config/skillTree';
+import {
+  BRANCHES,
+  nodesOfBranch,
+  previousNode,
+  SkillBranch,
+  skillBranchOwnedCount,
+  skillBranchRequiredCount,
+  skillNodeCost,
+  skillTierRequirementKey,
+  skillTierUnlocked,
+  skillTotalRequiredCount,
+  skillTreeSurchargeMultiplier,
+} from '@/lib/config/skillTree';
 import { useTranslations } from 'next-intl';
-import { clsx } from '@/lib/util';
+import { clsx, fmt } from '@/lib/util';
 import { audio } from '@/lib/audio/AudioEngine';
 
 const BRANCH_META: Record<SkillBranch, { color: string; symbol: string; tw: string }> = {
@@ -25,6 +37,8 @@ export function SkillTreeModal() {
   const sfxEnabled = useGame((s) => !s.audio.muted);
   const t = useTranslations('tree');
   const ui = useTranslations('ui');
+  const totalOwned = Object.values(tree ?? {}).filter(Boolean).length;
+  const surcharge = skillTreeSurchargeMultiplier(totalOwned);
 
   return (
     <AnimatePresence>
@@ -49,6 +63,11 @@ export function SkillTreeModal() {
                 <div className="mt-1 max-w-[260px] text-[9px] font-space uppercase tracking-wider text-white/45">
                   {t('explain')}
                 </div>
+                {surcharge > 1 && (
+                  <div className="mt-1 text-[9px] font-space uppercase tracking-wider text-pink/70">
+                    {t('requirements.surcharge', { pct: Math.round((surcharge - 1) * 100) })}
+                  </div>
+                )}
               </div>
               <div className="flex gap-2">
                 <button
@@ -79,12 +98,22 @@ export function SkillTreeModal() {
                       const prev = previousNode(node);
                       const tierOpen = skillTierUnlocked(node.tier, { bossTier, totalPrestiges });
                       const chainOpen = !prev || tree[prev.id];
-                      const unlocked = tierOpen && chainOpen;
-                      const affordable = !owned && unlocked && shards >= node.cost;
+                      const branchOwned = skillBranchOwnedCount(tree ?? {}, node.branch);
+                      const branchRequired = skillBranchRequiredCount(node.tier);
+                      const totalRequired = skillTotalRequiredCount(node.tier);
+                      const branchOpen = branchOwned >= branchRequired;
+                      const totalOpen = totalOwned >= totalRequired;
+                      const cost = skillNodeCost(node, totalOwned);
+                      const unlocked = tierOpen && chainOpen && branchOpen && totalOpen;
+                      const affordable = !owned && unlocked && shards >= cost;
                       const lockText = !tierOpen
                         ? t(skillTierRequirementKey(node.tier) as any)
                         : prev && !tree[prev.id]
                           ? t('requirements.previous')
+                          : !branchOpen
+                            ? t('requirements.branchNodes', { current: branchOwned, required: branchRequired })
+                            : !totalOpen
+                              ? t('requirements.totalNodes', { current: totalOwned, required: totalRequired })
                           : null;
                       return (
                         <button
@@ -119,9 +148,14 @@ export function SkillTreeModal() {
                           <div className="text-[10px] font-vt mt-1 flex justify-between">
                             <span>T{node.tier}</span>
                             <span className={owned ? 'text-gold' : 'text-cyan'}>
-                              {owned ? '✓' : `◇${node.cost}`}
+                              {owned ? '✓' : `◇${fmt(cost)}`}
                             </span>
                           </div>
+                          {!owned && (
+                            <div className="mt-0.5 text-[8px] font-space uppercase tracking-wider text-white/35">
+                              {t('requirements.shards', { current: fmt(shards), required: fmt(cost) })}
+                            </div>
+                          )}
                           <div className={clsx(
                             'mt-1 text-[8px] font-space uppercase tracking-wider',
                             owned ? 'text-gold' : affordable ? 'text-cyan' : 'text-white/35',
