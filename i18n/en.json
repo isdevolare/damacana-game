@@ -161,14 +161,40 @@
       "name": "Neptune",
       "desc": "Enter the storm edge before the route expands toward stars and anomalies.",
       "objective": "End the Planet Arc across levels 71-100 by defeating Neptune's final boss T100.",
-      "complete": "The first planetary route is complete. Stellar chapters remain beyond this MVP."
+      "complete": "The first planetary route is complete. The Star Arc is open."
+    },
+    "redDwarf": {
+      "name": "Red Dwarf",
+      "desc": "Push through dark red heat, unstable embers, and faster stellar waves.",
+      "objective": "Clear Red Dwarf tiers 101-125 and defeat the first stellar core T125.",
+      "complete": "The red stellar pressure is contained. White Dwarf compression is next."
+    },
+    "whiteDwarf": {
+      "name": "White Dwarf",
+      "desc": "Survive compact white-blue pressure and dense projectile fields.",
+      "objective": "Clear White Dwarf tiers 126-155 and break the compact star boss T155.",
+      "complete": "White Dwarf pressure has cracked. Giant Star mass is now in range."
+    },
+    "giantStar": {
+      "name": "Giant Star",
+      "desc": "Endure huge orange-gold solar pressure, tank waves, and heavy mines.",
+      "objective": "Clear Giant Star tiers 156-190 and collapse the solar pressure boss T190.",
+      "complete": "The Giant Star has destabilized. Supernova pressure is forming."
+    },
+    "supernova": {
+      "name": "Supernova",
+      "desc": "Enter violent stellar rupture, anomaly waves, and burst hazards.",
+      "objective": "Finish the Star Arc across tiers 191-230 by defeating Supernova T230.",
+      "complete": "The Star Arc is complete. Galaxy-scale routes remain locked for a later phase."
     }
   },
   "arcs": {
     "currentArc": "Current arc",
     "afterNeptune": "Coming after Neptune",
+    "afterStar": "Coming after Star Arc",
+    "starUnlocked": "Star Arc Unlocked",
     "planet": { "name": "Planet Arc", "label": "ARC 1 — Planet Arc" },
-    "star": { "name": "ARC 2 — Star Arc" },
+    "star": { "name": "Star Arc", "label": "ARC 2 — Star Arc" },
     "galaxy": { "name": "ARC 3 — Galaxy Arc" },
     "blackHole": { "name": "ARC 4 — Black Hole Arc" },
     "anomaly": { "name": "ARC 5 — Anomaly Arc" },
@@ -220,7 +246,11 @@
       "mars": "Red War Core",
       "saturn": "Orbital Ring Core",
       "uranus": "Cold Anomaly Core",
-      "neptune": "Deep Void Core"
+      "neptune": "Deep Void Core",
+      "redDwarf": "Red Ember Core",
+      "whiteDwarf": "Compact Light Core",
+      "giantStar": "Giant Solar Core",
+      "supernova": "Supernova Rupture Core"
     },
     "phaseLabel": "Phase {phase}/{total}",
     "finalPhase": "Final phase",
@@ -778,12 +808,12 @@
     "title": "PROGRESSION",
     "comingNext": "Coming next",
     "current": "Current ★",
-    "deepSystems": "Secondary systems",
-    "tier3": { "name": "★3 — POST-FAILED", "desc": "A new 8th evolution form unlocks." },
-    "tier5": { "name": "★5 — ELITE BOSSES", "desc": "Elite variants appear with 1.5× HP and guaranteed shard drops." },
-    "tier10": { "name": "★10 — SINGULARITY CRYSTALS", "desc": "Elite bosses can drop ✦. A small shop opens." },
-    "tier15": { "name": "★15 — CODEX ARTIFACTS", "desc": "Completing a fact category grants a permanent +5% bonus." },
-    "tier25": { "name": "★25 — MEGA-PRESTIGE", "desc": "Reset shards + tree for Cosmic Ascension Points." }
+    "deepSystems": "Long-term unlocks",
+    "tier3": { "name": "★3 — Augmented Evolution", "desc": "Unlocks an additional post-planet evolution signal." },
+    "tier5": { "name": "★5 — Elite Bosses", "desc": "Elite variants appear with 1.5× HP and guaranteed shard drops." },
+    "tier10": { "name": "★10 — Singularity Crystals", "desc": "Elite bosses can drop ✦ and the crystal shop opens." },
+    "tier15": { "name": "★15 — Codex Artifacts", "desc": "Completed codex categories grant permanent bonuses." },
+    "tier25": { "name": "★25 — Mega Prestige", "desc": "A future reset layer for cosmic ascension." }
   },
   "shop": {
     "title": "singularity shop",
@@ -792,7 +822,7 @@
     "shardBoost": { "name": "permanent +10% shards", "desc": "boosts shard gain forever" }
   },
   "levels8": {
-    "postFailed": { "name": "POST-FAILED", "desc": "after the system gives up, you keep going" }
+    "postFailed": { "name": "Augmented Evolution", "desc": "a post-planet evolution signal stabilizes" }
   },
   "elite": {
     "warden": "warden of the deeper void",
@@ -814,7 +844,7 @@
     "transcendent": { "name": "URANUS ICEFLOW", "desc": "cold atmosphere turns flow into cosmic pressure" },
     "voidConsumer": { "name": "NEPTUNE STORM BODY", "desc": "blue gravity pulls your liquid form toward the outer dark" },
     "classificationFailed": { "name": "PLANETARY LIMIT BREAK", "desc": "the first route strains against stellar space" },
-    "postFailed": { "name": "POST-PLANETARY SIGNAL", "desc": "after the planets, the star path starts to answer" }
+    "postFailed": { "name": "STELLAR SIGNAL", "desc": "after the planets, the star path starts to answer" }
   },
   "bosses": {
     "faucetGhost": "surface pressure echo",

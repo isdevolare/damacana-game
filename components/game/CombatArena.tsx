@@ -316,6 +316,21 @@ function enemyProjectileInterval(chapterId: string, variantId: EnemyVariantId, p
   if (chapterId === 'neptune') {
     return 3450 - phaseProgress * 950;
   }
+  if (chapterId === 'redDwarf') {
+    if (variantId === 'basic') return null;
+    return 3200 - phaseProgress * 850;
+  }
+  if (chapterId === 'whiteDwarf') {
+    if (variantId !== 'shield' && variantId !== 'manaLeech' && variantId !== 'orbitJammer' && variantId !== 'anomaly') return null;
+    return 2850 - phaseProgress * 760;
+  }
+  if (chapterId === 'giantStar') {
+    if (variantId !== 'tank' && variantId !== 'shield' && variantId !== 'orbitJammer' && variantId !== 'anomaly') return null;
+    return 3300 - phaseProgress * 780;
+  }
+  if (chapterId === 'supernova') {
+    return 2550 - phaseProgress * 900;
+  }
   return null;
 }
 
@@ -988,6 +1003,24 @@ export function CombatArena() {
       if (!lowDensityRef.current) addHazard('voidZone', now + 180, undefined, 0.9);
       return;
     }
+    if (chapter.id === 'redDwarf' && waveTypeId === 'elite') {
+      addHazard('pulseMine', now, undefined, 1);
+      return;
+    }
+    if (chapter.id === 'whiteDwarf' && (waveTypeId === 'elite' || waveTypeId === 'anomaly')) {
+      addHazard('laserSweep', now, undefined, 1.02);
+      return;
+    }
+    if (chapter.id === 'giantStar' && (waveTypeId === 'elite' || waveTypeId === 'tank')) {
+      addHazard('pulseMine', now, undefined, 1.08);
+      if (!lowDensityRef.current) addHazard('pulseMine', now + 120, undefined, 0.82);
+      return;
+    }
+    if (chapter.id === 'supernova' && (waveTypeId === 'elite' || waveTypeId === 'anomaly')) {
+      addHazard('gravityWell', now, { x: 50 + (Math.random() - 0.5) * 22, y: 48 + (Math.random() - 0.5) * 22 }, 1.12);
+      if (!lowDensityRef.current) addHazard('laserSweep', now + 180, undefined, 0.95);
+      return;
+    }
     if (waveTypeId === 'elite') addHazard(chapter.id === 'neptune' ? 'gravityWell' : 'pulseMine', now, undefined, 0.85);
   }, [addHazard]);
 
@@ -1429,7 +1462,15 @@ export function CombatArena() {
                 ? 0.58
                 : activeChapter.id === 'neptune'
                   ? 0.7
-                  : 0.08;
+                  : activeChapter.id === 'redDwarf'
+                    ? 0.72
+                    : activeChapter.id === 'whiteDwarf'
+                      ? 0.82
+                      : activeChapter.id === 'giantStar'
+                        ? 0.66
+                        : activeChapter.id === 'supernova'
+                          ? 0.88
+                          : 0.08;
           const waveBonus = activeWaveTypeRef.current === 'elite' || activeWaveTypeRef.current === 'anomaly' ? 0.12 : 0;
           const mobileMult = lowDensityFrame ? 0.72 : 1;
           if (Math.random() < (chapterShotChance + activePhaseTuning.info.progress * 0.12 + waveBonus) * mobileMult) {
@@ -1994,6 +2035,16 @@ export function CombatArena() {
         } else if (activeChapter.id === 'neptune') {
           addHazard(phase >= 10 ? 'gravityWell' : 'voidZone', now, { x: 50 + (Math.random() - 0.5) * 20, y: 46 + (Math.random() - 0.5) * 20 }, finalPhase ? 1.22 : 1.05);
           if (finalPhase && !lowDensityFrame) addHazard('laserSweep', now + 240, bossPointForShots, 1.08);
+        } else if (activeChapter.id === 'redDwarf') {
+          addHazard('pulseMine', now, undefined, finalPhase ? 1.24 : 1.02);
+        } else if (activeChapter.id === 'whiteDwarf') {
+          addHazard('laserSweep', now, bossPointForShots, finalPhase ? 1.22 : 1.05);
+        } else if (activeChapter.id === 'giantStar') {
+          addHazard('pulseMine', now, undefined, finalPhase ? 1.28 : 1.12);
+          if (phase >= 10 && !lowDensityFrame) addHazard('pulseMine', now + 180, undefined, 0.86);
+        } else if (activeChapter.id === 'supernova') {
+          addHazard(phase >= 10 ? 'gravityWell' : 'voidZone', now, { x: 50 + (Math.random() - 0.5) * 24, y: 46 + (Math.random() - 0.5) * 22 }, finalPhase ? 1.34 : 1.14);
+          if (finalPhase && !lowDensityFrame) addHazard('laserSweep', now + 220, bossPointForShots, 1.16);
         }
       }
 
@@ -2356,6 +2407,18 @@ export function CombatArena() {
         <div
           className="pointer-events-none absolute inset-x-[-8%] top-[34%] z-[4] h-20"
           style={{ opacity: 0.18, background: `linear-gradient(105deg, transparent, ${planetTheme.dustColor}, transparent)` }}
+        />
+      )}
+      {planetTheme.effect === 'ember' && (
+        <div
+          className="pointer-events-none absolute inset-x-[-10%] top-[24%] z-[4] h-28 opacity-20"
+          style={{ background: `repeating-linear-gradient(130deg, transparent 0 16px, ${planetTheme.dustColor} 18px 20px, transparent 22px 44px)` }}
+        />
+      )}
+      {planetTheme.effect === 'flare' && !lowDensity && (
+        <div
+          className="pointer-events-none absolute left-1/2 top-[42%] z-[4] h-[140%] w-px -translate-x-1/2 -translate-y-1/2 rotate-45 opacity-20"
+          style={{ background: planetTheme.uiAccent, boxShadow: `0 0 40px ${planetTheme.ambientGlow}` }}
         />
       )}
       {(activeArenaPulse || activeUpgradeSurge || comboArenaPulse || visualPressure || bossRageActive || bossCorruptedWarningActive) && (

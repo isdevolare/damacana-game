@@ -78,6 +78,42 @@ export function combatStyleForChapter(chapter: Chapter): CombatChapterStyle {
         speedMult: 1.18,
         aggression: 1.18,
       };
+    case 'redDwarf':
+      return {
+        enemy: '#ff4d3d',
+        enemyGlow: 'rgba(255,77,61,0.68)',
+        weak: '#ffd166',
+        arenaGlow: 'rgba(255,77,61,0.16)',
+        speedMult: 1.22,
+        aggression: 1.2,
+      };
+    case 'whiteDwarf':
+      return {
+        enemy: '#dffcff',
+        enemyGlow: 'rgba(223,252,255,0.7)',
+        weak: '#ff5ce8',
+        arenaGlow: 'rgba(223,252,255,0.14)',
+        speedMult: 1.16,
+        aggression: 1.24,
+      };
+    case 'giantStar':
+      return {
+        enemy: '#ffb23f',
+        enemyGlow: 'rgba(255,178,63,0.7)',
+        weak: '#5cf6ff',
+        arenaGlow: 'rgba(255,178,63,0.17)',
+        speedMult: 1.08,
+        aggression: 1.18,
+      };
+    case 'supernova':
+      return {
+        enemy: '#ff5ce8',
+        enemyGlow: 'rgba(255,92,232,0.72)',
+        weak: '#ffd166',
+        arenaGlow: 'rgba(255,92,232,0.2)',
+        speedMult: 1.24,
+        aggression: 1.28,
+      };
     case 'earth':
     default:
       return {

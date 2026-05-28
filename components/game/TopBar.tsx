@@ -25,6 +25,7 @@ export function TopBar() {
   const levels = activeLevels(totalPrestiges);
   const lv = levels[Math.min(levelIdx, levels.length - 1)];
   const chapter = currentChapter(completedChapters);
+  const arcName = t(`arcs.${chapter.arcId}.name` as any);
   const unlockCtx = { bossTier: boss.tier, completedChapters, totalPrestiges, shards };
   const chapterLevel = Math.min(Math.max(boss.tier - chapter.levelStart + 1, 1), chapter.levelEnd - chapter.levelStart + 1);
   const researchUnlocked = systemUnlocked('research', unlockCtx);
@@ -49,7 +50,7 @@ export function TopBar() {
             {t(`levels.${lv.key}.name` as any)}
           </div>
           <div className="mt-0.5 truncate text-[7px] font-space uppercase tracking-wider text-cyan/60 sm:text-[8px] sm:tracking-widest">
-            {t('arcs.planet.name')} · {t('chapters.level')} {chapterLevel}/{chapter.levelEnd - chapter.levelStart + 1} · {t('chapters.finalBoss')} T{chapter.finalBossTier}
+            {arcName} · {t('chapters.level')} {chapterLevel}/{chapter.levelEnd - chapter.levelStart + 1} · {t('chapters.finalBoss')} T{chapter.finalBossTier}
             {totalPrestiges > 0 && <span className="ml-2 text-pink">★{totalPrestiges}</span>}
           </div>
         </div>

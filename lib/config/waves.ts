@@ -60,6 +60,38 @@ const WAVE_WEIGHTS: Record<ChapterId, Record<WaveTypeId, WeightRange>> = {
     elite: [16, 22],
     anomaly: [6, 12],
   },
+  redDwarf: {
+    normal: [38, 24],
+    rush: [16, 22],
+    tank: [9, 12],
+    splitter: [10, 13],
+    elite: [18, 24],
+    anomaly: [8, 13],
+  },
+  whiteDwarf: {
+    normal: [34, 22],
+    rush: [8, 11],
+    tank: [12, 15],
+    splitter: [8, 10],
+    elite: [22, 28],
+    anomaly: [8, 12],
+  },
+  giantStar: {
+    normal: [32, 20],
+    rush: [6, 9],
+    tank: [22, 30],
+    splitter: [7, 10],
+    elite: [20, 26],
+    anomaly: [8, 12],
+  },
+  supernova: {
+    normal: [28, 16],
+    rush: [10, 13],
+    tank: [10, 14],
+    splitter: [12, 16],
+    elite: [18, 24],
+    anomaly: [16, 24],
+  },
 };
 
 export const WAVE_TYPES: Record<WaveTypeId, WaveTypeDef> = {
@@ -92,6 +124,10 @@ export const WAVE_TYPES: Record<WaveTypeId, WaveTypeDef> = {
       saturn: ['rush', 'rush', 'splitter'],
       uranus: ['rush', 'rush', 'manaLeech'],
       neptune: ['rush', 'rush', 'anomaly'],
+      redDwarf: ['rush', 'anomaly', 'rush'],
+      whiteDwarf: ['rush', 'shield', 'manaLeech'],
+      giantStar: ['rush', 'tank', 'tank'],
+      supernova: ['rush', 'anomaly', 'splitter'],
     },
   },
   tank: {
@@ -111,6 +147,10 @@ export const WAVE_TYPES: Record<WaveTypeId, WaveTypeDef> = {
       saturn: ['tank', 'tank', 'orbitJammer'],
       uranus: ['tank', 'shield', 'orbitJammer'],
       neptune: ['tank', 'shield', 'anomaly'],
+      redDwarf: ['tank', 'shield', 'rush'],
+      whiteDwarf: ['shield', 'tank', 'orbitJammer'],
+      giantStar: ['tank', 'tank', 'shield'],
+      supernova: ['tank', 'anomaly', 'shield'],
     },
   },
   splitter: {
@@ -129,6 +169,10 @@ export const WAVE_TYPES: Record<WaveTypeId, WaveTypeDef> = {
       saturn: ['splitter', 'splitter', 'orbitJammer'],
       uranus: ['splitter', 'shield', 'manaLeech'],
       neptune: ['splitter', 'anomaly', 'manaLeech'],
+      redDwarf: ['splitter', 'rush', 'anomaly'],
+      whiteDwarf: ['splitter', 'shield', 'orbitJammer'],
+      giantStar: ['splitter', 'tank', 'tank'],
+      supernova: ['splitter', 'anomaly', 'anomaly'],
     },
   },
   elite: {
@@ -148,6 +192,10 @@ export const WAVE_TYPES: Record<WaveTypeId, WaveTypeDef> = {
       saturn: ['orbitJammer', 'tank', 'splitter'],
       uranus: ['shield', 'manaLeech', 'orbitJammer'],
       neptune: ['anomaly', 'shield', 'manaLeech'],
+      redDwarf: ['anomaly', 'rush', 'shield'],
+      whiteDwarf: ['shield', 'manaLeech', 'orbitJammer'],
+      giantStar: ['tank', 'shield', 'orbitJammer'],
+      supernova: ['anomaly', 'anomaly', 'shield'],
     },
   },
   anomaly: {
@@ -166,6 +214,10 @@ export const WAVE_TYPES: Record<WaveTypeId, WaveTypeDef> = {
       saturn: ['anomaly', 'orbitJammer', 'splitter'],
       uranus: ['anomaly', 'manaLeech', 'shield'],
       neptune: ['anomaly', 'anomaly', 'manaLeech', 'shield'],
+      redDwarf: ['anomaly', 'rush', 'manaLeech'],
+      whiteDwarf: ['anomaly', 'shield', 'manaLeech'],
+      giantStar: ['anomaly', 'tank', 'orbitJammer'],
+      supernova: ['anomaly', 'anomaly', 'manaLeech', 'shield'],
     },
   },
 };

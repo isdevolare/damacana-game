@@ -161,14 +161,40 @@
       "name": "Neptün",
       "desc": "Rota yıldızlara ve anomalilere açılmadan önce fırtına eşiğine gir.",
       "objective": "Neptün seviyeleri 71-100’de final boss T100’ü yenerek Gezegen Arkı’nı bitir.",
-      "complete": "İlk gezegen rotası tamamlandı. Yıldız bölümleri bu MVP'nin ötesinde kalıyor."
+      "complete": "İlk gezegen rotası tamamlandı. Yıldız Arkı açıldı."
+    },
+    "redDwarf": {
+      "name": "Kızıl Cüce",
+      "desc": "Koyu kızıl ısı, dengesiz közler ve daha hızlı yıldız dalgalarından geç.",
+      "objective": "Kızıl Cüce tier 101-125’i temizle ve ilk yıldız çekirdeği T125’i yen.",
+      "complete": "Kızıl yıldız basıncı kontrol altına alındı. Sırada Beyaz Cüce sıkışması var."
+    },
+    "whiteDwarf": {
+      "name": "Beyaz Cüce",
+      "desc": "Yoğun beyaz-mavi basınca ve sık mermi alanlarına dayan.",
+      "objective": "Beyaz Cüce tier 126-155’i temizle ve sıkışık yıldız boss T155’i kır.",
+      "complete": "Beyaz Cüce basıncı çatladı. Dev Yıldız kütlesi artık menzilde."
+    },
+    "giantStar": {
+      "name": "Dev Yıldız",
+      "desc": "Turuncu-altın dev güneş basıncına, tank dalgalarına ve ağır mayınlara dayan.",
+      "objective": "Dev Yıldız tier 156-190’ı temizle ve güneş basıncı boss T190’ı çökert.",
+      "complete": "Dev Yıldız dengesizleşti. Süpernova basıncı oluşuyor."
+    },
+    "supernova": {
+      "name": "Süpernova",
+      "desc": "Şiddetli yıldız kırılması, anomali dalgaları ve patlama tehlikelerine gir.",
+      "objective": "Süpernova T230’u yenerek tier 191-230 boyunca Yıldız Arkı’nı bitir.",
+      "complete": "Yıldız Arkı tamamlandı. Galaksi ölçekli rotalar sonraki faz için kilitli."
     }
   },
   "arcs": {
     "currentArc": "Aktif ark",
     "afterNeptune": "Neptün’den sonra",
+    "afterStar": "Yıldız Arkı’ndan sonra",
+    "starUnlocked": "Yıldız Arkı Açıldı",
     "planet": { "name": "Gezegen Arkı", "label": "ARK 1 — Gezegen Arkı" },
-    "star": { "name": "ARK 2 — Yıldız Arkı" },
+    "star": { "name": "Yıldız Arkı", "label": "ARK 2 — Yıldız Arkı" },
     "galaxy": { "name": "ARK 3 — Galaksi Arkı" },
     "blackHole": { "name": "ARK 4 — Kara Delik Arkı" },
     "anomaly": { "name": "ARK 5 — Anomali Arkı" },
@@ -220,7 +246,11 @@
       "mars": "Kızıl Savaş Çekirdeği",
       "saturn": "Yörünge Halkası Çekirdeği",
       "uranus": "Soğuk Anomali Çekirdeği",
-      "neptune": "Derin Boşluk Çekirdeği"
+      "neptune": "Derin Boşluk Çekirdeği",
+      "redDwarf": "Kızıl Köz Çekirdeği",
+      "whiteDwarf": "Sıkışık Işık Çekirdeği",
+      "giantStar": "Dev Güneş Çekirdeği",
+      "supernova": "Süpernova Kırılma Çekirdeği"
     },
     "phaseLabel": "Faz {phase}/{total}",
     "finalPhase": "Final faz",
@@ -778,12 +808,12 @@
     "title": "İLERLEME",
     "comingNext": "Sırada",
     "current": "Şu anki ★",
-    "deepSystems": "İkincil sistemler",
-    "tier3": { "name": "★3 — POST-FAILED", "desc": "Yeni bir 8. evrim formu açılır." },
-    "tier5": { "name": "★5 — ELİT BOSS'LAR", "desc": "Elit varyantlar 1.5× HP ve garantili kırık drop ile çıkar." },
-    "tier10": { "name": "★10 — TEKİLLİK KRİSTALLERİ", "desc": "Elit boss'lar ✦ düşürebilir. Küçük bir dükkan açılır." },
-    "tier15": { "name": "★15 — KODEKS ARTEFAKTLARI", "desc": "Bir fact kategorisini tamamlamak kalıcı +%5 bonus verir." },
-    "tier25": { "name": "★25 — MEGA-PRESTİJ", "desc": "Kırıkları + ağacı Cosmic Ascension Points için sıfırla." }
+    "deepSystems": "Uzun vadeli açılımlar",
+    "tier3": { "name": "★3 — Artırılmış Evrim", "desc": "Gezegen sonrası ek bir evrim sinyali açar." },
+    "tier5": { "name": "★5 — Elit Bosslar", "desc": "Elit varyantlar 1.5× HP ve garantili kırık düşümüyle çıkar." },
+    "tier10": { "name": "★10 — Tekillik Kristalleri", "desc": "Elit bosslar ✦ düşürebilir ve kristal dükkanı açılır." },
+    "tier15": { "name": "★15 — Kodeks Artefaktları", "desc": "Tamamlanan kodeks kategorileri kalıcı bonuslar verir." },
+    "tier25": { "name": "★25 — Mega Prestij", "desc": "Kozmik yükseliş için gelecekteki reset katmanı." }
   },
   "shop": {
     "title": "tekillik dükkanı",
@@ -792,7 +822,7 @@
     "shardBoost": { "name": "kalıcı +%10 kırık", "desc": "kırık kazancını sonsuza dek artırır" }
   },
   "levels8": {
-    "postFailed": { "name": "POST-FAILED", "desc": "sistem pes ettikten sonra bile devam edersin" }
+    "postFailed": { "name": "Artırılmış Evrim", "desc": "gezegen sonrası evrim sinyali dengelenir" }
   },
   "elite": {
     "warden": "derin boşluğun bekçisi",
@@ -814,7 +844,7 @@
     "transcendent": { "name": "URANÜS BUZ AKIŞI", "desc": "soğuk atmosfer akışı kozmik basınca çevirir" },
     "voidConsumer": { "name": "NEPTÜN FIRTINA BEDENİ", "desc": "mavi çekim sıvı formunu dış karanlığa çeker" },
     "classificationFailed": { "name": "GEZEGEN SINIRI KIRILDI", "desc": "ilk rota yıldız uzayına doğru zorlanır" },
-    "postFailed": { "name": "GEZEGEN ÖTESİ SİNYAL", "desc": "gezegenlerden sonra yıldız yolu cevap vermeye başlar" }
+    "postFailed": { "name": "YILDIZ SİNYALİ", "desc": "gezegenlerden sonra yıldız yolu cevap vermeye başlar" }
   },
   "bosses": {
     "faucetGhost": "yüzey basınç yankısı",

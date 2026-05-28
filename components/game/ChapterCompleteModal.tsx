@@ -13,6 +13,7 @@ export function ChapterCompleteModal() {
   if (!complete) return null;
   const chapter = chapterById(complete.chapterId);
   const next = complete.nextChapterId ? chapterById(complete.nextChapterId) : null;
+  const starArcUnlocked = chapter.id === 'neptune' && next?.arcId === 'star';
 
   return (
     <AnimatePresence>
@@ -45,7 +46,7 @@ export function ChapterCompleteModal() {
           </div>
           {next && (
             <div className="mt-4 rounded-md border border-white/15 bg-white/[0.04] p-3 font-space text-[11px] text-white/70">
-              {t('chapters.unlocked')}: <span style={{ color: next.accent }}>{next.planetGlyph} {t(`chapters.${next.id}.name` as any)}</span>
+              {starArcUnlocked ? t('arcs.starUnlocked') : t('chapters.unlocked')}: <span style={{ color: next.accent }}>{next.planetGlyph} {t(`chapters.${next.id}.name` as any)}</span>
             </div>
           )}
           <button

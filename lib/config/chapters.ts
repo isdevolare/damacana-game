@@ -1,9 +1,18 @@
-export type ChapterId = 'earth' | 'mars' | 'saturn' | 'uranus' | 'neptune';
+export type ChapterId =
+  | 'earth'
+  | 'mars'
+  | 'saturn'
+  | 'uranus'
+  | 'neptune'
+  | 'redDwarf'
+  | 'whiteDwarf'
+  | 'giantStar'
+  | 'supernova';
 export type ArcId = 'planet' | 'star' | 'galaxy' | 'blackHole' | 'anomaly';
 
 export interface Chapter {
   id: ChapterId;
-  arcId: 'planet';
+  arcId: 'planet' | 'star';
   order: number;
   planetGlyph: string;
   accent: string;
@@ -16,7 +25,11 @@ export interface Chapter {
     | 'mars'
     | 'saturn'
     | 'uranus'
-    | 'neptune';
+    | 'neptune'
+    | 'redDwarf'
+    | 'whiteDwarf'
+    | 'giantStar'
+    | 'supernova';
 }
 
 export interface FutureArcChapter {
@@ -25,7 +38,7 @@ export interface FutureArcChapter {
 }
 
 export interface FutureArc {
-  id: Exclude<ArcId, 'planet'>;
+  id: Exclude<ArcId, 'planet' | 'star'>;
   order: number;
   i18nKey: string;
   chapters: FutureArcChapter[];
@@ -92,20 +105,57 @@ export const CHAPTERS: Chapter[] = [
     finalBossTier: 100,
     background: 'neptune',
   },
+  {
+    id: 'redDwarf',
+    arcId: 'star',
+    order: 6,
+    planetGlyph: '✦',
+    accent: '#ff4d3d',
+    glow: 'rgba(255,77,61,0.42)',
+    levelStart: 101,
+    levelEnd: 125,
+    finalBossTier: 125,
+    background: 'redDwarf',
+  },
+  {
+    id: 'whiteDwarf',
+    arcId: 'star',
+    order: 7,
+    planetGlyph: '✧',
+    accent: '#dffcff',
+    glow: 'rgba(223,252,255,0.48)',
+    levelStart: 126,
+    levelEnd: 155,
+    finalBossTier: 155,
+    background: 'whiteDwarf',
+  },
+  {
+    id: 'giantStar',
+    arcId: 'star',
+    order: 8,
+    planetGlyph: '☉',
+    accent: '#ffb23f',
+    glow: 'rgba(255,178,63,0.46)',
+    levelStart: 156,
+    levelEnd: 190,
+    finalBossTier: 190,
+    background: 'giantStar',
+  },
+  {
+    id: 'supernova',
+    arcId: 'star',
+    order: 9,
+    planetGlyph: '✺',
+    accent: '#ff5ce8',
+    glow: 'rgba(255,92,232,0.48)',
+    levelStart: 191,
+    levelEnd: 230,
+    finalBossTier: 230,
+    background: 'supernova',
+  },
 ];
 
 export const FUTURE_ARCS: FutureArc[] = [
-  {
-    id: 'star',
-    order: 2,
-    i18nKey: 'star',
-    chapters: [
-      { id: 'redDwarf', i18nKey: 'redDwarf' },
-      { id: 'whiteDwarf', i18nKey: 'whiteDwarf' },
-      { id: 'giantStar', i18nKey: 'giantStar' },
-      { id: 'supernova', i18nKey: 'supernova' },
-    ],
-  },
   {
     id: 'galaxy',
     order: 3,

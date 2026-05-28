@@ -20,6 +20,11 @@ export function ProgressionPanel() {
   const current = currentChapter(completedChapters);
   const completedSet = new Set(completedChapters);
   const phaseInfo = bossPhaseInfo(boss.tier);
+  const playableArcs = [
+    { id: 'planet', chapters: CHAPTERS.filter((chapter) => chapter.arcId === 'planet') },
+    { id: 'star', chapters: CHAPTERS.filter((chapter) => chapter.arcId === 'star') },
+  ] as const;
+  const currentArcName = t(`arcs.${current.arcId}.name` as any);
 
   return (
     <AnimatePresence>
@@ -43,7 +48,7 @@ export function ProgressionPanel() {
                 </button>
               </div>
               <div className="text-[10px] font-space text-white/60 mb-3">
-                {t('chapters.currentMission')}: <span style={{ color: current.accent }}>{t('arcs.planet.name')} / {t(`chapters.${current.id}.name` as any)}</span>
+                {t('chapters.currentMission')}: <span style={{ color: current.accent }}>{currentArcName} / {t(`chapters.${current.id}.name` as any)}</span>
               </div>
 
               <div className="mb-3 rounded-md border border-cyan/40 bg-cyan/10 p-3">
@@ -56,7 +61,7 @@ export function ProgressionPanel() {
                   </div>
                   <div>
                     <div className="text-[9px] font-space tracking-widest text-cyan/80 uppercase">
-                      {t('arcs.currentArc')}: {t('arcs.planet.name')}
+                      {t('arcs.currentArc')}: {currentArcName}
                     </div>
                     <div className="font-space text-xs text-white mt-0.5">
                       {t(`chapters.${current.id}.objective` as any)}
@@ -68,53 +73,57 @@ export function ProgressionPanel() {
                 </div>
               </div>
 
-              <div className="mb-2 font-space text-[9px] uppercase tracking-widest text-white/45">
-                {t('arcs.planet.label')}
-              </div>
-              <div className="flex flex-col gap-2">
-                {CHAPTERS.map((chapter) => {
-                  const done = completedSet.has(chapter.id);
-                  const active = chapter.id === current.id && !done;
-                  const previous = CHAPTERS[chapter.order - 2] ?? null;
-                  const locked = Boolean(previous && !completedSet.has(previous.id));
-                  return (
-                    <div
-                      key={chapter.id}
-                      className="rounded-md border p-2"
-                      style={{
-                        borderColor: done || active ? chapter.accent : 'rgba(255,255,255,0.12)',
-                        background: done || active ? `${chapter.accent}14` : 'rgba(255,255,255,0.03)',
-                        opacity: locked ? 0.45 : 1,
-                      }}
-                    >
-                      <div className="flex justify-between items-center">
-                        <div className="font-space text-[11px] text-white">
-                          {chapter.planetGlyph} {t('chapters.chapter')} {chapter.order}: {t(`chapters.${chapter.id}.name` as any)}
+              {playableArcs.map((arc) => (
+                <div key={arc.id} className="mt-3">
+                  <div className="mb-2 font-space text-[9px] uppercase tracking-widest text-white/45">
+                    {t(`arcs.${arc.id}.label` as any)}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {arc.chapters.map((chapter) => {
+                      const done = completedSet.has(chapter.id);
+                      const active = chapter.id === current.id && !done;
+                      const previous = CHAPTERS[chapter.order - 2] ?? null;
+                      const locked = Boolean(previous && !completedSet.has(previous.id));
+                      return (
+                        <div
+                          key={chapter.id}
+                          className="rounded-md border p-2"
+                          style={{
+                            borderColor: done || active ? chapter.accent : 'rgba(255,255,255,0.12)',
+                            background: done || active ? `${chapter.accent}14` : 'rgba(255,255,255,0.03)',
+                            opacity: locked ? 0.45 : 1,
+                          }}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div className="font-space text-[11px] text-white">
+                              {chapter.planetGlyph} {t('chapters.chapter')} {chapter.order}: {t(`chapters.${chapter.id}.name` as any)}
+                            </div>
+                            <div className="text-xs">{done ? '✓' : locked ? '⌁' : '●'}</div>
+                          </div>
+                          <div className="font-space text-[9px] text-white/55 mt-0.5">
+                            {t(`chapters.${chapter.id}.desc` as any)}
+                          </div>
+                          <div className="font-space text-[9px] text-white/45 mt-1">
+                            {t('chapters.levels')} {chapter.levelStart}-{chapter.levelEnd} · {t('chapters.finalBoss')} T{chapter.finalBossTier}
+                          </div>
+                          {locked && previous && (
+                            <div className="font-space text-[9px] text-danger/75 mt-1">
+                              {t('chapters.lockedRequirement', {
+                                chapter: t(`chapters.${previous.id}.name` as any),
+                                tier: previous.finalBossTier,
+                              })}
+                            </div>
+                          )}
                         </div>
-                        <div className="text-xs">{done ? '✓' : locked ? '⌁' : '●'}</div>
-                      </div>
-                      <div className="font-space text-[9px] text-white/55 mt-0.5">
-                        {t(`chapters.${chapter.id}.desc` as any)}
-                      </div>
-                      <div className="font-space text-[9px] text-white/45 mt-1">
-                        {t('chapters.levels')} {chapter.levelStart}-{chapter.levelEnd} · {t('chapters.finalBoss')} T{chapter.finalBossTier}
-                      </div>
-                      {locked && previous && (
-                        <div className="font-space text-[9px] text-danger/75 mt-1">
-                          {t('chapters.lockedRequirement', {
-                            chapter: t(`chapters.${previous.id}.name` as any),
-                            tier: previous.finalBossTier,
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
 
               <div className="mt-4 rounded-md border border-purple/25 bg-purple/5 p-3">
                 <div className="font-space text-[9px] uppercase tracking-widest text-purple/80">
-                  {t('arcs.afterNeptune')}
+                  {t('arcs.afterStar')}
                 </div>
                 <div className="mt-2 flex flex-col gap-2">
                   {FUTURE_ARCS.map((arc) => (
@@ -144,18 +153,9 @@ export function ProgressionPanel() {
                 <div className="font-space text-[9px] tracking-widest text-white/45 uppercase mb-2">
                   {t('progression.deepSystems')}
                 </div>
-                {next && (
-                  <div className="mb-2 rounded-md border border-white/15 bg-white/[0.03] p-2">
-                    <div className="text-[9px] font-space tracking-widest text-cyan/70">
-                      {t('progression.comingNext')}
-                    </div>
-                    <div className="font-space text-xs text-white mt-0.5">
-                      {t(`progression.${next.key}.name`)}
-                    </div>
-                  </div>
-                )}
                 {TIERS.map((tier) => {
                   const done = tier.unlocked(prestiges);
+                  const isNext = next?.key === tier.key;
                   return (
                     <div
                       key={tier.key}
@@ -170,7 +170,9 @@ export function ProgressionPanel() {
                         <div className="font-space text-[11px] text-white">
                           {t(`progression.${tier.key}.name`)}
                         </div>
-                        <div className="text-xs">{done ? '✓' : '🔒'}</div>
+                        <div className="font-space text-[9px] uppercase tracking-widest text-white/45">
+                          {done ? '✓' : isNext ? t('progression.comingNext') : '🔒'}
+                        </div>
                       </div>
                       <div className="font-space text-[9px] text-white/55 mt-0.5">
                         {t(`progression.${tier.key}.desc`)}

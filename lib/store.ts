@@ -733,6 +733,9 @@ function bossDefeatDropPatch(
     ];
   }
   if (drop?.shardGain) shardGain += drop.shardGain;
+  if (info.chapter.arcId === 'star' && info.finalPhase) {
+    shardGain += Math.max(2, info.chapter.order - 3);
+  }
   return {
     activeBuffs,
     shardGain,

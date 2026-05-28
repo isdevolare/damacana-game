@@ -90,6 +90,22 @@ export function Background() {
           }}
         />
       )}
+      {theme.effect === 'ember' && (
+        <div
+          className="absolute inset-x-0 top-[18%] h-44 opacity-24 blur-[2px]"
+          style={{
+            background: `radial-gradient(circle at 45% 45%, ${theme.dustColor}, transparent 58%), repeating-linear-gradient(120deg, transparent 0 18px, ${theme.dustColor} 19px 21px, transparent 22px 44px)`,
+          }}
+        />
+      )}
+      {theme.effect === 'flare' && (
+        <div
+          className="absolute left-1/2 top-[10%] h-[250px] w-[250px] -translate-x-1/2 rounded-full opacity-20 blur-md"
+          style={{
+            background: `conic-gradient(from 0deg, transparent, ${theme.dustColor}, transparent, ${theme.ambientGlow}, transparent)`,
+          }}
+        />
+      )}
       {stars.map((s) => (
         <div
           key={s.id}
