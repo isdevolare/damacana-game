@@ -184,7 +184,7 @@ export function UpgradePanel() {
       )}>
       <div>
         <div className="text-[10px] font-space tracking-widest text-cyan/80 mb-1">
-          {ui('tap')}
+          {t('section.weapons')}
         </div>
         <div className="flex flex-col gap-1.5">
           {tap.map((u) => renderUpgrade(u, 'cyan'))}
@@ -192,7 +192,7 @@ export function UpgradePanel() {
       </div>
       <div>
         <div className="text-[10px] font-space tracking-widest text-purple/80 mb-1">
-          {ui('flow')}
+          {t('section.autoSystems')}
         </div>
         <div className="flex flex-col gap-1.5">
           {auto.map((u) => renderUpgrade(u, 'purple'))}

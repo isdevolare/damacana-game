@@ -101,7 +101,7 @@
       "manaRegenIncreased": "Mana yenilenmesi arttı",
       "orbitDamageIncreased": "Yörünge hasarı arttı",
       "comboGainIncreased": "Combo kazanımı arttı",
-      "powerChanged": "Çekirdek gücü arttı"
+      "powerChanged": "Gemi çekirdeği güçlendi"
     },
     "unlockReq": {
       "abilities": "Dünya faz 5'e ulaş",
@@ -284,7 +284,7 @@
   "combat": {
     "boss": "Boss",
     "chapterBoss": "Bölüm boss'u",
-    "bossTarget": "Boss Hedefi",
+    "bossTarget": "Ana Gemi Hedefi",
     "bossAttackWarning": "Darbe geliyor",
     "bossSummoning": "Minyon çağırıyor",
     "weakPointExposed": "Zayıf nokta açık",
@@ -293,15 +293,15 @@
     "orbitSweep": "Yörünge süpürmesi",
     "corruptedPulse": "Bozuk darbe",
     "bossThemes": {
-      "earth": "Çekirdek Muhafızı",
-      "mars": "Kızıl Savaş Çekirdeği",
-      "saturn": "Yörünge Halkası Çekirdeği",
-      "uranus": "Soğuk Anomali Çekirdeği",
-      "neptune": "Derin Boşluk Çekirdeği",
-      "redDwarf": "Kızıl Köz Çekirdeği",
-      "whiteDwarf": "Sıkışık Işık Çekirdeği",
-      "giantStar": "Dev Güneş Çekirdeği",
-      "supernova": "Süpernova Kırılma Çekirdeği"
+      "earth": "Muhafız Ana Gemi",
+      "mars": "Kızıl Savaş Gemisi",
+      "saturn": "Yörünge Taşıyıcısı",
+      "uranus": "Soğuk Anomali Gemisi",
+      "neptune": "Derin Boşluk Ana Gemisi",
+      "redDwarf": "Kızıl Köz Savaş Gemisi",
+      "whiteDwarf": "Sıkışık Işık Dretnotu",
+      "giantStar": "Dev Güneş Taşıyıcısı",
+      "supernova": "Süpernova Kırılma Gemisi"
     },
     "phaseLabel": "Faz {phase}/{total}",
     "finalPhase": "Final faz",
@@ -332,8 +332,8 @@
     "cosmicChain": "kozmik zincir",
     "criticalRupture": "kritik kırılma",
     "nearMiss": "yakın sıyrılma",
-    "coreCollapsed": "ÇEKİRDEK ÇÖKTÜ",
-    "recovering": "Çekirdek yenileniyor…",
+    "coreCollapsed": "GEMİ ÇEKİRDEĞİ ÇÖKTÜ",
+    "recovering": "Gemi çekirdeği yenileniyor…",
     "invulnerable": "Kısa süre dokunulmazsın.",
     "comboTiers": {
       "ready": "Zincir Hazır",
@@ -346,9 +346,9 @@
     },
     "mana": "Mana",
     "abilities": {
-      "waveBurst": { "name": "Dalga Patlaması", "desc": "Çekirdeğin çevresinde alan kırılması" },
-      "orbitSlash": { "name": "Yörünge Kesimi", "desc": "Dönen halka hasarı" },
-      "coreHeal": { "name": "Çekirdek İyileştirme", "desc": "Çekirdek HP'sini yeniler" }
+      "waveBurst": { "name": "Dalga Patlaması", "desc": "Gemi çevresinde alan kırılması" },
+      "orbitSlash": { "name": "Yörünge Kesimi", "desc": "Savunma drone halkası hasarı" },
+      "coreHeal": { "name": "Çekirdek İyileştirme", "desc": "Gemi çekirdeği HP'sini yeniler" }
     }
   },
   "research": {
@@ -464,14 +464,14 @@
     "shardSpark": { "name": "Kırık Kıvılcımı", "desc": "+1 boşluk kırığı" }
   },
   "enemyVariants": {
-    "basic": { "name": "Basit Halka" },
-    "rush": { "name": "Hızlı Halka" },
-    "tank": { "name": "Tank Halka" },
-    "splitter": { "name": "Bölünen Halka" },
-    "shield": { "name": "Kalkan Halka" },
-    "manaLeech": { "name": "Mana Sömürücü" },
-    "orbitJammer": { "name": "Yörünge Bozucu" },
-    "anomaly": { "name": "Anomali Halkası" }
+    "basic": { "name": "Basit Drone" },
+    "rush": { "name": "Hızlı Keşif Gemisi" },
+    "tank": { "name": "Ağır Gemi" },
+    "splitter": { "name": "Bölünen Drone" },
+    "shield": { "name": "Kalkanlı Gemi" },
+    "manaLeech": { "name": "Sömürücü Drone" },
+    "orbitJammer": { "name": "Bozucu Gemi" },
+    "anomaly": { "name": "Bozulmuş Gemi" }
   },
   "artifacts": {
     "title": "ARTEFAKTLAR",
@@ -927,11 +927,15 @@
     "multishot": { "name": "Çoklu Atış", "desc": "ek yan mermiler" },
     "chainArc": { "name": "Zincir Arkı", "desc": "isabetler yakındaki düşmana sıçrayabilir" },
     "explosiveCore": { "name": "Patlayıcı Çekirdek", "desc": "mermi isabetleri dışa patlar" },
-    "orbitCannon": { "name": "Yörünge Topu", "desc": "yörünge halkası baskı atışları yapar" },
+    "orbitCannon": { "name": "Yörünge Topu", "desc": "savunma droneları baskı atışları yapar" },
     "beamPulse": { "name": "Işın Darbesi", "desc": "periyodik kısa ışın vuruşu" },
     "corruptedAmmo": { "name": "Bozulmuş Cephane", "desc": "daha güçlü dengesiz atışlar" }
   },
   "upgrades": {
+    "section": {
+      "weapons": "silah sistemleri",
+      "autoSystems": "otomatik sistemler"
+    },
     "rarity": {
       "common": "yaygın",
       "rare": "nadir",
@@ -941,32 +945,39 @@
       "singularity": "tekillik"
     },
     "identity": {
-      "activeAttack": "aktif saldırı",
-      "tapBurst": "dokunma patlaması",
-      "criticalPressure": "kritik baskı",
-      "weakPointDamage": "zayıf nokta hasarı",
-      "comboPressure": "combo baskısı",
-      "projectilePressure": "mermi baskısı",
-      "passiveFlow": "pasif akış",
-      "autoFire": "otomatik ateş",
-      "orbitDamage": "yörünge hasarı",
-      "beamCadence": "ışın ritmi"
+      "activeAttack": "silah sistemleri",
+      "tapBurst": "patlama topları",
+      "criticalPressure": "hedefleme dizisi",
+      "weakPointDamage": "zayıf nokta optiği",
+      "comboPressure": "savaş ritmi",
+      "projectilePressure": "mermi bataryası",
+      "passiveFlow": "otomatik sistemler",
+      "autoFire": "otomatik ateş matrisi",
+      "orbitDamage": "savunma droneları",
+      "beamCadence": "ışın reaktörü"
     },
     "preview": {
       "current": "mevcut",
       "next": "sonraki",
       "buy": "alım"
     },
-    "bigSip": { "name": "büyük yudum" },
-    "cosmicSip": { "name": "kozmik yudum" },
-    "voidLip": { "name": "boşluk dudağı" },
-    "axiomKiss": { "name": "aksiyom öpücüğü" },
-    "faucet": { "name": "musluk" },
-    "damacanaPump": { "name": "damacana pompası" },
-    "cosmicPipe": { "name": "kozmik boru" },
-    "voidFlow": { "name": "boşluk akışı" },
-    "flowEngine": { "name": "akış motoru" },
+    "bigSip": { "name": "darbe topu" },
+    "cosmicSip": { "name": "patlama bataryası" },
+    "voidLip": { "name": "kritik mercek" },
+    "axiomKiss": { "name": "kırılma optiği" },
+    "faucet": { "name": "otomatik reaktör" },
+    "damacanaPump": { "name": "taret matrisi" },
+    "cosmicPipe": { "name": "savunma droneları" },
+    "voidFlow": { "name": "ray baskısı" },
+    "flowEngine": { "name": "ışın motoru" },
     "milestoneReached": "{name} {level} seviyeye ulaştı"
+  },
+  "shipSkins": {
+    "defaultCoreShip": "Varsayılan Çekirdek Gemisi",
+    "rareVectorWing": "Nadir Vektör Kanadı",
+    "epicVoidInterceptor": "Epik Boşluk Önleyicisi",
+    "legendarySolarCarrier": "Efsanevi Güneş Taşıyıcısı",
+    "cosmicSingularityMothership": "Kozmik Tekillik Ana Gemisi"
   },
   "tree": {
     "explain": "Ağaç bölümler ilerledikçe açılır.",
@@ -1050,7 +1061,7 @@
       "weakPoint": "zayıf noktalar",
       "weakPointSummary": "zayıf pencere uzar",
       "orbitDamage": "yörünge hasarı",
-      "orbitDamageSummary": "pasif halka hasarı artar",
+      "orbitDamageSummary": "savunma drone hasarı artar",
       "shardChance": "kırık sinyali",
       "shardChanceSummary": "kırık şansı artar",
       "waveSurge": "dalga artışı",
@@ -1064,16 +1075,16 @@
       "bossDrop_comboStabilizer": "combo sabitleyici",
       "bossDrop_comboStabilizerSummary": "combo daha yavaş düşer",
       "bossDrop_orbitCharge": "yörünge yükü",
-      "bossDrop_orbitChargeSummary": "pasif halka hasarı +%40",
+      "bossDrop_orbitChargeSummary": "savunma drone hasarı +%40",
       "manaLeech": "mana sömürüsü",
       "manaLeechSummary": "mana yenilenmesi azalır"
     },
-    "blackHoleThreat": { "title": "KARA DELİK TEHDİDİ", "text": "Basınç arenaya doğru çekiliyor.", "ignore": "yok say", "ignorePreview": "+2 düşman dalgası\n+%30 ödül · 20sn", "respond": "yanıt ver", "respondPreview": "-20 mana\n+500 çekirdek" },
+    "blackHoleThreat": { "title": "KARA DELİK TEHDİDİ", "text": "Basınç arenaya doğru çekiliyor.", "ignore": "yok say", "ignorePreview": "+2 düşman dalgası\n+%30 ödül · 20sn", "respond": "yanıt ver", "respondPreview": "-20 mana\n+500 gemi çekirdeği" },
     "orbitFailure": { "title": "YÖRÜNGE HATASI", "text": "Gezegen yörüngesi kararsız.", "stabilize": "sabitle", "stabilizePreview": "Boss yavaşlar · 10sn", "release": "sal", "releasePreview": "+%40 combo artışı · 15sn\n+%20 düşman hasarı" },
     "voidSignal": { "title": "BOŞLUK SİNYALİ", "text": "Harita dışından sinyal sızıyor.", "accept": "kabul et", "acceptPreview": "+1 nadir dalga\n+%10 kırık şansı · 20sn", "block": "engelle", "blockPreview": "Tam kalkan · 8sn\n-%20 combo artışı · 15sn" },
-    "solarRain": { "title": "GÜNEŞ YAĞMURU", "text": "Yüklü ışık çekirdeğe düşüyor.", "drink": "iç", "drinkPreview": "+80 HP\n+25 mana", "overload": "aşırı yükle", "overloadPreview": "-40 HP\n+%60 yörünge hasarı · 16sn" },
+    "solarRain": { "title": "GÜNEŞ YAĞMURU", "text": "Yüklü ışık gemi çekirdeğine düşüyor.", "drink": "iç", "drinkPreview": "+80 HP\n+25 mana", "overload": "aşırı yükle", "overloadPreview": "-40 HP\n+%60 yörünge hasarı · 16sn" },
     "meteorLattice": { "title": "METEOR KAFESİ", "text": "Meteor ağı üstüne kilitlendi.", "harvest": "topla", "harvestPreview": "+%22 ödül · 18sn", "shatter": "parçala", "shatterPreview": "+1 düşman dalgası\n-%25 bekleme süresi" },
-    "pressureBloom": { "title": "BASINÇ ÇİÇEĞİ", "text": "Sıvı çekim çekirdeğin çevresinde açıyor.", "absorb": "em", "absorbPreview": "+%45 tık gücü · 18sn", "vent": "boşalt", "ventPreview": "%55 kalkan · 12sn\n-15 mana" },
+    "pressureBloom": { "title": "BASINÇ ÇİÇEĞİ", "text": "Sıvı çekim geminin çevresinde açıyor.", "absorb": "em", "absorbPreview": "+%45 silah gücü · 18sn", "vent": "boşalt", "ventPreview": "%55 kalkan · 12sn\n-15 mana" },
     "frozenTelemetry": { "title": "DONMUŞ TELEMETRİ", "text": "Eski buz boss koordinatı gönderiyor.", "decode": "çöz", "decodePreview": "+%45 zayıf pencere · 20sn", "burn": "yak", "burnPreview": "+35 mana\n+%12 düşman hızı · 12sn" },
     "gravityShear": { "title": "YERÇEKİMİ KESİĞİ", "text": "Arena bozuk çekimle eğiliyor.", "brace": "dayan", "bracePreview": "%65 kalkan · 12sn", "surf": "üstünde kay", "surfPreview": "+%35 combo artışı · 14sn\n-35 HP" },
     "ionStorm": { "title": "İYON FIRTINASI", "text": "Statik yörünge hattını kesiyor.", "ground": "toprakla", "groundPreview": "Boss yavaşlar · 12sn", "conduct": "ilet", "conductPreview": "+%45 yörünge hasarı · 14sn\n+%12 düşman hasarı" },
@@ -1085,9 +1096,9 @@
     "brokenMagnetosphere": { "title": "KIRIK MANYETOSFER", "text": "Kalkan katmanı kıvılcımla açılıyor.", "repair": "onar", "repairPreview": "%70 kalkan · 18sn", "exploit": "sömür", "exploitPreview": "-%35 bekleme süresi\n-25 mana" },
     "eclipseGate": { "title": "TUTULMA KAPISI", "text": "Karanlık kapı boss'u örtüyor.", "hold": "tut", "holdPreview": "Boss ağır yavaşlar · 8sn", "enter": "gir", "enterPreview": "+%45 ödül · 12sn\n+%25 boss öfkesi" },
     "voidTrial": { "title": "BOŞLUK SINAVI", "text": "Boşluk temiz kırılma istiyor.", "submit": "boyun eğ", "submitPreview": "+%80 zayıf pencere · 18sn\n-80 HP", "refuse": "reddet", "refusePreview": "Tam kalkan · 6sn" },
-    "ringCollapse": { "title": "HALKA ÇÖKÜŞÜ", "text": "Yörünge enkazı içeri düşüyor.", "catch": "yakala", "catchPreview": "+%110 yörünge hasarı · 10sn", "evade": "kaçın", "evadePreview": "-%28 düşman hızı · 10sn" },
-    "quantumTide": { "title": "KUANTUM GELGİTİ", "text": "Çekirdek olası yollara ayrılıyor.", "split": "böl", "splitPreview": "+%100 combo artışı · 10sn\n+%25 düşman hızı", "anchor": "çapala", "anchorPreview": "+160 HP\n+25 mana" },
-    "darkMatterLease": { "title": "KARANLIK MADDE SÖZLEŞMESİ", "text": "Güç küçük yazıyla geliyor.", "sign": "imzala", "signPreview": "+%75 ödül · 10sn\n-%8 mevcut çekirdek", "void": "geçersiz kıl", "voidPreview": "-%40 bekleme süresi" },
+    "ringCollapse": { "title": "DRONE YÖRÜNGE ÇÖKÜŞÜ", "text": "Yörünge enkazı içeri düşüyor.", "catch": "yakala", "catchPreview": "+%110 yörünge hasarı · 10sn", "evade": "kaçın", "evadePreview": "-%28 düşman hızı · 10sn" },
+    "quantumTide": { "title": "KUANTUM GELGİTİ", "text": "Gemi çekirdeği olası yollara ayrılıyor.", "split": "böl", "splitPreview": "+%100 combo artışı · 10sn\n+%25 düşman hızı", "anchor": "çapala", "anchorPreview": "+160 HP\n+25 mana" },
+    "darkMatterLease": { "title": "KARANLIK MADDE SÖZLEŞMESİ", "text": "Güç küçük yazıyla geliyor.", "sign": "imzala", "signPreview": "+%75 ödül · 10sn\n-%8 mevcut gemi çekirdeği", "void": "geçersiz kıl", "voidPreview": "-%40 bekleme süresi" },
     "bossEcho": { "title": "BOSS YANKISI", "text": "Boss yansıması çatlak gösteriyor.", "expose": "açığa çıkar", "exposePreview": "+%120 zayıf pencere · 10sn", "anger": "öfkelendir", "angerPreview": "-%8 boss HP\n+%35 boss öfkesi" },
     "corruptedOrbit": { "title": "BOZUK YÖRÜNGE", "text": "Yörüngenin matematiği enfekte.", "purge": "temizle", "purgePreview": "-45 mana\nTam kalkan · 10sn", "use": "kullan", "usePreview": "+%140 combo artışı · 8sn\n+%35 düşman hasarı" },
     "falseVacuum": { "title": "SAHTE VAKUM", "text": "Arena zemini hiçliğe dönmek istiyor.", "collapse": "çöktür", "collapsePreview": "+3 düşman dalgası\n+%90 ödül · 12sn", "stitch": "dik", "stitchPreview": "Boss çok yavaşlar · 10sn\n-%25 combo artışı" },

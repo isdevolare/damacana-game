@@ -22,6 +22,7 @@ export interface EnemyVariantDef {
   accent: string;
   glow: string;
   symbol: string;
+  shipClass: 'drone' | 'scout' | 'heavy' | 'splitter' | 'shielded' | 'leech' | 'jammer' | 'corrupted';
   shieldHits?: number;
   special?: EnemySpecial;
 }
@@ -131,7 +132,8 @@ export const ENEMY_VARIANTS: EnemyVariantDef[] = [
     rewardMult: 1,
     accent: '#5cf6ff',
     glow: 'rgba(92,246,255,0.62)',
-    symbol: '○',
+    symbol: '▲',
+    shipClass: 'drone',
   },
   {
     id: 'rush',
@@ -142,7 +144,8 @@ export const ENEMY_VARIANTS: EnemyVariantDef[] = [
     rewardMult: 1.05,
     accent: '#ff6b4a',
     glow: 'rgba(255,107,74,0.68)',
-    symbol: '›',
+    symbol: '»',
+    shipClass: 'scout',
   },
   {
     id: 'tank',
@@ -153,7 +156,8 @@ export const ENEMY_VARIANTS: EnemyVariantDef[] = [
     rewardMult: 1.16,
     accent: '#ffd166',
     glow: 'rgba(255,209,102,0.64)',
-    symbol: '■',
+    symbol: '▰',
+    shipClass: 'heavy',
   },
   {
     id: 'splitter',
@@ -164,7 +168,8 @@ export const ENEMY_VARIANTS: EnemyVariantDef[] = [
     rewardMult: 1.14,
     accent: '#ff5ce8',
     glow: 'rgba(255,92,232,0.62)',
-    symbol: '÷',
+    symbol: '⋈',
+    shipClass: 'splitter',
     special: 'splitter',
   },
   {
@@ -177,6 +182,7 @@ export const ENEMY_VARIANTS: EnemyVariantDef[] = [
     accent: '#80fff4',
     glow: 'rgba(128,255,244,0.66)',
     symbol: '⬡',
+    shipClass: 'shielded',
     shieldHits: 3,
     special: 'shield',
   },
@@ -190,6 +196,7 @@ export const ENEMY_VARIANTS: EnemyVariantDef[] = [
     accent: '#b87aff',
     glow: 'rgba(184,122,255,0.66)',
     symbol: '∿',
+    shipClass: 'leech',
     special: 'manaLeech',
   },
   {
@@ -202,6 +209,7 @@ export const ENEMY_VARIANTS: EnemyVariantDef[] = [
     accent: '#ff3d6e',
     glow: 'rgba(255,61,110,0.66)',
     symbol: '⊘',
+    shipClass: 'jammer',
     special: 'orbitJammer',
   },
   {
@@ -213,7 +221,8 @@ export const ENEMY_VARIANTS: EnemyVariantDef[] = [
     rewardMult: 1.85,
     accent: '#ffffff',
     glow: 'rgba(255,255,255,0.72)',
-    symbol: '◇',
+    symbol: '✧',
+    shipClass: 'corrupted',
     special: 'anomaly',
   },
 ];

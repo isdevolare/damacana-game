@@ -282,6 +282,57 @@ const HAZARD_STYLE: Record<ArenaHazardKind, { color: string; labelKey: string }>
   voidZone: { color: '#ff5ce8', labelKey: 'voidZone' },
 };
 
+const ENEMY_SHIP_VISUALS: Record<EnemyVariantId, { body: string; wings: string; radius: string; engine: string }> = {
+  basic: {
+    body: 'polygon(50% 0%, 72% 34%, 92% 70%, 58% 58%, 50% 100%, 42% 58%, 8% 70%, 28% 34%)',
+    wings: 'polygon(0% 42%, 28% 18%, 50% 58%, 72% 18%, 100% 42%, 78% 76%, 50% 62%, 22% 76%)',
+    radius: '28%',
+    engine: 'rgba(92,246,255,0.58)',
+  },
+  rush: {
+    body: 'polygon(66% 0%, 100% 48%, 62% 100%, 46% 66%, 0% 72%, 34% 48%, 0% 24%, 46% 34%)',
+    wings: 'polygon(0% 18%, 54% 32%, 100% 50%, 54% 68%, 0% 82%, 30% 50%)',
+    radius: '18%',
+    engine: 'rgba(255,107,74,0.7)',
+  },
+  tank: {
+    body: 'polygon(50% 0%, 86% 24%, 100% 72%, 70% 100%, 30% 100%, 0% 72%, 14% 24%)',
+    wings: 'polygon(0% 26%, 22% 12%, 50% 34%, 78% 12%, 100% 26%, 86% 90%, 50% 74%, 14% 90%)',
+    radius: '16%',
+    engine: 'rgba(255,209,102,0.58)',
+  },
+  splitter: {
+    body: 'polygon(50% 0%, 72% 30%, 100% 34%, 72% 58%, 86% 100%, 50% 72%, 14% 100%, 28% 58%, 0% 34%, 28% 30%)',
+    wings: 'polygon(0% 28%, 36% 18%, 50% 42%, 64% 18%, 100% 28%, 68% 82%, 50% 64%, 32% 82%)',
+    radius: '26%',
+    engine: 'rgba(255,92,232,0.6)',
+  },
+  shield: {
+    body: 'polygon(50% 0%, 88% 24%, 100% 56%, 74% 100%, 26% 100%, 0% 56%, 12% 24%)',
+    wings: 'polygon(50% 0%, 100% 28%, 84% 88%, 50% 100%, 16% 88%, 0% 28%)',
+    radius: '32%',
+    engine: 'rgba(128,255,244,0.62)',
+  },
+  manaLeech: {
+    body: 'polygon(50% 0%, 74% 24%, 64% 56%, 100% 76%, 66% 100%, 50% 70%, 34% 100%, 0% 76%, 36% 56%, 26% 24%)',
+    wings: 'polygon(50% 8%, 86% 30%, 72% 86%, 50% 68%, 28% 86%, 14% 30%)',
+    radius: '50%',
+    engine: 'rgba(184,122,255,0.64)',
+  },
+  orbitJammer: {
+    body: 'polygon(50% 0%, 82% 20%, 70% 44%, 100% 50%, 70% 56%, 82% 80%, 50% 100%, 18% 80%, 30% 56%, 0% 50%, 30% 44%, 18% 20%)',
+    wings: 'polygon(0% 18%, 42% 30%, 50% 0%, 58% 30%, 100% 18%, 70% 58%, 100% 82%, 58% 70%, 50% 100%, 42% 70%, 0% 82%, 30% 58%)',
+    radius: '20%',
+    engine: 'rgba(255,61,110,0.62)',
+  },
+  anomaly: {
+    body: 'polygon(50% 0%, 76% 26%, 100% 22%, 78% 52%, 100% 88%, 60% 74%, 50% 100%, 40% 74%, 0% 88%, 22% 52%, 0% 22%, 24% 26%)',
+    wings: 'polygon(50% 0%, 70% 34%, 100% 50%, 70% 66%, 50% 100%, 30% 66%, 0% 50%, 30% 34%)',
+    radius: '24%',
+    engine: 'rgba(255,255,255,0.66)',
+  },
+};
+
 function pointLineDistance(point: Vec, origin: Vec, angle: number, halfLength: number) {
   const dx = point.x - origin.x;
   const dy = point.y - origin.y;
@@ -2686,7 +2737,7 @@ export function CombatArena() {
         transition={{ type: 'spring', stiffness: 260, damping: 18 }}
         whileTap={{ scale: 0.96 }}
         onPointerDown={strikeBoss}
-        className="absolute left-1/2 top-[18%] z-[25] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border bg-black/60"
+        className="absolute left-1/2 top-[18%] z-[25] flex -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-visible rounded-[28%] border bg-black/60"
         style={{
           left: `${renderBossPoint.x}%`,
           top: `${renderBossPoint.y}%`,
@@ -2702,12 +2753,19 @@ export function CombatArena() {
               ? lowDensity ? '0 0 30px rgba(255,61,110,0.42)' : '0 0 64px rgba(255,61,110,0.58), inset 0 0 24px rgba(255,61,110,0.18)'
               : lowDensity ? `0 0 ${finalBoss ? 26 : 20}px ${finalBoss ? chapter.glow : 'rgba(255,61,110,0.32)'}` : `0 0 ${finalBoss ? 52 : 34}px ${finalBoss ? chapter.glow : 'rgba(255,61,110,0.42)'}`,
         }}
-        aria-label="boss entity"
+        aria-label="enemy mothership"
       >
-        <div className="absolute inset-2 rounded-full border border-white/10" />
-        <div className="absolute h-[78%] w-[78%] rounded-full border border-current/35 animate-spinslow" />
         <div
-          className="absolute h-[58%] w-[58%] rounded-full border border-white/10"
+          className="absolute h-[58%] w-[126%] rounded-[24%] border border-current/35 bg-current/10"
+          style={{ clipPath: 'polygon(2% 52%, 20% 20%, 40% 22%, 50% 0%, 60% 22%, 80% 20%, 98% 52%, 82% 84%, 60% 76%, 50% 100%, 40% 76%, 18% 84%)' }}
+        />
+        <div
+          className="absolute h-[76%] w-[88%] border border-white/15 bg-black/75"
+          style={{ clipPath: 'polygon(50% 0%, 82% 18%, 100% 54%, 74% 100%, 50% 82%, 26% 100%, 0% 54%, 18% 18%)' }}
+        />
+        <div className="absolute h-[18%] w-[104%] rounded-full border border-current/30 opacity-70" />
+        <div
+          className="absolute h-[46%] w-[46%] rounded-[28%] border border-white/15"
           style={{
             background: bossShieldActive
               ? 'radial-gradient(circle, rgba(128,255,244,0.18), rgba(128,255,244,0.02) 66%)'
@@ -2744,7 +2802,8 @@ export function CombatArena() {
             </div>
           </>
         )}
-        <div className="font-vt text-4xl">{chapter.planetGlyph}</div>
+        <div className="absolute bottom-[14%] h-[12%] w-[54%] rounded-full opacity-70 blur-sm" style={{ background: bossRageActive ? '#ff3d6e' : chapter.accent }} />
+        <div className="relative font-vt text-3xl drop-shadow-[0_0_12px_currentColor]">{chapter.planetGlyph}</div>
       </motion.button>
 
       {renderedHazards.map((hazard) => {
@@ -2954,20 +3013,23 @@ export function CombatArena() {
         const weak = renderNow <= enemy.weakUntil;
         const hit = renderNow <= enemy.hitUntil;
         const variant = enemyVariantById(enemy.variantId);
+        const visual = ENEMY_SHIP_VISUALS[variant.id];
         const shielded = enemy.shieldHitsLeft > 0;
         const hitShakeX = hit ? Math.sin((renderNow + enemy.id * 31) / 28) * (lowDensity ? 1.1 : 2.4) : 0;
         const hitShakeY = hit ? Math.cos((renderNow + enemy.id * 47) / 33) * (lowDensity ? 0.7 : 1.6) : 0;
+        const toCoreAngle = Math.atan2(player.y - enemy.y, player.x - enemy.x) + Math.PI / 2;
         return (
           <button
             key={enemy.id}
             onPointerDown={(e) => strikeEnemy(enemy.id, e)}
-            className="absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-[38%] border bg-black/70"
+            className="absolute z-20 -translate-x-1/2 -translate-y-1/2 border bg-black/70"
             style={{
               left: `${enemy.x}%`,
               top: `${enemy.y}%`,
               width: `${enemy.size * 2}px`,
               height: `${enemy.size * 2}px`,
               borderColor: weak ? style.weak : shielded ? '#ffffff' : variant.accent,
+              borderRadius: visual.radius,
               boxShadow: lowDensity ? `0 0 ${hit ? 16 : 8}px ${weak ? style.weak : variant.glow}` : `0 0 ${hit ? 34 : 16}px ${weak ? style.weak : variant.glow}`,
               transform: `translate(calc(-50% + ${hitShakeX}px), calc(-50% + ${hitShakeY}px)) scale(${hit ? 1.18 : 1})`,
             }}
@@ -2975,30 +3037,36 @@ export function CombatArena() {
             title={t(`enemyVariants.${variant.i18nKey}.name` as any)}
           >
             {hit && (
-              <span className="absolute -inset-1 rounded-[38%] border border-white/45 bg-white/10" />
+              <span className="absolute -inset-1 rounded-[30%] border border-white/45 bg-white/10" />
             )}
             <span
-              className="absolute inset-[24%] rounded-[30%] bg-current opacity-45"
+              className="absolute inset-[16%] bg-current opacity-25"
               style={{
                 color: weak ? style.weak : variant.accent,
-                transform: variant.id === 'rush'
-                  ? 'skewX(-18deg) rotate(45deg)'
-                  : variant.id === 'tank'
-                    ? 'rotate(0deg)'
-                    : variant.id === 'orbitJammer'
-                      ? 'rotate(45deg) scale(1.16)'
-                      : 'rotate(45deg)',
-                borderRadius: variant.id === 'tank' ? '18%' : variant.id === 'manaLeech' ? '50%' : '30%',
+                clipPath: visual.wings,
+                transform: `rotate(${toCoreAngle}rad)`,
               }}
             />
             <span
-              className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-vt text-[13px] leading-none"
-              style={{ color: shielded ? '#ffffff' : variant.accent, textShadow: `0 0 8px ${variant.glow}` }}
+              className="absolute inset-[23%] bg-current opacity-72"
+              style={{
+                color: weak ? style.weak : variant.accent,
+                clipPath: visual.body,
+                transform: `rotate(${toCoreAngle}rad)`,
+              }}
+            />
+            <span
+              className="absolute bottom-[9%] left-1/2 h-[14%] w-[42%] -translate-x-1/2 rounded-full opacity-70 blur-[1px]"
+              style={{ background: visual.engine, boxShadow: lowDensity ? undefined : `0 0 8px ${visual.engine}` }}
+            />
+            <span
+              className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-vt text-[10px] leading-none"
+              style={{ color: shielded ? '#ffffff' : variant.accent, textShadow: `0 0 8px ${variant.glow}`, transform: 'translate(-50%, -50%) rotate(0deg)' }}
             >
               {variant.symbol}
             </span>
             {shielded && (
-              <span className="absolute -inset-1 rounded-[38%] border border-white/55 bg-white/5" />
+              <span className="absolute -inset-1 rounded-[30%] border border-white/55 bg-white/5" />
             )}
             {weak && <span className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold shadow-[0_0_14px_rgba(255,209,102,0.95)]" />}
             <span className="absolute -bottom-2 left-1/2 h-1 w-9 -translate-x-1/2 overflow-hidden rounded-full bg-white/10">
@@ -3009,7 +3077,7 @@ export function CombatArena() {
       })}
 
       <div
-        className="pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
+        className="pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-[32%] border"
         style={{
           left: `${player.x}%`,
           top: `${player.y}%`,
@@ -3077,8 +3145,19 @@ export function CombatArena() {
         {burstFireActive && (
           <div className="absolute -inset-3 rounded-full border border-dashed border-pink/45 shadow-[0_0_20px_rgba(255,92,232,0.34)]" />
         )}
-        <div className="absolute inset-[8px] rounded-full bg-cyan shadow-[0_0_18px_rgba(92,246,255,0.98)]" />
-        <div className="absolute inset-[17px] rounded-full bg-white/85" />
+        <div
+          className="absolute inset-[5px] border border-cyan/45 bg-cyan/35 shadow-[0_0_18px_rgba(92,246,255,0.86)]"
+          style={{ clipPath: 'polygon(50% 0%, 72% 28%, 96% 46%, 72% 58%, 62% 100%, 50% 78%, 38% 100%, 28% 58%, 4% 46%, 28% 28%)' }}
+        />
+        <div
+          className="absolute inset-[13px] bg-black/72"
+          style={{ clipPath: 'polygon(50% 0%, 68% 34%, 60% 100%, 50% 80%, 40% 100%, 32% 34%)' }}
+        />
+        <div className="absolute left-1/2 top-[34%] h-[22%] w-[24%] -translate-x-1/2 rounded-full bg-white/88 shadow-[0_0_12px_rgba(255,255,255,0.86)]" />
+        <div className="absolute bottom-[-8px] left-1/2 h-5 w-8 -translate-x-1/2 rounded-full bg-pink/55 blur-sm shadow-[0_0_16px_rgba(255,92,232,0.64)]" />
+        {(burstFireActive || activeAttackSurgeActive || projectileSurgeActive || flowSurgeActive || orbitSurgeActive) && (
+          <div className="absolute bottom-[-16px] left-1/2 h-8 w-4 -translate-x-1/2 rounded-full bg-cyan/45 blur-md" />
+        )}
         {orbitSlashActive && (
           <div
             className="absolute left-1/2 top-1/2 h-[76px] w-[76px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-pink/35 animate-spinslow"
