@@ -79,7 +79,7 @@ export const UPGRADES: UpgradeDef[] = [
 ];
 
 export function upgradeCost(def: UpgradeDef, currentLevel: number): number {
-  const level = Math.max(0, currentLevel);
+  const level = Number.isFinite(currentLevel) ? Math.max(0, currentLevel) : 0;
   const first = Math.min(level, 25);
   const second = Math.min(Math.max(0, level - 25), 50);
   const third = Math.min(Math.max(0, level - 75), 75);
@@ -89,7 +89,8 @@ export function upgradeCost(def: UpgradeDef, currentLevel: number): number {
     Math.pow(def.growth + 0.005, second) *
     Math.pow(def.growth + 0.018, third) *
     Math.pow(def.growth + 0.04, late);
-  return Math.max(def.baseCost, Math.floor(def.baseCost * scaled));
+  const cost = def.baseCost * scaled;
+  return Math.max(def.baseCost, Math.min(Number.MAX_SAFE_INTEGER, Math.floor(Number.isFinite(cost) ? cost : def.baseCost)));
 }
 
 export function upgradeLevelWeight(level: number): number {
@@ -101,8 +102,9 @@ export function upgradeLevelWeight(level: number): number {
 
 export function upgradeTotalAmount(def: UpgradeDef, level: number): number {
   let total = 0;
-  for (let i = 0; i < level; i++) total += def.amount * upgradeLevelWeight(i);
-  return total;
+  const safeLevel = Number.isFinite(level) ? Math.max(0, Math.min(10000, Math.floor(level))) : 0;
+  for (let i = 0; i < safeLevel; i++) total += def.amount * upgradeLevelWeight(i);
+  return Number.isFinite(total) ? total : 0;
 }
 
 export function upgradeBulkCost(def: UpgradeDef, currentLevel: number, count: number): number {

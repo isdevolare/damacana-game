@@ -28,13 +28,16 @@ export function prestigeShardGain(
   prestigeGainPct = 0,
   guaranteedShards = false,
 ) {
-  const stageMult = 1 + Math.min(1.5, totalPrestiges * 0.04);
-  const base = Math.floor(BALANCE.prestige.shardFormula(totalEarned) * stageMult * (1 + prestigeGainPct));
+  const earned = Number.isFinite(totalEarned) ? Math.max(0, totalEarned) : 0;
+  const prestiges = Number.isFinite(totalPrestiges) ? Math.max(0, totalPrestiges) : 0;
+  const gainPct = Number.isFinite(prestigeGainPct) ? Math.max(0, Math.min(2, prestigeGainPct)) : 0;
+  const stageMult = 1 + Math.min(1.5, prestiges * 0.04);
+  const base = Math.floor(BALANCE.prestige.shardFormula(earned) * stageMult * (1 + gainPct));
   return Math.max(guaranteedShards ? 5 : 0, base + (guaranteedShards ? 5 : 0));
 }
 
 export function prestigePermanentBonuses(totalPrestiges: number): PrestigePermanentBonuses {
-  const count = Math.max(0, totalPrestiges);
+  const count = Number.isFinite(totalPrestiges) ? Math.max(0, totalPrestiges) : 0;
   const early = Math.min(count, 10);
   const late = Math.max(0, count - early);
   const scaled = early + late * 0.6;

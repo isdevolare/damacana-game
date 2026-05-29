@@ -32,12 +32,18 @@ export function bossNameKey(tier: number): BossNameKey {
 
 export function bossHp(tier: number, levelIdx: number): number {
   const { hpBase, hpScale, hpLevelMult } = BALANCE.boss;
-  return Math.floor(hpBase * Math.pow(hpScale, tier - 1) * (1 + levelIdx * hpLevelMult) * bossPhaseHpMultiplier(tier));
+  const safeTier = Number.isFinite(tier) ? Math.max(1, Math.floor(tier)) : 1;
+  const safeLevel = Number.isFinite(levelIdx) ? Math.max(0, Math.floor(levelIdx)) : 0;
+  const hp = hpBase * Math.pow(hpScale, safeTier - 1) * (1 + safeLevel * hpLevelMult) * bossPhaseHpMultiplier(safeTier);
+  return Math.max(1, Math.min(Number.MAX_SAFE_INTEGER, Math.floor(Number.isFinite(hp) ? hp : hpBase)));
 }
 
 export function bossReward(tier: number, levelIdx: number): number {
   const { rewardBase, rewardScale, hpLevelMult } = BALANCE.boss;
-  return Math.floor(rewardBase * Math.pow(rewardScale, tier - 1) * (1 + levelIdx * hpLevelMult) * bossPhaseRewardMultiplier(tier));
+  const safeTier = Number.isFinite(tier) ? Math.max(1, Math.floor(tier)) : 1;
+  const safeLevel = Number.isFinite(levelIdx) ? Math.max(0, Math.floor(levelIdx)) : 0;
+  const reward = rewardBase * Math.pow(rewardScale, safeTier - 1) * (1 + safeLevel * hpLevelMult) * bossPhaseRewardMultiplier(safeTier);
+  return Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, Math.floor(Number.isFinite(reward) ? reward : rewardBase)));
 }
 
 export function isMegaBoss(tier: number): boolean {

@@ -297,6 +297,11 @@ function freshBoss(tier: number, levelIdx: number, eliteUnlocked: boolean): Boss
   return { tier, nameKey, hpCur: hpMax, hpMax, isElite: elite };
 }
 
+function finiteOr(value: number | undefined | null, fallback: number, min = 0, max = Number.MAX_SAFE_INTEGER): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
+  return Math.max(min, Math.min(max, value));
+}
+
 // Codex artifact bonuses (★15): completed categories grant permanent bonuses.
 function codexBonuses(state: Persisted): { tap: number; flow: number; shard: number } {
   const out = { tap: 0, flow: 0, shard: 0 };
@@ -334,9 +339,9 @@ function derivedPerTap(state: Persisted): number {
   mult *= 1 + upgradeIdentity.activeDamagePct;
   const now = Date.now();
   for (const b of state.activeBuffs) {
-    if (b.type === 'tap' && b.expiresAt > now) mult *= b.mult;
+    if (b.type === 'tap' && b.expiresAt > now) mult *= finiteOr(b.mult, 1, 0.05, 10);
   }
-  return Math.max(1, Math.floor(base * mult));
+  return finiteOr(Math.floor(base * mult), 1, 1);
 }
 
 function derivedPerSec(state: Persisted): number {
@@ -364,18 +369,18 @@ function derivedPerSec(state: Persisted): number {
   mult *= 1 + upgradeIdentity.passiveProductionPct;
   const now = Date.now();
   for (const b of state.activeBuffs) {
-    if (b.type === 'flow' && b.expiresAt > now) mult *= b.mult;
+    if (b.type === 'flow' && b.expiresAt > now) mult *= finiteOr(b.mult, 1, 0.05, 10);
   }
-  return Math.floor(base * mult);
+  return finiteOr(Math.floor(base * mult), 0, 0);
 }
 
 function activeBuffMult(state: Persisted, type: Buff['type'], fallback = 1): number {
   const now = Date.now();
   let mult = fallback;
   for (const b of state.activeBuffs) {
-    if (b.type === type && b.expiresAt > now) mult *= b.mult;
+    if (b.type === type && b.expiresAt > now) mult *= finiteOr(b.mult, 1, 0.05, 10);
   }
-  return mult;
+  return finiteOr(mult, fallback, 0.01, 25);
 }
 
 function activeBuffMax(state: Persisted, type: Buff['type']): number {
@@ -388,7 +393,7 @@ function activeBuffMax(state: Persisted, type: Buff['type']): number {
 }
 
 function shardGainMult(state: Persisted): number {
-  return (1 + state.shop.shardBoost * 0.1) * (1 + codexBonuses(state).shard) * (1 + buildBonuses(state).shardGainPct) * (1 + ascensionBonuses(state).shardGainPct);
+  return finiteOr((1 + state.shop.shardBoost * 0.1) * (1 + codexBonuses(state).shard) * (1 + buildBonuses(state).shardGainPct) * (1 + ascensionBonuses(state).shardGainPct), 1, 0.1, 12);
 }
 
 function researchBonuses(state: Persisted): ResearchBonusSummary {
@@ -530,12 +535,12 @@ function derivedCombatStats(state: Persisted): CombatStats {
   const baseManaRegen = BASE_COMBAT_STATS.manaRegen + bonuses.manaRegen;
   const baseHpRegen = BASE_COMBAT_STATS.hpRegen + bonuses.hpRegen;
   return {
-    maxHp: baseHp * (1 + research.maxHpPct + build.maxHpPct + artifact.maxHpPct + prestige.maxHpPct),
-    maxMana: (BASE_COMBAT_STATS.maxMana + levelMana + bonuses.maxMana) * (1 + prestige.maxManaPct),
-    hpRegen: baseHpRegen * (1 + build.hpRegenPct),
-    manaRegen: baseManaRegen * (1 + research.manaRegenPct + build.manaRegenPct + artifact.manaRegenPct + prestige.manaRegenPct) * activeBuffMult(state, 'manaRegen'),
-    armor: BASE_COMBAT_STATS.armor + bonuses.armor + build.armor,
-    damageReduction: Math.min(0.82, BASE_COMBAT_STATS.damageReduction + bonuses.damageReduction + build.damageReductionPct + artifact.damageReductionPct + ascension.damageReductionPct),
+    maxHp: finiteOr(baseHp * (1 + research.maxHpPct + build.maxHpPct + artifact.maxHpPct + prestige.maxHpPct), BASE_COMBAT_STATS.maxHp, 1),
+    maxMana: finiteOr((BASE_COMBAT_STATS.maxMana + levelMana + bonuses.maxMana) * (1 + prestige.maxManaPct), BASE_COMBAT_STATS.maxMana, 1),
+    hpRegen: finiteOr(baseHpRegen * (1 + build.hpRegenPct), BASE_COMBAT_STATS.hpRegen, 0),
+    manaRegen: finiteOr(baseManaRegen * (1 + research.manaRegenPct + build.manaRegenPct + artifact.manaRegenPct + prestige.manaRegenPct) * activeBuffMult(state, 'manaRegen'), BASE_COMBAT_STATS.manaRegen, 0),
+    armor: finiteOr(BASE_COMBAT_STATS.armor + bonuses.armor + build.armor, BASE_COMBAT_STATS.armor, 0, 500),
+    damageReduction: finiteOr(BASE_COMBAT_STATS.damageReduction + bonuses.damageReduction + build.damageReductionPct + artifact.damageReductionPct + ascension.damageReductionPct, BASE_COMBAT_STATS.damageReduction, 0, 0.82),
   };
 }
 

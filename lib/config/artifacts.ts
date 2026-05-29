@@ -258,6 +258,18 @@ export function summarizeArtifactBonuses(runArtifacts: OwnedArtifact[] = [], per
   summary.extraProjectileChancePct = Math.min(0.42, summary.extraProjectileChancePct);
   summary.cooldownReductionPct = Math.min(0.32, summary.cooldownReductionPct);
   summary.projectileFireRatePct = Math.min(0.45, summary.projectileFireRatePct);
+  summary.comboGainPct = Math.min(1.2, summary.comboGainPct);
+  summary.weakPointDamagePct = Math.min(1.4, summary.weakPointDamagePct);
+  summary.orbitDamagePct = Math.min(1.35, summary.orbitDamagePct);
+  summary.orbitRadiusPct = Math.min(0.55, summary.orbitRadiusPct);
+  summary.maxHpPct = Math.min(1.2, summary.maxHpPct);
+  summary.manaRegenPct = Math.min(1.1, summary.manaRegenPct);
+  summary.anomalyRewardPct = Math.min(1.2, summary.anomalyRewardPct);
+  summary.shardChancePct = Math.min(0.55, summary.shardChancePct);
+  summary.passiveProductionPct = Math.min(1.25, summary.passiveProductionPct);
+  summary.offlineEfficiencyPct = Math.min(0.9, summary.offlineEfficiencyPct);
+  summary.enemyDamagePct = Math.min(0.35, summary.enemyDamagePct);
+  summary.bossPulseDamagePct = Math.min(0.35, summary.bossPulseDamagePct);
   return summary;
 }
 

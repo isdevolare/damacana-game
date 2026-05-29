@@ -237,27 +237,27 @@ const ARENA_PERF = {
   mobileCollisionMs: 80,
   desktopEnemyCap: 9,
   mobileEnemyCap: 6,
-  desktopParticleCap: 42,
-  mobileParticleCap: 22,
+  desktopParticleCap: 34,
+  mobileParticleCap: 16,
   desktopEffectCap: 4,
   mobileEffectCap: 3,
   desktopHpFloatCap: 5,
   mobileHpFloatCap: 3,
-  desktopEnemyProjectileCap: 18,
-  mobileEnemyProjectileCap: 9,
+  desktopEnemyProjectileCap: 14,
+  mobileEnemyProjectileCap: 7,
   desktopDodgeFloatCap: 4,
   mobileDodgeFloatCap: 2,
-  desktopMultishotExtraCap: 4,
+  desktopMultishotExtraCap: 3,
   mobileMultishotExtraCap: 2,
-  desktopChainCap: 3,
+  desktopChainCap: 2,
   mobileChainCap: 1,
 };
 
 const WEAPON_EVOLUTION_TIMING = {
-  orbitCannonMs: 1650,
-  orbitCannonMobileMs: 2200,
-  beamPulseMs: 5600,
-  beamPulseMobileMs: 7200,
+  orbitCannonMs: 1850,
+  orbitCannonMobileMs: 2600,
+  beamPulseMs: 6400,
+  beamPulseMobileMs: 8400,
 };
 
 const ENEMY_PROJECTILES: Record<EnemyProjectileKind, {
@@ -272,7 +272,7 @@ const ENEMY_PROJECTILES: Record<EnemyProjectileKind, {
   basic: { speed: 0.026, damageMult: 0.42, manaDamage: 0, color: '#ff6b4a', size: 8, lifeMs: 4300, hitRadius: 4.2 },
   heavy: { speed: 0.019, damageMult: 0.68, manaDamage: 0, color: '#ffd166', size: 12, lifeMs: 5000, hitRadius: 5.4 },
   leech: { speed: 0.023, damageMult: 0.24, manaDamage: 16, color: '#b87aff', size: 9, lifeMs: 4500, hitRadius: 4.8 },
-  anomaly: { speed: 0.024, damageMult: 0.78, manaDamage: 8, color: '#ff5ce8', size: 10, lifeMs: 4700, hitRadius: 5 },
+  anomaly: { speed: 0.023, damageMult: 0.7, manaDamage: 7, color: '#ff5ce8', size: 10, lifeMs: 4600, hitRadius: 5 },
 };
 
 const HAZARD_STYLE: Record<ArenaHazardKind, { color: string; labelKey: string }> = {
@@ -318,18 +318,18 @@ function enemyProjectileInterval(chapterId: string, variantId: EnemyVariantId, p
   }
   if (chapterId === 'redDwarf') {
     if (variantId === 'basic') return null;
-    return 3200 - phaseProgress * 850;
+    return 3450 - phaseProgress * 760;
   }
   if (chapterId === 'whiteDwarf') {
     if (variantId !== 'shield' && variantId !== 'manaLeech' && variantId !== 'orbitJammer' && variantId !== 'anomaly') return null;
-    return 2850 - phaseProgress * 760;
+    return 3100 - phaseProgress * 680;
   }
   if (chapterId === 'giantStar') {
     if (variantId !== 'tank' && variantId !== 'shield' && variantId !== 'orbitJammer' && variantId !== 'anomaly') return null;
-    return 3300 - phaseProgress * 780;
+    return 3500 - phaseProgress * 700;
   }
   if (chapterId === 'supernova') {
-    return 2550 - phaseProgress * 900;
+    return 2850 - phaseProgress * 780;
   }
   return null;
 }
@@ -955,7 +955,7 @@ export function CombatArena() {
   }, []);
 
   const addHazard = useCallback((kind: ArenaHazardKind, now: number, origin?: Partial<Vec>, power = 1) => {
-    const cap = lowDensityRef.current ? 3 : 5;
+    const cap = lowDensityRef.current ? 2 : 4;
     if (hazardsRef.current.length >= cap) return;
     const playerPoint = playerRef.current;
     const bossPoint = bossArenaPoint(now, bossPhaseInfo(bossRef.current.tier).progress);
@@ -1006,7 +1006,7 @@ export function CombatArena() {
     }
     if (chapter.id === 'neptune' && waveTypeId === 'anomaly') {
       addHazard('gravityWell', now, { x: 50 + (Math.random() - 0.5) * 16, y: 48 + (Math.random() - 0.5) * 18 }, 1.05);
-      if (!lowDensityRef.current) addHazard('voidZone', now + 180, undefined, 0.9);
+      if (!lowDensityRef.current && bossPhaseInfo(bossRef.current.tier).finalPhase) addHazard('voidZone', now + 180, undefined, 0.82);
       return;
     }
     if (chapter.id === 'redDwarf' && waveTypeId === 'elite') {
@@ -1019,12 +1019,12 @@ export function CombatArena() {
     }
     if (chapter.id === 'giantStar' && (waveTypeId === 'elite' || waveTypeId === 'tank')) {
       addHazard('pulseMine', now, undefined, 1.08);
-      if (!lowDensityRef.current) addHazard('pulseMine', now + 120, undefined, 0.82);
+      if (!lowDensityRef.current && bossPhaseInfo(bossRef.current.tier).finalPhase) addHazard('pulseMine', now + 120, undefined, 0.76);
       return;
     }
     if (chapter.id === 'supernova' && (waveTypeId === 'elite' || waveTypeId === 'anomaly')) {
       addHazard('gravityWell', now, { x: 50 + (Math.random() - 0.5) * 22, y: 48 + (Math.random() - 0.5) * 22 }, 1.12);
-      if (!lowDensityRef.current) addHazard('laserSweep', now + 180, undefined, 0.95);
+      if (!lowDensityRef.current && bossPhaseInfo(bossRef.current.tier).finalPhase) addHazard('laserSweep', now + 180, undefined, 0.86);
       return;
     }
     if (waveTypeId === 'elite') addHazard(chapter.id === 'neptune' ? 'gravityWell' : 'pulseMine', now, undefined, 0.85);
@@ -2025,33 +2025,33 @@ export function CombatArena() {
       const phase = activePhaseTuning.info.phase;
       const finalPhase = activePhaseTuning.info.finalPhase;
       const bossHazardInterval = finalPhase
-        ? (lowDensityFrame ? 5400 : 4300)
+        ? (lowDensityFrame ? 6800 : 5200)
         : phase >= 10
-          ? (lowDensityFrame ? 7200 : 6000)
+          ? (lowDensityFrame ? 8800 : 7200)
           : phase >= 5
-            ? (lowDensityFrame ? 9400 : 7800)
+            ? (lowDensityFrame ? 11200 : 9200)
             : Number.POSITIVE_INFINITY;
       if (activeChapter.id !== 'earth' && now - lastBossHazardAtRef.current > bossHazardInterval) {
         lastBossHazardAtRef.current = now;
         if (activeChapter.id === 'mars') {
-          addHazard('pulseMine', now, undefined, finalPhase ? 1.18 : 0.95);
+          addHazard('pulseMine', now, undefined, finalPhase ? 1.08 : 0.9);
         } else if (activeChapter.id === 'saturn') {
-          addHazard('laserSweep', now, bossPointForShots, finalPhase ? 1.18 : 1);
+          addHazard('laserSweep', now, bossPointForShots, finalPhase ? 1.08 : 0.94);
         } else if (activeChapter.id === 'uranus') {
-          addHazard(now <= bossShieldUntilRef.current || phase >= 10 ? 'voidZone' : 'laserSweep', now, undefined, finalPhase ? 1.16 : 1);
+          addHazard(now <= bossShieldUntilRef.current || phase >= 10 ? 'voidZone' : 'laserSweep', now, undefined, finalPhase ? 1.08 : 0.94);
         } else if (activeChapter.id === 'neptune') {
-          addHazard(phase >= 10 ? 'gravityWell' : 'voidZone', now, { x: 50 + (Math.random() - 0.5) * 20, y: 46 + (Math.random() - 0.5) * 20 }, finalPhase ? 1.22 : 1.05);
-          if (finalPhase && !lowDensityFrame) addHazard('laserSweep', now + 240, bossPointForShots, 1.08);
+          addHazard(phase >= 10 ? 'gravityWell' : 'voidZone', now, { x: 50 + (Math.random() - 0.5) * 20, y: 46 + (Math.random() - 0.5) * 20 }, finalPhase ? 1.12 : 0.98);
+          if (finalPhase && !lowDensityFrame) addHazard('laserSweep', now + 240, bossPointForShots, 0.92);
         } else if (activeChapter.id === 'redDwarf') {
-          addHazard('pulseMine', now, undefined, finalPhase ? 1.24 : 1.02);
+          addHazard('pulseMine', now, undefined, finalPhase ? 1.12 : 0.96);
         } else if (activeChapter.id === 'whiteDwarf') {
-          addHazard('laserSweep', now, bossPointForShots, finalPhase ? 1.22 : 1.05);
+          addHazard('laserSweep', now, bossPointForShots, finalPhase ? 1.12 : 0.98);
         } else if (activeChapter.id === 'giantStar') {
-          addHazard('pulseMine', now, undefined, finalPhase ? 1.28 : 1.12);
-          if (phase >= 10 && !lowDensityFrame) addHazard('pulseMine', now + 180, undefined, 0.86);
+          addHazard('pulseMine', now, undefined, finalPhase ? 1.16 : 1.02);
+          if (phase >= 10 && finalPhase && !lowDensityFrame) addHazard('pulseMine', now + 180, undefined, 0.78);
         } else if (activeChapter.id === 'supernova') {
-          addHazard(phase >= 10 ? 'gravityWell' : 'voidZone', now, { x: 50 + (Math.random() - 0.5) * 24, y: 46 + (Math.random() - 0.5) * 22 }, finalPhase ? 1.34 : 1.14);
-          if (finalPhase && !lowDensityFrame) addHazard('laserSweep', now + 220, bossPointForShots, 1.16);
+          addHazard(phase >= 10 ? 'gravityWell' : 'voidZone', now, { x: 50 + (Math.random() - 0.5) * 24, y: 46 + (Math.random() - 0.5) * 22 }, finalPhase ? 1.2 : 1.04);
+          if (finalPhase && !lowDensityFrame) addHazard('laserSweep', now + 220, bossPointForShots, 0.98);
         }
       }
 

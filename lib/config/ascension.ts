@@ -90,19 +90,20 @@ export function ascensionUnlocked(ctx: AscensionContext) {
     ctx.completedChapters.includes('supernova') ||
     ctx.bestBossTier >= 230 ||
     ctx.totalPrestiges >= 25 ||
-    ctx.shards >= 250
+    ctx.shards >= 750
   );
 }
 
 export function ascensionPointGain(ctx: AscensionContext) {
   if (!ascensionUnlocked(ctx)) return 0;
-  const prestigeScore = ctx.totalPrestiges / 5;
-  const shardScore = Math.sqrt(Math.max(0, ctx.shards)) / 5;
-  const starScore = Math.max(0, ctx.bestBossTier - 100) / 26;
+  const prestigeScore = Math.sqrt(Math.max(0, ctx.totalPrestiges)) * 0.9;
+  const shardScore = Math.sqrt(Math.max(0, ctx.shards)) / 7;
+  const starScore = Math.max(0, ctx.bestBossTier - 100) / 32;
   const completionScore = ctx.completedChapters.includes('supernova') ? 4 : ctx.completedChapters.filter((id) => ['redDwarf', 'whiteDwarf', 'giantStar'].includes(id)).length;
-  const systemScore = ctx.claimedResearchCount / 8 + ctx.ownedBuildNodeCount / 10 + ctx.artifactCount / 6;
+  const systemScore = ctx.claimedResearchCount / 10 + ctx.ownedBuildNodeCount / 14 + ctx.artifactCount / 8;
   const raw = prestigeScore + shardScore + starScore + completionScore + systemScore;
-  return Math.max(1, Math.min(250, Math.floor(raw)));
+  const softened = raw <= 35 ? raw : 35 + Math.sqrt(raw - 35) * 2.5;
+  return Math.max(1, Math.min(120, Math.floor(softened)));
 }
 
 export function nextAscensionPointTarget(ctx: AscensionContext) {
@@ -113,7 +114,7 @@ export function nextAscensionPointTarget(ctx: AscensionContext) {
       progress: Math.max(
         ctx.bestBossTier / 230,
         ctx.totalPrestiges / 25,
-        ctx.shards / 250,
+        ctx.shards / 750,
       ),
     };
   }
@@ -127,24 +128,24 @@ export function summarizeAscensionBonuses(levels: Record<string, number> = {}): 
   const level = (id: AscensionUpgradeId) => Math.max(0, Math.min(ASCENSION_UPGRADES.find((upgrade) => upgrade.id === id)?.maxLevel ?? 0, levels[id] ?? 0));
 
   const reality = level('realityCompression');
-  out.globalProductionPct += reality * 0.08;
+  out.globalProductionPct += reality * 0.065;
 
   const flow = level('eternalFlow');
-  out.passiveProductionPct += flow * 0.09;
-  out.offlineEfficiencyPct += flow * 0.08;
+  out.passiveProductionPct += flow * 0.075;
+  out.offlineEfficiencyPct += flow * 0.07;
 
   const weapon = level('weaponMutation');
-  out.weaponEvolutionDamagePct += weapon * 0.08;
-  out.weaponEvolutionFireRatePct += weapon * 0.025;
+  out.weaponEvolutionDamagePct += weapon * 0.065;
+  out.weaponEvolutionFireRatePct += weapon * 0.018;
 
   const memory = level('cosmicMemory');
   out.retainedPrestigePct += memory * 0.04;
   out.retainedShardPct += memory * 0.05;
 
   const pressure = level('dimensionalPressure');
-  out.eliteRewardPct += pressure * 0.1;
-  out.anomalyRewardPct += pressure * 0.1;
-  out.shardGainPct += pressure * 0.06;
+  out.eliteRewardPct += pressure * 0.08;
+  out.anomalyRewardPct += pressure * 0.08;
+  out.shardGainPct += pressure * 0.045;
 
   const stability = level('singularityStability');
   out.instabilityReductionPct += stability * 0.08;

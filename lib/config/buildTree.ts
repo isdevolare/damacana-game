@@ -199,5 +199,26 @@ export function summarizeBuildBonuses(ids: string[]): BuildBonusSummary {
       out[bonus.type] += bonus.value;
     }
   }
+  out.comboGainPct = Math.min(1.15, out.comboGainPct);
+  out.comboDecayPct = Math.min(0.75, out.comboDecayPct);
+  out.weakPointDamagePct = Math.min(1.35, out.weakPointDamagePct);
+  out.damageComboPreservePct = Math.min(0.65, out.damageComboPreservePct);
+  out.maxHpPct = Math.min(1.4, out.maxHpPct);
+  out.armor = Math.min(36, out.armor);
+  out.hpRegenPct = Math.min(0.9, out.hpRegenPct);
+  out.damageReductionPct = Math.min(0.32, out.damageReductionPct);
+  out.collapseRecoveryMs = Math.min(4200, out.collapseRecoveryMs);
+  out.orbitDamagePct = Math.min(1.35, out.orbitDamagePct);
+  out.orbitSlashRadiusPct = Math.min(0.8, out.orbitSlashRadiusPct);
+  out.aoeDamagePct = Math.min(1, out.aoeDamagePct);
+  out.orbitSlowPct = Math.min(0.45, out.orbitSlowPct);
+  out.anomalyFrequencyPct = Math.min(0.8, out.anomalyFrequencyPct);
+  out.shardGainPct = Math.min(1, out.shardGainPct);
+  out.unstableRewardPct = Math.min(1.15, out.unstableRewardPct);
+  out.enemyAggressionPct = Math.min(0.35, out.enemyAggressionPct);
+  out.passiveProductionPct = Math.min(1.25, out.passiveProductionPct);
+  out.offlineEfficiencyPct = Math.min(0.9, out.offlineEfficiencyPct);
+  out.manaRegenPct = Math.min(0.9, out.manaRegenPct);
+  out.cooldownReductionPct = Math.min(0.34, out.cooldownReductionPct);
   return out;
 }
