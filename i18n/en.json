@@ -78,7 +78,22 @@
       "cooldowns": "cooldowns",
       "current": "current cycle"
     },
-    "resetAll": "reset all progress",
+    "resetAll": "reset local save",
+    "saveTools": {
+      "title": "local save tools",
+      "description": "Export, restore, or reset the local save on this device. No cloud account is used.",
+      "export": "export save",
+      "copy": "copy JSON",
+      "import": "import save",
+      "confirmReset": "confirm reset",
+      "placeholder": "Paste save JSON here",
+      "empty": "No local save found.",
+      "exported": "Save exported below.",
+      "copied": "Save JSON copied.",
+      "copyFailed": "Copy blocked. The save JSON is shown below.",
+      "imported": "Save imported. Reloading...",
+      "invalid": "Save JSON is invalid."
+    },
     "tapToStart": "tap to start",
     "codex": "knowledge codex",
     "achievements": "achievements",
@@ -1006,8 +1021,8 @@
   "shipSkins": {
     "title": "SHIP SKINS",
     "subtitle": "cosmetic hulls only · no combat stats",
-    "soon": "future",
-    "futurePremium": "premium placeholder · {price}",
+    "soon": "Coming soon",
+    "futurePremium": "Coming soon",
     "credits": "Skin Credits",
     "price": "{amount} Skin Credits",
     "filters": {
@@ -1015,7 +1030,7 @@
       "unlocked": "Unlocked",
       "locked": "Locked",
       "rarePlus": "Rare+",
-      "premium": "Premium / Future"
+      "premium": "Coming Soon"
     },
     "rarity": {
       "default": "default",
@@ -1051,7 +1066,7 @@
       "prestige": "Prestige {count} time.",
       "ascension": "Ascend {count} time.",
       "skinCredits": "Purchase with Skin Credits.",
-      "futurePremium": "Future cosmetic skin. Payments are not implemented.",
+      "futurePremium": "Coming soon.",
       "locked": "Locked."
     },
     "detail": {

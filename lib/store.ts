@@ -67,7 +67,7 @@ import {
 } from './config/ascension';
 import type { AscensionBonusSummary } from './config/ascension';
 import { duplicateArtifactSkinCredits, skinCreditRewardForBoss, SKIN_CREDIT_LIMIT } from './config/cosmetics';
-import { DEFAULT_SHIP_SKIN_ID, shipSkinById, shipSkinPurchasable, shipSkinUnlocked } from './config/shipSkins';
+import { DEFAULT_SHIP_SKIN_ID, SHIP_SKINS, shipSkinById, shipSkinPurchasable, shipSkinUnlocked } from './config/shipSkins';
 import { fmt } from './util';
 
 export interface Buff {
@@ -321,6 +321,113 @@ function freshBoss(tier: number, levelIdx: number, eliteUnlocked: boolean): Boss
 function finiteOr(value: number | undefined | null, fallback: number, min = 0, max = Number.MAX_SAFE_INTEGER): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
   return Math.max(min, Math.min(max, value));
+}
+
+function safeRecord(value: unknown): Record<string, number> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([key, val]) => [
+      key,
+      finiteOr(typeof val === 'number' ? val : 0, 0),
+    ]),
+  );
+}
+
+function safeStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
+function sanitizeLoadedState(state: GameState): GameState {
+  const knownSkinIds = new Set(SHIP_SKINS.map((skin) => skin.id));
+  const ownedShipSkinIds = [
+    ...new Set([
+      ...safeStringArray(state.ownedShipSkinIds).filter((id) => knownSkinIds.has(id)),
+      DEFAULT_SHIP_SKIN_ID,
+    ]),
+  ];
+  const equippedCandidate = shipSkinById(state.equippedShipSkinId).id;
+  const safeBoss = state.boss && typeof state.boss === 'object' ? state.boss : freshBoss(1, 0, false);
+  const safeBossHpMax = finiteOr(safeBoss.hpMax, freshBoss(1, 0, false).hpMax, 1);
+  const safeBossTier = Math.floor(finiteOr(safeBoss.tier, 1, 1));
+  const safeState: GameState = {
+    ...state,
+    damacana: finiteOr(state.damacana, 0),
+    totalEarned: finiteOr(state.totalEarned, 0),
+    levelIdx: Math.floor(finiteOr(state.levelIdx, 0, 0, LEVELS.length - 1)),
+    upgrades: safeRecord(state.upgrades),
+    boss: {
+      tier: safeBossTier,
+      nameKey: typeof safeBoss.nameKey === 'string' ? safeBoss.nameKey : bossNameKey(safeBossTier),
+      hpCur: finiteOr(safeBoss.hpCur, safeBossHpMax, 0, safeBossHpMax),
+      hpMax: safeBossHpMax,
+      isElite: Boolean(safeBoss.isElite),
+    },
+    activeAbilityCooldowns: safeRecord(state.activeAbilityCooldowns),
+    activeBuffs: Array.isArray(state.activeBuffs)
+      ? state.activeBuffs.filter((buff) => buff && typeof buff.id === 'string' && Number.isFinite(buff.expiresAt))
+      : [],
+    tapsThisRun: finiteOr(state.tapsThisRun, 0),
+    perRunPerTapPctBonus: finiteOr(state.perRunPerTapPctBonus, 0),
+    bossKillsThisRun: finiteOr(state.bossKillsThisRun, 0),
+    runStartAt: finiteOr(state.runStartAt, Date.now()),
+    shards: finiteOr(state.shards, 0),
+    crystals: finiteOr(state.crystals, 0),
+    tree: typeof state.tree === 'object' && state.tree ? state.tree : {},
+    totalPrestiges: Math.floor(finiteOr(state.totalPrestiges, 0)),
+    prestigePromptDismissedRunAt: finiteOr(state.prestigePromptDismissedRunAt, 0),
+    bestLevel: Math.floor(finiteOr(state.bestLevel, 0)),
+    bestBossTier: Math.floor(finiteOr(state.bestBossTier, 1, 1)),
+    collectedFacts: safeStringArray(state.collectedFacts),
+    achievements: safeStringArray(state.achievements),
+    bossKillsLifetime: Math.floor(finiteOr(state.bossKillsLifetime, 0)),
+    bestCombo: finiteOr(state.bestCombo, 1, 1),
+    totalPlayMs: finiteOr(state.totalPlayMs, 0),
+    lastActiveAt: finiteOr(state.lastActiveAt, Date.now()),
+    offlineMaxMs: finiteOr(state.offlineMaxMs, OFFLINE_PROGRESS.defaultMaxMs),
+    voidBurstUses: Math.floor(finiteOr(state.voidBurstUses, 0)),
+    completedChapters: safeStringArray(state.completedChapters) as ChapterId[],
+    discoveredEnemyTypeIds: safeStringArray(state.discoveredEnemyTypeIds) as EnemyVariantId[],
+    knowledgeBulbsCollected: Math.floor(finiteOr(state.knowledgeBulbsCollected, 0)),
+    nextKnowledgeBulbAt: finiteOr(state.nextKnowledgeBulbAt, 0),
+    combatAbilityCooldowns: safeRecord(state.combatAbilityCooldowns),
+    completedResearchIds: safeStringArray(state.completedResearchIds),
+    claimedResearchIds: safeStringArray(state.claimedResearchIds),
+    activeResearchId: typeof state.activeResearchId === 'string' ? state.activeResearchId : null,
+    activeResearchStartAt: finiteOr(state.activeResearchStartAt, 0),
+    activeResearchEndAt: finiteOr(state.activeResearchEndAt, 0),
+    ownedBuildNodeIds: safeStringArray(state.ownedBuildNodeIds),
+    runArtifacts: Array.isArray(state.runArtifacts) ? state.runArtifacts : [],
+    permanentArtifacts: Array.isArray(state.permanentArtifacts) ? state.permanentArtifacts : [],
+    seenWeaponEvolutionIds: safeStringArray(state.seenWeaponEvolutionIds) as WeaponEvolutionId[],
+    ascensionPoints: finiteOr(state.ascensionPoints, 0),
+    totalAscensions: Math.floor(finiteOr(state.totalAscensions, 0)),
+    ascensionUpgradeLevels: safeRecord(state.ascensionUpgradeLevels),
+    ascensionUnlockedAt: finiteOr(state.ascensionUnlockedAt, 0),
+    skinCredits: finiteOr(state.skinCredits, 0, 0, SKIN_CREDIT_LIMIT),
+    ownedShipSkinIds,
+    equippedShipSkinId: ownedShipSkinIds.includes(equippedCandidate) ? equippedCandidate : DEFAULT_SHIP_SKIN_ID,
+    shop: {
+      tapBoost: finiteOr(state.shop?.tapBoost, 0),
+      flowBoost: finiteOr(state.shop?.flowBoost, 0),
+      shardBoost: finiteOr(state.shop?.shardBoost, 0),
+    },
+    audio: {
+      master: finiteOr(state.audio?.master, initialState.audio.master, 0, 1),
+      music: finiteOr(state.audio?.music, initialState.audio.music, 0, 1),
+      sfx: finiteOr(state.audio?.sfx, initialState.audio.sfx, 0, 1),
+      muted: Boolean(state.audio?.muted),
+    },
+    combo: finiteOr(state.combo, 1, 1, 1000000),
+    lastTapAt: finiteOr(state.lastTapAt, 0),
+    floatingNumbers: Array.isArray(state.floatingNumbers) ? state.floatingNumbers.slice(-8) : [],
+    recentEarnings: Array.isArray(state.recentEarnings) ? state.recentEarnings.slice(-20) : [],
+  };
+  const combatStats = derivedCombatStats(safeState);
+  return {
+    ...safeState,
+    playerHp: finiteOr(state.playerHp, combatStats.maxHp, 0, combatStats.maxHp),
+    playerMana: finiteOr(state.playerMana, combatStats.maxMana, 0, combatStats.maxMana),
+  };
 }
 
 // Codex artifact bonuses (★15): completed categories grant permanent bonuses.
@@ -2203,6 +2310,11 @@ export const useGame = create<GameState>()(
         hasStarted: s.hasStarted,
         lastBulbAt: s.lastBulbAt,
       }),
+      merge: (persistedState, currentState) =>
+        sanitizeLoadedState({
+          ...currentState,
+          ...(persistedState && typeof persistedState === 'object' ? (persistedState as Partial<GameState>) : {}),
+        }),
     },
   ),
 );

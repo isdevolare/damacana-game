@@ -78,7 +78,22 @@
       "cooldowns": "bekleme",
       "current": "mevcut döngü"
     },
-    "resetAll": "tüm ilerlemeyi sıfırla",
+    "resetAll": "yerel kaydı sıfırla",
+    "saveTools": {
+      "title": "yerel kayıt araçları",
+      "description": "Bu cihazdaki yerel kaydı dışa aktar, geri yükle veya sıfırla. Bulut hesabı kullanılmaz.",
+      "export": "kaydı dışa aktar",
+      "copy": "JSON kopyala",
+      "import": "kaydı içe aktar",
+      "confirmReset": "sıfırlamayı onayla",
+      "placeholder": "Kayıt JSON'unu buraya yapıştır",
+      "empty": "Yerel kayıt bulunamadı.",
+      "exported": "Kayıt aşağıya aktarıldı.",
+      "copied": "Kayıt JSON'u kopyalandı.",
+      "copyFailed": "Kopyalama engellendi. Kayıt JSON'u aşağıda görünüyor.",
+      "imported": "Kayıt içe aktarıldı. Yenileniyor...",
+      "invalid": "Kayıt JSON'u geçersiz."
+    },
     "tapToStart": "başlamak için dokun",
     "codex": "bilgi kodeksi",
     "achievements": "başarımlar",
@@ -1006,8 +1021,8 @@
   "shipSkins": {
     "title": "GEMİ GÖRÜNÜMLERİ",
     "subtitle": "sadece kozmetik gövdeler · savaş istatistiği yok",
-    "soon": "gelecek",
-    "futurePremium": "premium yer tutucu · {price}",
+    "soon": "Yakında",
+    "futurePremium": "Yakında",
     "credits": "Gemi Kredisi",
     "price": "{amount} Gemi Kredisi",
     "filters": {
@@ -1015,7 +1030,7 @@
       "unlocked": "Açık",
       "locked": "Kilitli",
       "rarePlus": "Nadir+",
-      "premium": "Premium / Gelecek"
+      "premium": "Yakında"
     },
     "rarity": {
       "default": "varsayılan",
@@ -1051,7 +1066,7 @@
       "prestige": "{count} kez prestij yap.",
       "ascension": "{count} kez kozmik yükseliş yap.",
       "skinCredits": "Gemi Kredisi ile satın alınır.",
-      "futurePremium": "Gelecek kozmetik görünüm. Ödeme sistemi uygulanmadı.",
+      "futurePremium": "Yakında.",
       "locked": "Kilitli."
     },
     "detail": {

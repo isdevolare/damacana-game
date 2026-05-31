@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from '@/lib/store';
 import { audio } from '@/lib/audio/AudioEngine';
@@ -7,6 +8,8 @@ import { useTranslations } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
 import { locales } from '@/i18n/config';
 import { systemRequirementKey, systemUnlocked } from '@/lib/config/systemUnlocks';
+
+const SAVE_STORAGE_KEY = 'damacana_v1';
 
 export function SettingsPanel({ locale }: { locale: string }) {
   const show = useGame((s) => s.showSettings);
@@ -25,10 +28,12 @@ export function SettingsPanel({ locale }: { locale: string }) {
   const setLowEffectsMode = useGame((s) => s.setLowEffectsMode);
   const audioSettings = useGame((s) => s.audio);
   const set = useGame((s) => s.setAudioSetting);
-  const reset = useGame((s) => s.reset);
   const t = useTranslations('ui');
   const router = useRouter();
   const pathname = usePathname();
+  const [saveText, setSaveText] = useState('');
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [confirmResetSave, setConfirmResetSave] = useState(false);
   const unlockCtx = { bossTier: boss.tier, completedChapters, totalPrestiges, shards };
   const codexUnlocked = collectedFacts.length > 0 || systemUnlocked('codexAdvanced', unlockCtx);
 
@@ -49,6 +54,70 @@ export function SettingsPanel({ locale }: { locale: string }) {
   const openUtility = (open: () => void) => {
     setShow(false);
     open();
+  };
+
+  const setTimedSaveMessage = (message: string) => {
+    setSaveMessage(message);
+    window.setTimeout(() => setSaveMessage(null), 3500);
+  };
+
+  const readRawSave = () => {
+    try {
+      return window.localStorage.getItem(SAVE_STORAGE_KEY) ?? '';
+    } catch {
+      return '';
+    }
+  };
+
+  const exportSave = async () => {
+    const raw = readRawSave();
+    setSaveText(raw);
+    if (!raw) {
+      setTimedSaveMessage(t('saveTools.empty'));
+      return;
+    }
+    try {
+      await navigator.clipboard?.writeText(raw);
+      setTimedSaveMessage(t('saveTools.copied'));
+    } catch {
+      setTimedSaveMessage(t('saveTools.exported'));
+    }
+  };
+
+  const copySave = async () => {
+    const raw = saveText || readRawSave();
+    if (!raw) {
+      setTimedSaveMessage(t('saveTools.empty'));
+      return;
+    }
+    try {
+      await navigator.clipboard?.writeText(raw);
+      setTimedSaveMessage(t('saveTools.copied'));
+    } catch {
+      setTimedSaveMessage(t('saveTools.copyFailed'));
+    }
+  };
+
+  const importSave = () => {
+    try {
+      const parsed = JSON.parse(saveText);
+      const payload = parsed && typeof parsed === 'object' && 'state' in parsed ? parsed : { state: parsed, version: 0 };
+      if (!payload.state || typeof payload.state !== 'object') throw new Error('Invalid save');
+      window.localStorage.setItem(SAVE_STORAGE_KEY, JSON.stringify(payload));
+      setTimedSaveMessage(t('saveTools.imported'));
+      window.setTimeout(() => window.location.reload(), 250);
+    } catch {
+      setTimedSaveMessage(t('saveTools.invalid'));
+    }
+  };
+
+  const resetLocalSave = () => {
+    try {
+      window.localStorage.removeItem(SAVE_STORAGE_KEY);
+    } catch {
+      // The reload still gives the runtime a clean in-memory boot if storage is unavailable.
+    }
+    window.location.reload();
   };
 
   return (
@@ -221,15 +290,60 @@ export function SettingsPanel({ locale }: { locale: string }) {
               </button>
             </div>
 
+            <div className="mt-4 rounded-lg border border-danger/20 bg-danger/[0.04] p-2.5">
+              <div className="font-space text-[9px] uppercase tracking-[0.2em] text-danger/80">
+                {t('saveTools.title')}
+              </div>
+              <div className="mt-1 font-space text-[9px] leading-relaxed text-white/40">
+                {t('saveTools.description')}
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => void exportSave()}
+                  className="rounded-md border border-cyan/35 bg-cyan/10 px-2 py-2 font-space text-[9px] uppercase tracking-[0.14em] text-cyan"
+                >
+                  {t('saveTools.export')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void copySave()}
+                  className="rounded-md border border-white/15 bg-white/[0.03] px-2 py-2 font-space text-[9px] uppercase tracking-[0.14em] text-white/65"
+                >
+                  {t('saveTools.copy')}
+                </button>
+              </div>
+              <textarea
+                value={saveText}
+                onChange={(event) => setSaveText(event.target.value)}
+                placeholder={t('saveTools.placeholder')}
+                spellCheck={false}
+                className="mt-2 min-h-20 w-full resize-none rounded-md border border-white/10 bg-black/35 p-2 font-space text-[9px] leading-relaxed text-white/70 outline-none focus:border-cyan/45"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={importSave}
+                  className="rounded-md border border-gold/35 bg-gold/10 px-2 py-2 font-space text-[9px] uppercase tracking-[0.14em] text-gold"
+                >
+                  {t('saveTools.import')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => (confirmResetSave ? resetLocalSave() : setConfirmResetSave(true))}
+                  className="rounded-md border border-danger/50 bg-danger/10 px-2 py-2 font-space text-[9px] uppercase tracking-[0.14em] text-danger/85"
+                >
+                  {confirmResetSave ? t('saveTools.confirmReset') : t('resetAll')}
+                </button>
+              </div>
+              {saveMessage && (
+                <div className="mt-2 rounded border border-white/10 bg-white/[0.03] px-2 py-1.5 font-space text-[9px] text-white/55">
+                  {saveMessage}
+                </div>
+              )}
+            </div>
+
             <div className="mt-4 flex gap-2">
-              <button
-                onClick={() => {
-                  if (confirm('Reset all progress?')) reset();
-                }}
-                className="flex-1 text-[10px] font-space tracking-widest py-2 rounded-md border border-danger/50 text-danger/80"
-              >
-                {t('resetAll')}
-              </button>
               <button
                 onClick={() => setShow(false)}
                 className="flex-1 text-xs font-space tracking-widest py-2 rounded-md border border-white/30 text-white/80"

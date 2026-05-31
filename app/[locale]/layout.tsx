@@ -11,11 +11,18 @@ const sm = Space_Mono({ subsets: ['latin'], weight: ['400', '700'], variable: '-
 const mm = Major_Mono_Display({ subsets: ['latin'], weight: '400', variable: '--font-major-mono' });
 
 export const metadata: Metadata = {
-  title: 'damacana.exe',
-  description: 'a cosmic-absurd idle / clicker game',
+  applicationName: 'Damacana',
+  title: 'Damacana',
+  description: 'A cosmic ship defense incremental game.',
   manifest: '/manifest.json',
-  appleWebApp: { capable: true, title: 'damacana', statusBarStyle: 'black-translucent' },
-  icons: { apple: '/apple-touch-icon.png' },
+  appleWebApp: { capable: true, title: 'Damacana', statusBarStyle: 'black-translucent' },
+  icons: {
+    icon: [
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export const viewport: Viewport = {
@@ -24,6 +31,7 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: 'cover',
   themeColor: '#05010d',
+  colorScheme: 'dark',
 };
 
 export function generateStaticParams() {
@@ -42,7 +50,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   return (
     <html lang={locale} className={`${vt.variable} ${sm.variable} ${mm.variable}`}>
-      <body>
+      <body className="bg-[#05010d] antialiased">
         <NextIntlClientProvider messages={messages} locale={locale}>
           {children}
         </NextIntlClientProvider>
