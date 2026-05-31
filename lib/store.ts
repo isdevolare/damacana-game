@@ -19,7 +19,7 @@ import {
 import { AbsurdEvent, AnomalyEffectType, EventReward, pickRandomEvent } from './config/events';
 import { CATEGORIES, categoryComplete, factById, pickFactForLevel, pickRandomBonusFact } from './config/facts';
 import { ELITE_NAME_KEYS, KNOWLEDGE_BULB_TIMING, OFFLINE_PROGRESS, SHOP_ITEMS, shouldBeElite } from './config/progression';
-import { ChapterId, firstCompletableChapter, nextChapter } from './config/chapters';
+import { ChapterId, currentChapter, firstCompletableChapter, nextChapter } from './config/chapters';
 import { bossPhaseInfo } from './config/bossMissions';
 import { BossDropId, rollBossDrop } from './config/bossDrops';
 import { EnemyVariantId } from './config/enemyVariants';
@@ -66,6 +66,7 @@ import {
   summarizeAscensionBonuses,
 } from './config/ascension';
 import type { AscensionBonusSummary } from './config/ascension';
+import { DEFAULT_SHIP_SKIN_ID, shipSkinById, shipSkinUnlocked } from './config/shipSkins';
 import { fmt } from './util';
 
 export interface Buff {
@@ -176,6 +177,7 @@ interface Persisted {
   ascensionUpgradeLevels: Record<string, number>;
   ascensionBonuses: AscensionBonusSummary;
   ascensionUnlockedAt: number;
+  equippedShipSkinId: string;
   shop: { tapBoost: number; flowBoost: number; shardBoost: number };
   // audio settings
   audio: { master: number; music: number; sfx: number; muted: boolean };
@@ -200,6 +202,7 @@ export interface GameState extends Persisted {
   showBuildTree: boolean;
   showArtifacts: boolean;
   showAscension: boolean;
+  showShipSkins: boolean;
   currentEvent: AbsurdEvent | null;
   floatingNumbers: Array<{ id: number; value: number; x: number; y: number; crit?: boolean }>;
   shake: { intensity: 'small' | 'medium' | 'hard'; at: number } | null;
@@ -268,6 +271,8 @@ export interface GameState extends Persisted {
   prestige: () => void;
   ascend: () => void;
   buyAscensionUpgrade: (id: string) => void;
+  setShowShipSkins: (v: boolean) => void;
+  equipShipSkin: (id: string) => void;
   setAudioSetting: (partial: Partial<Persisted['audio']>) => void;
   start: () => void;
   reset: () => void;
@@ -873,6 +878,7 @@ const initialState: Persisted = {
   ascensionUpgradeLevels: {},
   ascensionBonuses: EMPTY_ASCENSION_BONUSES,
   ascensionUnlockedAt: 0,
+  equippedShipSkinId: DEFAULT_SHIP_SKIN_ID,
   shop: { tapBoost: 0, flowBoost: 0, shardBoost: 0 },
   audio: { master: 0.7, music: 0.6, sfx: 0.8, muted: false },
   hasStarted: false,
@@ -897,6 +903,7 @@ export const useGame = create<GameState>()(
       showBuildTree: false,
       showArtifacts: false,
       showAscension: false,
+      showShipSkins: false,
       currentEvent: null,
       floatingNumbers: [],
       shake: null,
@@ -1337,6 +1344,23 @@ export const useGame = create<GameState>()(
       setShowBuildTree: (v) => set({ showBuildTree: v }),
       setShowArtifacts: (v) => set({ showArtifacts: v }),
       setShowAscension: (v) => set({ showAscension: v }),
+      setShowShipSkins: (v) => set({ showShipSkins: v }),
+
+      equipShipSkin: (id) => {
+        const s = get();
+        const skin = shipSkinById(id);
+        const chapter = currentChapter(s.completedChapters);
+        const unlocked = shipSkinUnlocked(skin, {
+          completedChapters: s.completedChapters,
+          currentChapterId: chapter.id,
+          bestBossTier: s.bestBossTier,
+          artifactCount: (s.runArtifacts?.length ?? 0) + (s.permanentArtifacts?.length ?? 0),
+          totalPrestiges: s.totalPrestiges,
+          totalAscensions: s.totalAscensions,
+        });
+        if (!unlocked) return;
+        set({ equippedShipSkinId: skin.id });
+      },
 
       dismissEvolution: () => set({ showEvolution: null }),
       dismissChapterComplete: () => set({ showChapterComplete: null }),
@@ -2057,6 +2081,7 @@ export const useGame = create<GameState>()(
         ascensionUpgradeLevels: s.ascensionUpgradeLevels,
         ascensionBonuses: s.ascensionBonuses,
         ascensionUnlockedAt: s.ascensionUnlockedAt,
+        equippedShipSkinId: s.equippedShipSkinId,
         shop: s.shop,
         audio: s.audio,
         hasStarted: s.hasStarted,

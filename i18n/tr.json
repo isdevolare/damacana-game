@@ -13,6 +13,7 @@
     "research": "laboratuvar",
     "buildTree": "yapı ağacı",
     "artifacts": "artefaktlar",
+    "shipSkins": "gemi görünümleri",
     "coreSystems": "çekirdek sistemler",
     "utilityHub": "yardımcı / meta merkez",
     "utilitySystems": "kayıtlar ve araçlar",
@@ -973,11 +974,53 @@
     "milestoneReached": "{name} {level} seviyeye ulaştı"
   },
   "shipSkins": {
-    "defaultCoreShip": "Varsayılan Çekirdek Gemisi",
-    "rareVectorWing": "Nadir Vektör Kanadı",
-    "epicVoidInterceptor": "Epik Boşluk Önleyicisi",
-    "legendarySolarCarrier": "Efsanevi Güneş Taşıyıcısı",
-    "cosmicSingularityMothership": "Kozmik Tekillik Ana Gemisi"
+    "title": "GEMİ GÖRÜNÜMLERİ",
+    "subtitle": "sadece kozmetik gövdeler · savaş istatistiği yok",
+    "soon": "gelecek",
+    "futurePremium": "premium yer tutucu · {price}",
+    "rarity": {
+      "default": "varsayılan",
+      "rare": "nadir",
+      "epic": "epik",
+      "legendary": "efsanevi",
+      "cosmic": "kozmik"
+    },
+    "state": {
+      "locked": "kilitli",
+      "unlocked": "açık",
+      "equipped": "takılı"
+    },
+    "button": {
+      "equip": "kuşan",
+      "equipped": "takılı",
+      "locked": "kilitli"
+    },
+    "requirements": {
+      "starter": "Varsayılan olarak açık.",
+      "chapter_mars": "Mars'a ulaş.",
+      "chapter_saturn": "Satürn'e ulaş.",
+      "chapter_earth": "Dünya'ya ulaş.",
+      "chapter_uranus": "Uranüs'e ulaş.",
+      "chapter_neptune": "Neptün'e ulaş.",
+      "chapter_redDwarf": "Kızıl Cüce'ye ulaş.",
+      "chapter_whiteDwarf": "Beyaz Cüce'ye ulaş.",
+      "chapter_giantStar": "Dev Yıldız'a ulaş.",
+      "chapter_supernova": "Süpernova'ya ulaş.",
+      "artifacts": "{count} artefakt topla.",
+      "prestige": "{count} kez prestij yap.",
+      "ascension": "{count} kez kozmik yükseliş yap.",
+      "futurePremium": "Gelecek kozmetik görünüm. Ödeme sistemi uygulanmadı.",
+      "locked": "Kilitli."
+    },
+    "skins": {
+      "defaultCoreShip": { "name": "Varsayılan Çekirdek Gemisi" },
+      "marsRaider": { "name": "Mars Akıncısı" },
+      "saturnOrbitCruiser": { "name": "Satürn Yörünge Kruvazörü" },
+      "voidInterceptor": { "name": "Boşluk Önleyicisi" },
+      "prestigeVessel": { "name": "Prestij Gemisi" },
+      "ascendantMothership": { "name": "Yükselen Ana Gemi" },
+      "cosmicWhaleShip": { "name": "Kozmik Balina Gemisi" }
+    }
   },
   "tree": {
     "explain": "Ağaç bölümler ilerledikçe açılır.",

@@ -14,6 +14,7 @@ export function SettingsPanel({ locale }: { locale: string }) {
   const setShowProfile = useGame((s) => s.setShowProfile);
   const setShowCodex = useGame((s) => s.setShowCodex);
   const setShowAchievements = useGame((s) => s.setShowAchievements);
+  const setShowShipSkins = useGame((s) => s.setShowShipSkins);
   const boss = useGame((s) => s.boss);
   const completedChapters = useGame((s) => s.completedChapters);
   const totalPrestiges = useGame((s) => s.totalPrestiges);
@@ -75,6 +76,12 @@ export function SettingsPanel({ locale }: { locale: string }) {
                 {t('utilitySystems')}
               </div>
               <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => openUtility(() => setShowShipSkins(true))}
+                  className="rounded-md border border-cyan/30 bg-cyan/10 px-2 py-2 text-left font-space text-[10px] uppercase tracking-[0.1em] text-cyan"
+                >
+                  {t('shipSkins')}
+                </button>
                 <button
                   onClick={() => openUtility(() => setShowProfile(true))}
                   className="rounded-md border border-cyan/30 bg-cyan/10 px-2 py-2 text-left font-space text-[10px] uppercase tracking-[0.1em] text-cyan"

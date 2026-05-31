@@ -13,6 +13,7 @@
     "research": "research lab",
     "buildTree": "build tree",
     "artifacts": "artifacts",
+    "shipSkins": "ship skins",
     "coreSystems": "core systems",
     "utilityHub": "utility / meta hub",
     "utilitySystems": "records and tools",
@@ -973,11 +974,53 @@
     "milestoneReached": "{name} reached level {level}"
   },
   "shipSkins": {
-    "defaultCoreShip": "Default Core Ship",
-    "rareVectorWing": "Rare Vector Wing",
-    "epicVoidInterceptor": "Epic Void Interceptor",
-    "legendarySolarCarrier": "Legendary Solar Carrier",
-    "cosmicSingularityMothership": "Cosmic Singularity Mothership"
+    "title": "SHIP SKINS",
+    "subtitle": "cosmetic hulls only · no combat stats",
+    "soon": "future",
+    "futurePremium": "premium placeholder · {price}",
+    "rarity": {
+      "default": "default",
+      "rare": "rare",
+      "epic": "epic",
+      "legendary": "legendary",
+      "cosmic": "cosmic"
+    },
+    "state": {
+      "locked": "locked",
+      "unlocked": "unlocked",
+      "equipped": "equipped"
+    },
+    "button": {
+      "equip": "equip",
+      "equipped": "equipped",
+      "locked": "locked"
+    },
+    "requirements": {
+      "starter": "Unlocked by default.",
+      "chapter_mars": "Reach Mars.",
+      "chapter_saturn": "Reach Saturn.",
+      "chapter_earth": "Reach Earth.",
+      "chapter_uranus": "Reach Uranus.",
+      "chapter_neptune": "Reach Neptune.",
+      "chapter_redDwarf": "Reach Red Dwarf.",
+      "chapter_whiteDwarf": "Reach White Dwarf.",
+      "chapter_giantStar": "Reach Giant Star.",
+      "chapter_supernova": "Reach Supernova.",
+      "artifacts": "Collect {count} artifacts.",
+      "prestige": "Prestige {count} time.",
+      "ascension": "Ascend {count} time.",
+      "futurePremium": "Future cosmetic skin. Payments are not implemented.",
+      "locked": "Locked."
+    },
+    "skins": {
+      "defaultCoreShip": { "name": "Default Core Ship" },
+      "marsRaider": { "name": "Mars Raider" },
+      "saturnOrbitCruiser": { "name": "Saturn Orbit Cruiser" },
+      "voidInterceptor": { "name": "Void Interceptor" },
+      "prestigeVessel": { "name": "Prestige Vessel" },
+      "ascendantMothership": { "name": "Ascendant Mothership" },
+      "cosmicWhaleShip": { "name": "Cosmic Whale Ship" }
+    }
   },
   "tree": {
     "explain": "Tree nodes unlock as chapters progress.",

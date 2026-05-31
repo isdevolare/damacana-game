@@ -29,6 +29,7 @@ import { ResearchToast } from './ResearchToast';
 import { BuildTreeModal } from './BuildTreeModal';
 import { ArtifactInventoryModal } from './ArtifactInventoryModal';
 import { AscensionModal } from './AscensionModal';
+import { ShipSkinsModal } from './ShipSkinsModal';
 import { AudioUnlockPrompt } from './AudioUnlockPrompt';
 import { PowerToast } from './PowerToast';
 import { ArtifactToast } from './ArtifactToast';
@@ -72,6 +73,7 @@ export function GameScreen({ locale }: { locale: string }) {
       <BuildTreeModal />
       <ArtifactInventoryModal />
       <AscensionModal />
+      <ShipSkinsModal />
       <ShopModal />
       <ChapterCompleteModal />
       <OfflineReturnModal />

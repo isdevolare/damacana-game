@@ -23,6 +23,7 @@ import {
   pickEnemyVariant,
 } from '@/lib/config/enemyVariants';
 import { isMegaBoss } from '@/lib/config/bosses';
+import { shipSkinById } from '@/lib/config/shipSkins';
 import { audio } from '@/lib/audio/AudioEngine';
 import { fmt } from '@/lib/util';
 
@@ -535,6 +536,7 @@ export function CombatArena() {
   const ownedBuildNodeIds = useGame((s) => s.ownedBuildNodeIds);
   const runArtifacts = useGame((s) => s.runArtifacts);
   const permanentArtifacts = useGame((s) => s.permanentArtifacts);
+  const equippedShipSkinId = useGame((s) => s.equippedShipSkinId);
   const seenWeaponEvolutionIds = useGame((s) => s.seenWeaponEvolutionIds);
   const weaponEvolutionToast = useGame((s) => s.weaponEvolutionToast);
   const discoverWeaponEvolution = useGame((s) => s.discoverWeaponEvolution);
@@ -563,6 +565,7 @@ export function CombatArena() {
   const chapter = currentChapter(completedChapters);
   const style = useMemo(() => combatStyleForChapter(chapter), [chapter]);
   const planetTheme = useMemo(() => planetThemeForChapter(chapter.id), [chapter.id]);
+  const shipSkin = useMemo(() => shipSkinById(equippedShipSkinId), [equippedShipSkinId]);
   const bossProfile = useMemo(() => bossProfileForChapter(chapter.id), [chapter.id]);
   const upgradeBonuses = useMemo(() => summarizeUpgradeIdentityBonuses(upgradeLevels), [upgradeLevels]);
   const activeWeaponEvolutions = useMemo(() => unlockedWeaponEvolutions({
@@ -3083,7 +3086,7 @@ export function CombatArena() {
           top: `${player.y}%`,
           width: coreSize,
           height: coreSize,
-          borderColor: playerHit ? '#ff3d6e' : collapseActive || flowSurgeActive || orbitSurgeActive ? '#5cf6ff' : activeAttackSurgeActive || projectileSurgeActive ? '#ff5ce8' : comboSurgeActive ? '#ffd166' : chapter.accent,
+          borderColor: playerHit ? '#ff3d6e' : collapseActive || flowSurgeActive || orbitSurgeActive ? shipSkin.accent : activeAttackSurgeActive || projectileSurgeActive ? shipSkin.engine : comboSurgeActive ? '#ffd166' : shipSkin.accent,
           background: playerHit
             ? 'rgba(255,61,110,0.24)'
             : burstFireActive || activeAttackSurgeActive || projectileSurgeActive
@@ -3098,12 +3101,12 @@ export function CombatArena() {
             : collapseActive
               ? `0 0 ${42 * playerGlow}px rgba(92,246,255,0.72)`
               : burstFireActive || activeAttackSurgeActive || projectileSurgeActive
-                ? `0 0 ${44 * playerGlow}px rgba(255,92,232,0.58)`
+                ? `0 0 ${44 * playerGlow}px ${shipSkin.engine}`
                 : flowSurgeActive || orbitSurgeActive
-                  ? `0 0 ${42 * playerGlow}px rgba(92,246,255,0.48)`
+                  ? `0 0 ${42 * playerGlow}px ${shipSkin.glow}`
                   : comboSurgeActive
                     ? `0 0 ${40 * playerGlow}px rgba(255,209,102,0.48)`
-                : `0 0 ${(18 + intensity * 30) * playerGlow}px ${combo >= 15 ? `rgba(255,92,232,${0.34 + intensity * 0.2})` : chapter.glow}`,
+                : `0 0 ${(18 + intensity * 30) * playerGlow}px ${combo >= 15 ? shipSkin.engine : shipSkin.glow}`,
         }}
       >
         <div
@@ -3112,7 +3115,7 @@ export function CombatArena() {
             width: coreShieldSize,
             height: coreShieldSize,
             opacity: playerHpPct > 66 ? 0.48 : playerHpPct > 33 ? 0.3 : 0.16,
-            boxShadow: lowDensity ? undefined : `0 0 ${playerHit ? 26 : 16}px rgba(92,246,255,0.16)`,
+            boxShadow: lowDensity ? undefined : `0 0 ${playerHit ? 26 : 16}px ${shipSkin.glow}`,
           }}
         />
         {combo >= 15 && (
@@ -3146,17 +3149,32 @@ export function CombatArena() {
           <div className="absolute -inset-3 rounded-full border border-dashed border-pink/45 shadow-[0_0_20px_rgba(255,92,232,0.34)]" />
         )}
         <div
-          className="absolute inset-[5px] border border-cyan/45 bg-cyan/35 shadow-[0_0_18px_rgba(92,246,255,0.86)]"
-          style={{ clipPath: 'polygon(50% 0%, 72% 28%, 96% 46%, 72% 58%, 62% 100%, 50% 78%, 38% 100%, 28% 58%, 4% 46%, 28% 28%)' }}
+          className="absolute inset-[5px] border shadow-[0_0_18px_rgba(92,246,255,0.86)]"
+          style={{
+            borderColor: `${shipSkin.accent}88`,
+            background: `linear-gradient(180deg, ${shipSkin.accent}55, ${shipSkin.hull} 68%)`,
+            boxShadow: `0 0 18px ${shipSkin.glow}`,
+            clipPath: shipSkin.silhouette === 'raider'
+              ? 'polygon(58% 0%, 100% 48%, 58% 100%, 46% 68%, 0% 76%, 34% 50%, 0% 24%, 46% 32%)'
+              : shipSkin.silhouette === 'cruiser'
+                ? 'polygon(50% 0%, 88% 22%, 100% 54%, 76% 100%, 50% 82%, 24% 100%, 0% 54%, 12% 22%)'
+                : shipSkin.silhouette === 'interceptor'
+                  ? 'polygon(50% 0%, 78% 28%, 100% 22%, 76% 56%, 92% 100%, 50% 74%, 8% 100%, 24% 56%, 0% 22%, 22% 28%)'
+                  : shipSkin.silhouette === 'mothership'
+                    ? 'polygon(4% 52%, 22% 18%, 42% 22%, 50% 0%, 58% 22%, 78% 18%, 96% 52%, 78% 88%, 58% 76%, 50% 100%, 42% 76%, 22% 88%)'
+                    : shipSkin.silhouette === 'whale'
+                      ? 'polygon(50% 0%, 88% 18%, 100% 48%, 88% 78%, 62% 74%, 50% 100%, 38% 74%, 12% 78%, 0% 48%, 12% 18%)'
+                      : 'polygon(50% 0%, 72% 28%, 96% 46%, 72% 58%, 62% 100%, 50% 78%, 38% 100%, 28% 58%, 4% 46%, 28% 28%)',
+          }}
         />
         <div
-          className="absolute inset-[13px] bg-black/72"
-          style={{ clipPath: 'polygon(50% 0%, 68% 34%, 60% 100%, 50% 80%, 40% 100%, 32% 34%)' }}
+          className="absolute inset-[13px]"
+          style={{ background: `${shipSkin.hull}cc`, clipPath: 'polygon(50% 0%, 68% 34%, 60% 100%, 50% 80%, 40% 100%, 32% 34%)' }}
         />
-        <div className="absolute left-1/2 top-[34%] h-[22%] w-[24%] -translate-x-1/2 rounded-full bg-white/88 shadow-[0_0_12px_rgba(255,255,255,0.86)]" />
-        <div className="absolute bottom-[-8px] left-1/2 h-5 w-8 -translate-x-1/2 rounded-full bg-pink/55 blur-sm shadow-[0_0_16px_rgba(255,92,232,0.64)]" />
+        <div className="absolute left-1/2 top-[34%] h-[22%] w-[24%] -translate-x-1/2 rounded-full bg-white/88" style={{ boxShadow: `0 0 12px ${shipSkin.accent}` }} />
+        <div className="absolute bottom-[-8px] left-1/2 h-5 w-8 -translate-x-1/2 rounded-full blur-sm" style={{ background: shipSkin.engine, boxShadow: `0 0 16px ${shipSkin.engine}` }} />
         {(burstFireActive || activeAttackSurgeActive || projectileSurgeActive || flowSurgeActive || orbitSurgeActive) && (
-          <div className="absolute bottom-[-16px] left-1/2 h-8 w-4 -translate-x-1/2 rounded-full bg-cyan/45 blur-md" />
+          <div className="absolute bottom-[-16px] left-1/2 h-8 w-4 -translate-x-1/2 rounded-full blur-md" style={{ background: shipSkin.accent }} />
         )}
         {orbitSlashActive && (
           <div
