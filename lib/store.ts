@@ -183,6 +183,8 @@ interface Persisted {
   // audio settings
   audio: { master: number; music: number; sfx: number; muted: boolean };
   // first-time gate
+  tutorialCompleted: boolean;
+  seenOnboardingHintIds: string[];
   hasStarted: boolean;
 }
 
@@ -204,6 +206,8 @@ export interface GameState extends Persisted {
   showArtifacts: boolean;
   showAscension: boolean;
   showShipSkins: boolean;
+  showTutorial: boolean;
+  activeOnboardingHintId: string | null;
   currentEvent: AbsurdEvent | null;
   floatingNumbers: Array<{ id: number; value: number; x: number; y: number; crit?: boolean }>;
   shake: { intensity: 'small' | 'medium' | 'hard'; at: number } | null;
@@ -275,6 +279,11 @@ export interface GameState extends Persisted {
   setShowShipSkins: (v: boolean) => void;
   equipShipSkin: (id: string) => void;
   setLowEffectsMode: (v: boolean) => void;
+  setShowTutorial: (v: boolean) => void;
+  completeTutorial: () => void;
+  replayTutorial: () => void;
+  triggerOnboardingHint: (id: string) => void;
+  dismissOnboardingHint: () => void;
   setAudioSetting: (partial: Partial<Persisted['audio']>) => void;
   start: () => void;
   reset: () => void;
@@ -884,6 +893,8 @@ const initialState: Persisted = {
   shop: { tapBoost: 0, flowBoost: 0, shardBoost: 0 },
   lowEffectsMode: false,
   audio: { master: 0.7, music: 0.6, sfx: 0.8, muted: false },
+  tutorialCompleted: false,
+  seenOnboardingHintIds: [],
   hasStarted: false,
 };
 
@@ -907,6 +918,8 @@ export const useGame = create<GameState>()(
       showArtifacts: false,
       showAscension: false,
       showShipSkins: false,
+      showTutorial: false,
+      activeOnboardingHintId: null,
       currentEvent: null,
       floatingNumbers: [],
       shake: null,
@@ -1366,6 +1379,18 @@ export const useGame = create<GameState>()(
       },
 
       setLowEffectsMode: (v) => set({ lowEffectsMode: v }),
+      setShowTutorial: (v) => set({ showTutorial: v }),
+      completeTutorial: () => set({ tutorialCompleted: true, showTutorial: false }),
+      replayTutorial: () => set({ showSettings: false, showTutorial: true }),
+      triggerOnboardingHint: (id) => {
+        const s = get();
+        if ((s.seenOnboardingHintIds ?? []).includes(id)) return;
+        set({
+          seenOnboardingHintIds: [...(s.seenOnboardingHintIds ?? []), id],
+          activeOnboardingHintId: id,
+        });
+      },
+      dismissOnboardingHint: () => set({ activeOnboardingHintId: null }),
 
       dismissEvolution: () => set({ showEvolution: null }),
       dismissChapterComplete: () => set({ showChapterComplete: null }),
@@ -1860,8 +1885,10 @@ export const useGame = create<GameState>()(
         const s = get();
         const dmc = s.tree['startingGift'] && s.totalEarned === 0 ? legacySkillValue(s, 'startingGift', 100) : s.damacana;
         const now = Date.now();
+        const firstRunTutorial = !s.tutorialCompleted && s.totalPlayMs === 0 && s.totalEarned === 0 && s.boss.tier <= 1;
         set({
           hasStarted: true,
+          showTutorial: firstRunTutorial,
           damacana: dmc,
           runStartAt: now,
           lastActiveAt: now,
@@ -1911,6 +1938,8 @@ export const useGame = create<GameState>()(
           pendingBulbLevel: null,
           currentFact: null,
           achievementToast: null,
+          showTutorial: false,
+          activeOnboardingHintId: null,
           combo: 1,
           lastTapAt: 0,
         });
@@ -2081,6 +2110,8 @@ export const useGame = create<GameState>()(
         permanentArtifacts: s.permanentArtifacts,
         artifactBonuses: s.artifactBonuses,
         seenWeaponEvolutionIds: s.seenWeaponEvolutionIds,
+        tutorialCompleted: s.tutorialCompleted,
+        seenOnboardingHintIds: s.seenOnboardingHintIds,
         ascensionPoints: s.ascensionPoints,
         totalAscensions: s.totalAscensions,
         ascensionUpgradeLevels: s.ascensionUpgradeLevels,

@@ -23,6 +23,7 @@
     "lowEffectsMode": "Low Effects Mode",
     "on": "on",
     "off": "off",
+    "replayTutorial": "Replay Tutorial",
     "master": "master",
     "music": "music",
     "sfx": "sfx",
@@ -112,11 +113,35 @@
       "anomalies": "Defeat Earth final boss T10",
       "research": "Reach Mars",
       "buildTree": "Reach Saturn",
+      "artifacts": "Boss drops and progression",
       "codexAdvanced": "Reach Uranus",
       "prestige": "Reach Neptune pressure",
+      "ascension": "Late Star Arc or high prestige",
       "default": "Locked"
     },
     "megaPrestige": "mega prestige"
+  },
+  "onboarding": {
+    "kicker": "tutorial",
+    "skip": "skip",
+    "next": "next",
+    "done": "done",
+    "steps": {
+      "shipControl": "This is your cosmic ship. Survive enemy waves.",
+      "autoFire": "Your ship fires automatically and clears approaching enemies.",
+      "tapBurst": "Tap to boost fire rate and build combo.",
+      "upgrades": "Spend resources to upgrade ship modules.",
+      "bossPhases": "Clear boss phases to unlock new planets and arcs.",
+      "advancedLater": "Skills, lab, artifacts, and prestige unlock as you progress."
+    },
+    "hints": {
+      "kicker": "quick hint",
+      "firstUpgrade": "A ship module is affordable. Upgrade it to feel stronger immediately.",
+      "firstAbility": "Active abilities are unlocking. Use them when waves crowd the ship.",
+      "firstBossPhase": "Boss phase cleared. Keep pushing phases to open new chapters.",
+      "firstPrestige": "Permanent power is available. Prestige is optional and can wait.",
+      "firstArtifact": "Artifact found. Check Artifacts to see the build bonus."
+    }
   },
   "ascension": {
     "kicker": "mega prestige layer",

@@ -15,6 +15,7 @@ export function SettingsPanel({ locale }: { locale: string }) {
   const setShowCodex = useGame((s) => s.setShowCodex);
   const setShowAchievements = useGame((s) => s.setShowAchievements);
   const setShowShipSkins = useGame((s) => s.setShowShipSkins);
+  const replayTutorial = useGame((s) => s.replayTutorial);
   const boss = useGame((s) => s.boss);
   const completedChapters = useGame((s) => s.completedChapters);
   const totalPrestiges = useGame((s) => s.totalPrestiges);
@@ -109,6 +110,12 @@ export function SettingsPanel({ locale }: { locale: string }) {
                       {t(systemRequirementKey('codexAdvanced') as any)}
                     </span>
                   )}
+                </button>
+                <button
+                  onClick={() => replayTutorial()}
+                  className="rounded-md border border-purple/30 bg-purple/10 px-2 py-2 text-left font-space text-[10px] uppercase tracking-[0.1em] text-purple"
+                >
+                  {t('replayTutorial')}
                 </button>
               </div>
             </div>

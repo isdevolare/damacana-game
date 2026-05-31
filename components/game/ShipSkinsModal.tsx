@@ -13,54 +13,174 @@ import {
 } from '@/lib/config/shipSkins';
 import { clsx } from '@/lib/util';
 
-const RARITY_STYLE: Record<ShipSkinRarity, { border: string; text: string; bg: string }> = {
-  default: { border: 'border-white/20', text: 'text-white/70', bg: 'bg-white/[0.03]' },
-  rare: { border: 'border-cyan/35', text: 'text-cyan', bg: 'bg-cyan/[0.06]' },
-  epic: { border: 'border-purple/40', text: 'text-purple', bg: 'bg-purple/[0.07]' },
-  legendary: { border: 'border-gold/45', text: 'text-gold', bg: 'bg-gold/[0.07]' },
-  cosmic: { border: 'border-pink/45', text: 'text-pink', bg: 'bg-pink/[0.07]' },
+const RARITY_STYLE: Record<ShipSkinRarity, { border: string; text: string; bg: string; badge: string; glow: string }> = {
+  default: {
+    border: 'border-white/20',
+    text: 'text-white/70',
+    bg: 'bg-white/[0.03]',
+    badge: 'border-white/15 bg-white/[0.04]',
+    glow: '0 0 18px rgba(255,255,255,0.08)',
+  },
+  rare: {
+    border: 'border-cyan/40',
+    text: 'text-cyan',
+    bg: 'bg-cyan/[0.06]',
+    badge: 'border-cyan/35 bg-cyan/10',
+    glow: '0 0 22px rgba(92,246,255,0.13)',
+  },
+  epic: {
+    border: 'border-purple/45',
+    text: 'text-purple',
+    bg: 'bg-purple/[0.08]',
+    badge: 'border-purple/40 bg-purple/10',
+    glow: '0 0 26px rgba(184,122,255,0.16)',
+  },
+  legendary: {
+    border: 'border-gold/55',
+    text: 'text-gold',
+    bg: 'bg-gold/[0.08]',
+    badge: 'border-gold/50 bg-gold/10',
+    glow: '0 0 30px rgba(255,209,102,0.2)',
+  },
+  cosmic: {
+    border: 'border-pink/55',
+    text: 'text-pink',
+    bg: 'bg-pink/[0.08]',
+    badge: 'border-pink/45 bg-pink/10',
+    glow: '0 0 34px rgba(255,92,232,0.22)',
+  },
 };
 
 function ShipPreview({ skin, small = false }: { skin: ShipSkinDef; small?: boolean }) {
+  const frameSize = small ? 70 : 86;
+  const bodyWidth = `${skin.visual.bodyWidthPct}%`;
+  const bodyHeight = `${skin.visual.bodyHeightPct}%`;
+  const innerWidth = `${skin.visual.bodyWidthPct * 0.52}%`;
+  const innerHeight = `${skin.visual.bodyHeightPct * 0.74}%`;
+  const coreSize = `${skin.visual.coreSizePct}%`;
+  const renderEffect = () => {
+    switch (skin.visual.effect) {
+      case 'orbitRing':
+        return (
+          <>
+            <div
+              className="absolute left-1/2 top-1/2 rounded-[50%] border"
+              style={{
+                width: small ? 72 : 88,
+                height: small ? 30 : 36,
+                borderColor: `${skin.accent}80`,
+                boxShadow: `0 0 14px ${skin.glow}`,
+                transform: 'translate(-50%, -50%) rotate(-10deg)',
+              }}
+            />
+            <div
+              className="absolute left-1/2 top-1/2 rounded-[50%] border border-white/15"
+              style={{ width: small ? 82 : 98, height: small ? 18 : 24, transform: 'translate(-50%, -50%) rotate(13deg)' }}
+            />
+          </>
+        );
+      case 'fragments':
+        return (
+          <>
+            {[[-23, -18, 8], [24, -8, -16], [-19, 20, -28]].map(([x, y, rotate]) => (
+              <div
+                key={`${x}-${y}`}
+                className="absolute left-1/2 top-1/2 h-2 w-1.5 border border-purple/50 bg-purple/30"
+                style={{
+                  boxShadow: `0 0 10px ${skin.glow}`,
+                  transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${rotate}deg)`,
+                  clipPath: 'polygon(50% 0%, 100% 100%, 0% 74%)',
+                }}
+              />
+            ))}
+          </>
+        );
+      case 'prestigeAura':
+        return (
+          <>
+            <div className="absolute left-1/2 top-1/2 h-[78%] w-[78%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/25" />
+            <div className="absolute left-1/2 top-1/2 h-[96%] w-[56%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-pink/20" />
+          </>
+        );
+      case 'ascensionAura':
+        return (
+          <>
+            <div className="absolute left-1/2 top-1/2 h-[88%] w-[112%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/30" />
+            <div className="absolute left-1/2 top-1/2 h-[108%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan/25" />
+            <div className="absolute left-1/2 top-[18%] h-1 w-10 -translate-x-1/2 rounded-full bg-white/50 blur-sm" />
+          </>
+        );
+      case 'whaleWake':
+        return (
+          <>
+            <div className="absolute left-[18%] top-1/2 h-[54%] w-[78%] -translate-y-1/2 rounded-full border-l border-cyan/25" />
+            <div className="absolute left-[8%] top-1/2 h-[34%] w-[70%] -translate-y-1/2 rounded-full border-l border-purple/25" />
+            <div className="absolute right-[8%] top-[32%] h-1.5 w-1.5 rounded-full bg-cyan/70 shadow-[0_0_8px_rgba(128,255,244,0.7)]" />
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div
       className={clsx('relative mx-auto flex shrink-0 items-center justify-center', small ? 'h-16 w-20' : 'h-20 w-24')}
       aria-hidden
     >
       <div
-        className="absolute left-1/2 top-1/2 rounded-full border opacity-45"
+        className="absolute left-1/2 top-1/2 rounded-full border opacity-55"
         style={{
-          width: small ? 64 : 78,
-          height: small ? 64 : 78,
+          width: frameSize,
+          height: frameSize,
           borderColor: `${skin.accent}66`,
           boxShadow: `0 0 ${small ? 16 : 22}px ${skin.glow}`,
           transform: 'translate(-50%, -50%)',
         }}
       />
+      {renderEffect()}
       <div
-        className="absolute bottom-1 left-1/2 h-7 w-5 -translate-x-1/2 rounded-full blur-md"
-        style={{ background: skin.engine, opacity: 0.65 }}
+        className="absolute bottom-0 left-1/2 h-8 w-5 -translate-x-1/2 rounded-full blur-md"
+        style={{ background: skin.engine, opacity: 0.7, boxShadow: `0 0 16px ${skin.engine}` }}
       />
       <div
-        className="absolute h-[74%] w-[82%] border"
+        className="absolute border"
         style={{
+          width: bodyWidth,
+          height: bodyHeight,
+          borderRadius: skin.visual.bodyRadius,
           borderColor: `${skin.accent}88`,
-          background: `linear-gradient(180deg, ${skin.accent}44, ${skin.hull} 62%)`,
-          boxShadow: `0 0 18px ${skin.glow}`,
-          clipPath: skin.silhouette === 'raider'
-            ? 'polygon(58% 0%, 100% 48%, 58% 100%, 46% 68%, 0% 76%, 34% 50%, 0% 24%, 46% 32%)'
-            : skin.silhouette === 'cruiser'
-              ? 'polygon(50% 0%, 88% 22%, 100% 54%, 76% 100%, 50% 82%, 24% 100%, 0% 54%, 12% 22%)'
-              : skin.silhouette === 'interceptor'
-                ? 'polygon(50% 0%, 78% 28%, 100% 22%, 76% 56%, 92% 100%, 50% 74%, 8% 100%, 24% 56%, 0% 22%, 22% 28%)'
-                : skin.silhouette === 'mothership'
-                  ? 'polygon(4% 52%, 22% 18%, 42% 22%, 50% 0%, 58% 22%, 78% 18%, 96% 52%, 78% 88%, 58% 76%, 50% 100%, 42% 76%, 22% 88%)'
-                  : skin.silhouette === 'whale'
-                    ? 'polygon(50% 0%, 88% 18%, 100% 48%, 88% 78%, 62% 74%, 50% 100%, 38% 74%, 12% 78%, 0% 48%, 12% 18%)'
-                    : 'polygon(50% 0%, 72% 28%, 96% 46%, 72% 58%, 62% 100%, 50% 78%, 38% 100%, 28% 58%, 4% 46%, 28% 28%)',
+          background: `linear-gradient(110deg, ${skin.hull} 8%, ${skin.accent}55 46%, ${skin.hull} 88%)`,
+          boxShadow: `0 0 12px ${skin.glow}`,
+          clipPath: skin.visual.wingClip,
+          opacity: 0.72,
         }}
       />
-      <div className="absolute top-[31%] h-4 w-4 rounded-full bg-white/85" style={{ boxShadow: `0 0 12px ${skin.accent}` }} />
+      <div
+        className="absolute border"
+        style={{
+          width: bodyWidth,
+          height: bodyHeight,
+          borderRadius: skin.visual.bodyRadius,
+          borderColor: `${skin.accent}a0`,
+          background: `linear-gradient(180deg, ${skin.accent}44, ${skin.hull} 62%)`,
+          boxShadow: `0 0 18px ${skin.glow}`,
+          clipPath: skin.visual.bodyClip,
+        }}
+      />
+      <div
+        className="absolute border border-white/10"
+        style={{
+          width: innerWidth,
+          height: innerHeight,
+          background: `${skin.hull}d8`,
+          clipPath: skin.visual.innerClip,
+        }}
+      />
+      <div
+        className="absolute left-1/2 top-[33%] -translate-x-1/2 rounded-full bg-white/88"
+        style={{ width: coreSize, height: coreSize, boxShadow: `0 0 14px ${skin.accent}` }}
+      />
     </div>
   );
 }
@@ -127,11 +247,21 @@ export function ShipSkinsModal() {
                 return (
                   <div
                     key={skin.id}
-                    className={clsx('rounded-lg border p-2.5', rarity.border, rarity.bg, !unlocked && 'opacity-72')}
+                    className={clsx('relative overflow-hidden rounded-lg border p-2.5', rarity.border, rarity.bg, !unlocked && 'opacity-[0.78]')}
+                    style={{ boxShadow: unlocked ? rarity.glow : 'inset 0 0 24px rgba(0,0,0,0.28)' }}
                   >
+                    <div
+                      className="pointer-events-none absolute inset-x-8 -top-10 h-16 rounded-full blur-2xl"
+                      style={{ background: skin.accent, opacity: unlocked ? 0.12 : 0.06 }}
+                    />
                     <div className="flex gap-3">
-                      <div className="rounded-md border border-white/10 bg-black/40 px-1">
+                      <div
+                        className={clsx('relative overflow-hidden rounded-lg border bg-black/50 px-1', unlocked ? 'border-white/15' : 'border-white/10')}
+                        style={{ boxShadow: `inset 0 0 18px ${skin.glow}` }}
+                      >
                         <ShipPreview skin={skin} small />
+                        {!unlocked && <div className="absolute inset-0 bg-black/38 backdrop-saturate-50" />}
+                        {equipped && <div className="absolute inset-x-2 bottom-1 h-px bg-cyan shadow-[0_0_8px_rgba(92,246,255,0.8)]" />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
@@ -139,7 +269,7 @@ export function ShipSkinsModal() {
                             <div className="truncate font-space text-[11px] uppercase tracking-[0.14em] text-white/90">
                               {t(`skins.${skin.i18nKey}.name` as any)}
                             </div>
-                            <div className={clsx('mt-0.5 font-space text-[8px] uppercase tracking-[0.16em]', rarity.text)}>
+                            <div className={clsx('mt-1 inline-flex rounded border px-1.5 py-0.5 font-space text-[8px] uppercase tracking-[0.16em]', rarity.text, rarity.badge)}>
                               {t(`rarity.${skin.rarity}` as any)}
                             </div>
                           </div>

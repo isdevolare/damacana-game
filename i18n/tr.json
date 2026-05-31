@@ -23,6 +23,7 @@
     "lowEffectsMode": "Düşük Efekt Modu",
     "on": "açık",
     "off": "kapalı",
+    "replayTutorial": "Eğitimi Tekrar Oynat",
     "master": "ana ses",
     "music": "müzik",
     "sfx": "efekt",
@@ -112,11 +113,35 @@
       "anomalies": "Dünya final boss T10'u yen",
       "research": "Mars'a ulaş",
       "buildTree": "Satürn'e ulaş",
+      "artifacts": "Boss düşümleri ve ilerleme",
       "codexAdvanced": "Uranüs'e ulaş",
       "prestige": "Neptün baskısına ulaş",
+      "ascension": "Geç Yıldız Arkı veya yüksek prestij",
       "default": "Kilitli"
     },
     "megaPrestige": "mega prestij"
+  },
+  "onboarding": {
+    "kicker": "eğitim",
+    "skip": "atla",
+    "next": "ileri",
+    "done": "tamam",
+    "steps": {
+      "shipControl": "Bu senin kozmik gemin. Düşman dalgalarına karşı dayan.",
+      "autoFire": "Gemin otomatik ateş eder. Yaklaşan düşmanları temizler.",
+      "tapBurst": "Ekrana dokunarak ateşi hızlandır, kombo kur.",
+      "upgrades": "Kazandığın kaynakla gemi modüllerini güçlendir.",
+      "bossPhases": "Boss fazlarını geç, yeni gezegenleri ve arkları aç.",
+      "advancedLater": "Yetenekler, laboratuvar, artefaktlar ve prestij ilerledikçe açılır."
+    },
+    "hints": {
+      "kicker": "kısa ipucu",
+      "firstUpgrade": "Bir gemi modülü alınabilir. Hemen güçlenmek için yükselt.",
+      "firstAbility": "Aktif yetenekler açılıyor. Dalgalar gemiyi sardığında kullan.",
+      "firstBossPhase": "Boss fazı temizlendi. Yeni bölümler için fazları zorlamaya devam et.",
+      "firstPrestige": "Kalıcı güç hazır. Prestij isteğe bağlıdır ve bekleyebilir.",
+      "firstArtifact": "Artefakt bulundu. Yapı bonusunu görmek için Artefaktlar'a bak."
+    }
   },
   "ascension": {
     "kicker": "mega prestij katmanı",

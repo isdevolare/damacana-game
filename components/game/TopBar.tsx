@@ -122,6 +122,11 @@ export function TopBar() {
               <span className="inline-block max-w-[calc(100%-16px)] truncate align-middle font-space text-[8px] uppercase tracking-[0.08em] sm:text-[9px]">
                 {system.label}
               </span>
+              {!system.unlocked && system.requirement && (
+                <span className="mt-0.5 block truncate font-space text-[7px] uppercase tracking-[0.06em] text-white/45">
+                  {t(system.requirement as any)}
+                </span>
+              )}
             </button>
           ))}
         </div>

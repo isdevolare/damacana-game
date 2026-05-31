@@ -33,6 +33,8 @@ import { ShipSkinsModal } from './ShipSkinsModal';
 import { AudioUnlockPrompt } from './AudioUnlockPrompt';
 import { PowerToast } from './PowerToast';
 import { ArtifactToast } from './ArtifactToast';
+import { TutorialOverlay } from './TutorialOverlay';
+import { OnboardingHints } from './OnboardingHints';
 import { useScreenShake } from '@/lib/hooks/useScreenShake';
 import { useGameLoop } from '@/lib/hooks/useGameLoop';
 import { useAchievements } from '@/lib/hooks/useAchievements';
@@ -81,6 +83,8 @@ export function GameScreen({ locale }: { locale: string }) {
       <AchievementToast />
       <PowerToast />
       <ArtifactToast />
+      <OnboardingHints />
+      <TutorialOverlay />
       <SettingsPanel locale={locale} />
       <AudioUnlockPrompt />
       <StartOverlay />
