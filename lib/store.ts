@@ -66,7 +66,8 @@ import {
   summarizeAscensionBonuses,
 } from './config/ascension';
 import type { AscensionBonusSummary } from './config/ascension';
-import { DEFAULT_SHIP_SKIN_ID, shipSkinById, shipSkinUnlocked } from './config/shipSkins';
+import { duplicateArtifactSkinCredits, skinCreditRewardForBoss, SKIN_CREDIT_LIMIT } from './config/cosmetics';
+import { DEFAULT_SHIP_SKIN_ID, shipSkinById, shipSkinPurchasable, shipSkinUnlocked } from './config/shipSkins';
 import { fmt } from './util';
 
 export interface Buff {
@@ -177,6 +178,8 @@ interface Persisted {
   ascensionUpgradeLevels: Record<string, number>;
   ascensionBonuses: AscensionBonusSummary;
   ascensionUnlockedAt: number;
+  skinCredits: number;
+  ownedShipSkinIds: string[];
   equippedShipSkinId: string;
   shop: { tapBoost: number; flowBoost: number; shardBoost: number };
   lowEffectsMode: boolean;
@@ -277,6 +280,8 @@ export interface GameState extends Persisted {
   ascend: () => void;
   buyAscensionUpgrade: (id: string) => void;
   setShowShipSkins: (v: boolean) => void;
+  addSkinCredits: (amount: number) => void;
+  buyShipSkin: (id: string) => void;
   equipShipSkin: (id: string) => void;
   setLowEffectsMode: (v: boolean) => void;
   setShowTutorial: (v: boolean) => void;
@@ -746,7 +751,7 @@ function upgradePowerLabel(identity: string, kind: string) {
 function addArtifactPatch(
   state: Persisted,
   source: ArtifactSource,
-): Partial<Pick<Persisted, 'runArtifacts' | 'permanentArtifacts' | 'artifactBonuses'>> & { artifactToast?: ArtifactToast; artifactShardGain?: number } {
+): Partial<Pick<Persisted, 'runArtifacts' | 'permanentArtifacts' | 'artifactBonuses'>> & { artifactToast?: ArtifactToast; artifactShardGain?: number; artifactSkinCreditGain?: number } {
   const artifact = rollArtifactDrop(source);
   if (!artifact) return {};
   const now = Date.now();
@@ -754,6 +759,7 @@ function addArtifactPatch(
   const current = state[key] ?? [];
   const index = current.findIndex((item) => item.id === artifact.id);
   let convertedShards = 0;
+  let convertedSkinCredits = 0;
   let level = 1;
   let nextArtifacts: OwnedArtifact[];
   if (index >= 0) {
@@ -766,6 +772,7 @@ function addArtifactPatch(
     } else {
       level = existing.level;
       convertedShards = duplicateShardValue(artifact.rarity);
+      convertedSkinCredits = duplicateArtifactSkinCredits(artifact.rarity);
       nextArtifacts = current;
     }
   } else {
@@ -776,6 +783,7 @@ function addArtifactPatch(
   return {
     [key]: nextArtifacts,
     ...(convertedShards > 0 ? { artifactShardGain: convertedShards } : {}),
+    ...(convertedSkinCredits > 0 ? { artifactSkinCreditGain: convertedSkinCredits } : {}),
     artifactBonuses: summarizeArtifactBonuses(runArtifacts, permanentArtifacts),
     artifactToast: {
       id: artifactToastCounter++,
@@ -789,7 +797,7 @@ function addArtifactPatch(
 }
 
 function artifactStatePatch(patch: ReturnType<typeof addArtifactPatch>) {
-  const { artifactShardGain: _artifactShardGain, ...statePatch } = patch;
+  const { artifactShardGain: _artifactShardGain, artifactSkinCreditGain: _artifactSkinCreditGain, ...statePatch } = patch;
   return statePatch;
 }
 
@@ -797,7 +805,7 @@ function bossDefeatDropPatch(
   state: Persisted,
   defeatedTier: number,
   now: number,
-): { activeBuffs: Buff[]; shardGain: number; toast: BossPhaseToast; artifactPatch: ReturnType<typeof addArtifactPatch> } {
+): { activeBuffs: Buff[]; shardGain: number; skinCreditGain: number; toast: BossPhaseToast; artifactPatch: ReturnType<typeof addArtifactPatch> } {
   const info = bossPhaseInfo(defeatedTier);
   const drop = rollBossDrop(info.finalPhase);
   const artifactPatch = addArtifactPatch(state, info.finalPhase ? 'chapterClear' : 'bossPhase');
@@ -819,9 +827,11 @@ function bossDefeatDropPatch(
   if (info.chapter.arcId === 'star' && info.finalPhase) {
     shardGain += Math.max(2, info.chapter.order - 3);
   }
+  const skinCreditGain = skinCreditRewardForBoss(defeatedTier) + (artifactPatch.artifactSkinCreditGain ?? 0);
   return {
     activeBuffs,
     shardGain,
+    skinCreditGain,
     artifactPatch,
     toast: {
       id: bossPhaseToastCounter++,
@@ -889,6 +899,8 @@ const initialState: Persisted = {
   ascensionUpgradeLevels: {},
   ascensionBonuses: EMPTY_ASCENSION_BONUSES,
   ascensionUnlockedAt: 0,
+  skinCredits: 0,
+  ownedShipSkinIds: [DEFAULT_SHIP_SKIN_ID],
   equippedShipSkinId: DEFAULT_SHIP_SKIN_ID,
   shop: { tapBoost: 0, flowBoost: 0, shardBoost: 0 },
   lowEffectsMode: false,
@@ -970,6 +982,7 @@ export const useGame = create<GameState>()(
 
         let boss = { ...s.boss };
         let shardsDelta = 0;
+        let skinCreditsDelta = 0;
         let crystalsDelta = 0;
         let dmcDelta = earn;
         let bossKillsRun = s.bossKillsThisRun;
@@ -1010,6 +1023,7 @@ export const useGame = create<GameState>()(
           const dropPatch = bossDefeatDropPatch({ ...s, activeBuffs }, defeatedTier, now);
           activeBuffs = dropPatch.activeBuffs;
           shardsDelta += dropPatch.shardGain;
+          skinCreditsDelta += dropPatch.skinCreditGain;
           shardsDelta += dropPatch.artifactPatch.artifactShardGain ?? 0;
           artifactPatch = dropPatch.artifactPatch;
           bossPhaseToast = dropPatch.toast;
@@ -1053,6 +1067,7 @@ export const useGame = create<GameState>()(
           damacana: s.damacana + dmcDelta,
           totalEarned,
           shards: s.shards + shardsDelta,
+          skinCredits: Math.min(SKIN_CREDIT_LIMIT, (s.skinCredits ?? 0) + skinCreditsDelta),
           crystals: s.crystals + crystalsDelta,
           boss,
           activeBuffs,
@@ -1109,6 +1124,7 @@ export const useGame = create<GameState>()(
         let boss = { ...s.boss };
         let dmcDelta = passiveGain;
         let shardsDelta = 0;
+        let skinCreditsDelta = 0;
         let crystalsDelta = 0;
         let bestBossTier = s.bestBossTier;
         let bossKillsRun = s.bossKillsThisRun;
@@ -1153,6 +1169,7 @@ export const useGame = create<GameState>()(
               const dropPatch = bossDefeatDropPatch({ ...s, activeBuffs: buffs }, defeatedTier, now);
               buffs = dropPatch.activeBuffs;
               shardsDelta += dropPatch.shardGain;
+              skinCreditsDelta += dropPatch.skinCreditGain;
               shardsDelta += dropPatch.artifactPatch.artifactShardGain ?? 0;
               artifactPatch = dropPatch.artifactPatch;
               bossPhaseToast = dropPatch.toast;
@@ -1192,6 +1209,7 @@ export const useGame = create<GameState>()(
           damacana: s.damacana + dmcDelta,
           totalEarned,
           shards: s.shards + shardsDelta,
+          skinCredits: Math.min(SKIN_CREDIT_LIMIT, (s.skinCredits ?? 0) + skinCreditsDelta),
           crystals: s.crystals + crystalsDelta,
           boss,
           activeBuffs: buffs,
@@ -1285,6 +1303,7 @@ export const useGame = create<GameState>()(
           boss.hpCur -= dmg;
           let dmcDelta = dmc;
           let shardsDelta = 0;
+          let skinCreditsDelta = 0;
           let bestBossTier = s.bestBossTier;
           let bossKillsRun = s.bossKillsThisRun;
           let bossKillsLife = s.bossKillsLifetime;
@@ -1298,6 +1317,7 @@ export const useGame = create<GameState>()(
             const dropPatch = bossDefeatDropPatch({ ...s, activeBuffs }, defeatedTier, now);
             activeBuffs = dropPatch.activeBuffs;
             shardsDelta += dropPatch.shardGain;
+            skinCreditsDelta += dropPatch.skinCreditGain;
             shardsDelta += dropPatch.artifactPatch.artifactShardGain ?? 0;
             artifactPatch = dropPatch.artifactPatch;
             bossPhaseToast = dropPatch.toast;
@@ -1313,6 +1333,7 @@ export const useGame = create<GameState>()(
             damacana: s.damacana + dmcDelta,
             totalEarned: s.totalEarned + dmcDelta,
             shards: s.shards + shardsDelta,
+            skinCredits: Math.min(SKIN_CREDIT_LIMIT, (s.skinCredits ?? 0) + skinCreditsDelta),
             activeBuffs,
             bestBossTier,
             bossKillsThisRun: bossKillsRun,
@@ -1362,10 +1383,44 @@ export const useGame = create<GameState>()(
       setShowAscension: (v) => set({ showAscension: v }),
       setShowShipSkins: (v) => set({ showShipSkins: v }),
 
+      addSkinCredits: (amount) => {
+        if (!Number.isFinite(amount) || amount <= 0) return;
+        set((state) => ({
+          skinCredits: Math.min(SKIN_CREDIT_LIMIT, (state.skinCredits ?? 0) + Math.floor(amount)),
+          powerToast: powerToast('skinCreditsGained', `+${fmt(Math.floor(amount))}`),
+        }));
+      },
+
+      buyShipSkin: (id) => {
+        const s = get();
+        const skin = shipSkinById(id);
+        const ownedShipSkinIds = s.ownedShipSkinIds ?? [DEFAULT_SHIP_SKIN_ID];
+        const chapter = currentChapter(s.completedChapters);
+        const context = {
+          completedChapters: s.completedChapters,
+          currentChapterId: chapter.id,
+          bestBossTier: s.bestBossTier,
+          artifactCount: (s.runArtifacts?.length ?? 0) + (s.permanentArtifacts?.length ?? 0),
+          totalPrestiges: s.totalPrestiges,
+          totalAscensions: s.totalAscensions,
+          ownedShipSkinIds,
+          skinCredits: s.skinCredits ?? 0,
+        };
+        if (shipSkinUnlocked(skin, context) || !shipSkinPurchasable(skin, context)) return;
+        const price = skin.priceCredits ?? 0;
+        set({
+          skinCredits: Math.max(0, (s.skinCredits ?? 0) - price),
+          ownedShipSkinIds: [...new Set([...ownedShipSkinIds, skin.id, DEFAULT_SHIP_SKIN_ID])],
+          equippedShipSkinId: skin.id,
+          powerToast: powerToast('skinPurchased'),
+        });
+      },
+
       equipShipSkin: (id) => {
         const s = get();
         const skin = shipSkinById(id);
         const chapter = currentChapter(s.completedChapters);
+        const ownedShipSkinIds = s.ownedShipSkinIds ?? [DEFAULT_SHIP_SKIN_ID];
         const unlocked = shipSkinUnlocked(skin, {
           completedChapters: s.completedChapters,
           currentChapterId: chapter.id,
@@ -1373,9 +1428,14 @@ export const useGame = create<GameState>()(
           artifactCount: (s.runArtifacts?.length ?? 0) + (s.permanentArtifacts?.length ?? 0),
           totalPrestiges: s.totalPrestiges,
           totalAscensions: s.totalAscensions,
+          ownedShipSkinIds,
+          skinCredits: s.skinCredits ?? 0,
         });
         if (!unlocked) return;
-        set({ equippedShipSkinId: skin.id });
+        set({
+          equippedShipSkinId: skin.id,
+          ownedShipSkinIds: [...new Set([...ownedShipSkinIds, skin.id, DEFAULT_SHIP_SKIN_ID])],
+        });
       },
 
       setLowEffectsMode: (v) => set({ lowEffectsMode: v }),
@@ -1422,9 +1482,16 @@ export const useGame = create<GameState>()(
         const patch = addArtifactPatch(s, source);
         if (!patch.artifactToast) return;
         const shardGain = patch.artifactShardGain ?? 0;
+        const skinCreditGain = patch.artifactSkinCreditGain ?? 0;
         set({
           ...artifactStatePatch(patch),
           ...(shardGain > 0 ? { shards: s.shards + shardGain } : {}),
+          ...(skinCreditGain > 0
+            ? {
+                skinCredits: Math.min(SKIN_CREDIT_LIMIT, (s.skinCredits ?? 0) + skinCreditGain),
+                powerToast: powerToast('skinCreditsGained', `+${fmt(skinCreditGain)}`),
+              }
+            : {}),
         });
       },
 
@@ -1719,6 +1786,9 @@ export const useGame = create<GameState>()(
           permanentArtifacts: nextPermanentArtifacts,
           artifactBonuses: nextArtifactBonuses,
           seenWeaponEvolutionIds: s.seenWeaponEvolutionIds ?? [],
+          skinCredits: s.skinCredits ?? 0,
+          ownedShipSkinIds: [...new Set([...(s.ownedShipSkinIds ?? []), DEFAULT_SHIP_SKIN_ID])],
+          equippedShipSkinId: s.equippedShipSkinId || DEFAULT_SHIP_SKIN_ID,
           shop: s.shop,
           audio: s.audio,
           hasStarted: s.hasStarted,
@@ -1822,6 +1892,9 @@ export const useGame = create<GameState>()(
           ascensionUpgradeLevels: nextAscensionUpgradeLevels,
           ascensionBonuses: nextAscensionBonuses,
           ascensionUnlockedAt: s.ascensionUnlockedAt || now,
+          skinCredits: s.skinCredits ?? 0,
+          ownedShipSkinIds: [...new Set([...(s.ownedShipSkinIds ?? []), DEFAULT_SHIP_SKIN_ID])],
+          equippedShipSkinId: s.equippedShipSkinId || DEFAULT_SHIP_SKIN_ID,
           shop: { tapBoost: 0, flowBoost: 0, shardBoost: 0 },
           audio: s.audio,
           hasStarted: s.hasStarted,
@@ -1899,6 +1972,7 @@ export const useGame = create<GameState>()(
       },
 
       reset: () => {
+        const s = get();
         const now = Date.now();
         set({
           ...initialState,
@@ -1920,6 +1994,9 @@ export const useGame = create<GameState>()(
           runArtifacts: [],
           permanentArtifacts: [],
           artifactBonuses: EMPTY_ARTIFACT_BONUSES,
+          skinCredits: s.skinCredits ?? 0,
+          ownedShipSkinIds: [...new Set([...(s.ownedShipSkinIds ?? []), DEFAULT_SHIP_SKIN_ID])],
+          equippedShipSkinId: s.equippedShipSkinId || DEFAULT_SHIP_SKIN_ID,
           nextKnowledgeBulbAt: 0,
           showChapterComplete: null,
           offlineReward: null,
@@ -2117,6 +2194,8 @@ export const useGame = create<GameState>()(
         ascensionUpgradeLevels: s.ascensionUpgradeLevels,
         ascensionBonuses: s.ascensionBonuses,
         ascensionUnlockedAt: s.ascensionUnlockedAt,
+        skinCredits: s.skinCredits,
+        ownedShipSkinIds: s.ownedShipSkinIds,
         equippedShipSkinId: s.equippedShipSkinId,
         shop: s.shop,
         lowEffectsMode: s.lowEffectsMode,

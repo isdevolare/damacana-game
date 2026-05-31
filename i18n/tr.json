@@ -106,6 +106,8 @@
       "manaRegenIncreased": "Mana yenilenmesi arttı",
       "orbitDamageIncreased": "Yörünge hasarı arttı",
       "comboGainIncreased": "Combo kazanımı arttı",
+      "skinCreditsGained": "Gemi Kredisi kazanıldı",
+      "skinPurchased": "Gemi görünümü açıldı",
       "powerChanged": "Gemi çekirdeği güçlendi"
     },
     "unlockReq": {
@@ -1006,8 +1008,18 @@
     "subtitle": "sadece kozmetik gövdeler · savaş istatistiği yok",
     "soon": "gelecek",
     "futurePremium": "premium yer tutucu · {price}",
+    "credits": "Gemi Kredisi",
+    "price": "{amount} Gemi Kredisi",
+    "filters": {
+      "all": "Hepsi",
+      "unlocked": "Açık",
+      "locked": "Kilitli",
+      "rarePlus": "Nadir+",
+      "premium": "Premium / Gelecek"
+    },
     "rarity": {
       "default": "varsayılan",
+      "common": "yaygın",
       "rare": "nadir",
       "epic": "epik",
       "legendary": "efsanevi",
@@ -1020,6 +1032,7 @@
     },
     "button": {
       "equip": "kuşan",
+      "buy": "satın al",
       "equipped": "takılı",
       "locked": "kilitli"
     },
@@ -1037,17 +1050,62 @@
       "artifacts": "{count} artefakt topla.",
       "prestige": "{count} kez prestij yap.",
       "ascension": "{count} kez kozmik yükseliş yap.",
+      "skinCredits": "Gemi Kredisi ile satın alınır.",
       "futurePremium": "Gelecek kozmetik görünüm. Ödeme sistemi uygulanmadı.",
       "locked": "Kilitli."
     },
+    "detail": {
+      "unlock": "açılma",
+      "effect": "efekt",
+      "trail": "iz",
+      "aura": "aura"
+    },
+    "effects": {
+      "none": "temiz başlangıç gövdesi",
+      "orbitRing": "yörünge halka vurgusu",
+      "fragments": "bozulmuş parçacıklar",
+      "prestigeAura": "prestij aurası",
+      "ascensionAura": "yükseliş halesi",
+      "whaleWake": "derin kozmik iz",
+      "bladeTrail": "bıçak egzozu",
+      "iceMist": "soğuk sis çıkışı",
+      "dragonWake": "ejder izi",
+      "eclipseHalo": "tutulma halesi",
+      "singularity": "tekillik çerçevesi"
+    },
+    "trails": {
+      "standard": "standart egzoz",
+      "twin": "çift motor",
+      "blade": "bıçak izi",
+      "mist": "sis izi",
+      "wake": "kozmik iz",
+      "rift": "yarık izi"
+    },
+    "auras": {
+      "none": "yok",
+      "soft": "hafif parıltı",
+      "ring": "yörünge çerçevesi",
+      "prestige": "prestij alanı",
+      "ascension": "yükseliş alanı",
+      "corrupt": "boşluk bozulması",
+      "singularity": "tekillik alanı"
+    },
     "skins": {
       "defaultCoreShip": { "name": "Varsayılan Çekirdek Gemisi" },
+      "scoutCore": { "name": "Keşif Çekirdeği" },
+      "iceRunner": { "name": "Buz Koşucusu" },
       "marsRaider": { "name": "Mars Akıncısı" },
+      "solarBlade": { "name": "Güneş Bıçağı" },
       "saturnOrbitCruiser": { "name": "Satürn Yörünge Kruvazörü" },
       "voidInterceptor": { "name": "Boşluk Önleyicisi" },
+      "plasmaNeedle": { "name": "Plazma İğnesi" },
+      "frostCarrier": { "name": "Don Taşıyıcısı" },
       "prestigeVessel": { "name": "Prestij Gemisi" },
+      "dragonCoreShip": { "name": "Ejder Çekirdek Gemisi" },
+      "eclipseHunter": { "name": "Tutulma Avcısı" },
       "ascendantMothership": { "name": "Yükselen Ana Gemi" },
-      "cosmicWhaleShip": { "name": "Kozmik Balina Gemisi" }
+      "cosmicWhaleShip": { "name": "Kozmik Balina Gemisi" },
+      "singularityArk": { "name": "Tekillik Gemisi" }
     }
   },
   "tree": {

@@ -24,6 +24,14 @@ import {
 } from '@/lib/config/enemyVariants';
 import { isMegaBoss } from '@/lib/config/bosses';
 import { shipSkinById } from '@/lib/config/shipSkins';
+import {
+  COSMETIC_CRATE_SPAWN,
+  COSMETIC_CRATES,
+  nextCosmeticCrateDelayMs,
+  randomSkinCredits,
+  rollCosmeticCrateType,
+  type CosmeticCrateId,
+} from '@/lib/config/cosmetics';
 import { audio } from '@/lib/audio/AudioEngine';
 import { fmt } from '@/lib/util';
 
@@ -64,6 +72,18 @@ interface Particle {
   size: number;
 }
 
+interface CosmeticCrate {
+  id: number;
+  type: CosmeticCrateId;
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  size: number;
+  bornAt: number;
+  hitUntil: number;
+}
+
 interface Pulse {
   id: number;
   bornAt: number;
@@ -99,7 +119,7 @@ interface Projectile {
   x: number;
   y: number;
   targetId: number;
-  targetType: 'enemy' | 'boss';
+  targetType: 'enemy' | 'boss' | 'crate';
   damage: number;
   crit: boolean;
   speed: number;
@@ -515,6 +535,7 @@ let damageFloatId = 1;
 let dodgeFloatId = 1;
 let beamEffectId = 1;
 let hazardId = 1;
+let cosmeticCrateId = 1;
 
 export function CombatArena() {
   const t = useTranslations();
@@ -560,6 +581,7 @@ export function CombatArena() {
   const dismissEnemyDiscoveryToast = useGame((s) => s.dismissEnemyDiscoveryToast);
   const discoverEnemyType = useGame((s) => s.discoverEnemyType);
   const rollArtifactReward = useGame((s) => s.rollArtifactReward);
+  const addSkinCredits = useGame((s) => s.addSkinCredits);
   const lowEffectsMode = useGame((s) => s.lowEffectsMode);
   const sfxEnabled = useGame((s) => !s.audio.muted);
 
@@ -597,6 +619,7 @@ export function CombatArena() {
   const abilityEffectsRef = useRef<AbilityEffect[]>([]);
   const projectilesRef = useRef<Projectile[]>([]);
   const enemyProjectilesRef = useRef<EnemyProjectile[]>([]);
+  const cosmeticCratesRef = useRef<CosmeticCrate[]>([]);
   const beamEffectsRef = useRef<BeamEffect[]>([]);
   const hazardsRef = useRef<ArenaHazard[]>([]);
   const lastSpawnRef = useRef(0);
@@ -604,6 +627,7 @@ export function CombatArena() {
   const lastBossProjectileShotRef = useRef(0);
   const lastOrbitCannonShotRef = useRef(0);
   const lastBeamPulseShotRef = useRef(0);
+  const nextCosmeticCrateAtRef = useRef(0);
   const burstFireUntilRef = useRef(0);
   const waveRef = useRef(1);
   const pendingWaveRef = useRef<PendingWave | null>(null);
@@ -639,6 +663,7 @@ export function CombatArena() {
   const [abilityEffects, setAbilityEffects] = useState<AbilityEffect[]>([]);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const [enemyProjectiles, setEnemyProjectiles] = useState<EnemyProjectile[]>([]);
+  const [cosmeticCrates, setCosmeticCrates] = useState<CosmeticCrate[]>([]);
   const [beamEffects, setBeamEffects] = useState<BeamEffect[]>([]);
   const [hazards, setHazards] = useState<ArenaHazard[]>([]);
   const [damageFloats, setDamageFloats] = useState<DamageFloat[]>([]);
@@ -689,6 +714,7 @@ export function CombatArena() {
   const totalPrestigesRef = useRef(totalPrestiges);
   const discoverEnemyTypeRef = useRef(discoverEnemyType);
   const rollArtifactRewardRef = useRef(rollArtifactReward);
+  const addSkinCreditsRef = useRef(addSkinCredits);
 
   useEffect(() => { perTapRef.current = perTap; }, [perTap]);
   useEffect(() => { perSecRef.current = perSec; }, [perSec]);
@@ -719,6 +745,7 @@ export function CombatArena() {
   useEffect(() => { totalPrestigesRef.current = totalPrestiges; }, [totalPrestiges]);
   useEffect(() => { discoverEnemyTypeRef.current = discoverEnemyType; }, [discoverEnemyType]);
   useEffect(() => { rollArtifactRewardRef.current = rollArtifactReward; }, [rollArtifactReward]);
+  useEffect(() => { addSkinCreditsRef.current = addSkinCredits; }, [addSkinCredits]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -767,6 +794,7 @@ export function CombatArena() {
     abilityEffectsRef.current = [];
     projectilesRef.current = [];
     enemyProjectilesRef.current = [];
+    cosmeticCratesRef.current = [];
     beamEffectsRef.current = [];
     hazardsRef.current = [];
     lastSpawnRef.current = now;
@@ -774,6 +802,7 @@ export function CombatArena() {
     lastBossProjectileShotRef.current = now;
     lastOrbitCannonShotRef.current = now;
     lastBeamPulseShotRef.current = now;
+    nextCosmeticCrateAtRef.current = now + nextCosmeticCrateDelayMs(lowDensityRef.current);
     burstFireUntilRef.current = 0;
     waveRef.current = 1;
     pendingWaveRef.current = null;
@@ -806,6 +835,7 @@ export function CombatArena() {
     setAbilityEffects([]);
     setProjectiles([]);
     setEnemyProjectiles([]);
+    setCosmeticCrates([]);
     setBeamEffects([]);
     setHazards([]);
     setDamageFloats([]);
@@ -923,6 +953,61 @@ export function CombatArena() {
       setDodgeFloats((items) => items.filter((item) => item.id !== id));
     }, 720);
   }, []);
+
+  const spawnCosmeticCrate = useCallback((now: number) => {
+    const low = lowDensityRef.current;
+    const cap = low ? COSMETIC_CRATE_SPAWN.mobileCap : COSMETIC_CRATE_SPAWN.desktopCap;
+    const existing = cosmeticCratesRef.current.filter((crate) => now - crate.bornAt < 50_000);
+    if (existing.length >= cap) {
+      cosmeticCratesRef.current = existing;
+      return;
+    }
+    const def = rollCosmeticCrateType();
+    const bounds = low
+      ? { minX: 24, maxX: 76, minY: 38, maxY: 58 }
+      : { minX: 18, maxX: 82, minY: 34, maxY: 66 };
+    let point = { x: 50, y: 48 };
+    for (let i = 0; i < 10; i += 1) {
+      const candidate = {
+        x: bounds.minX + Math.random() * (bounds.maxX - bounds.minX),
+        y: bounds.minY + Math.random() * (bounds.maxY - bounds.minY),
+      };
+      const playerDistance = dist(candidate, playerRef.current);
+      const bossDistance = dist(candidate, bossArenaPoint(now, bossPhaseInfo(bossRef.current.tier).progress));
+      if (playerDistance > 18 && bossDistance > 15) {
+        point = candidate;
+        break;
+      }
+    }
+    cosmeticCratesRef.current = [
+      ...existing,
+      {
+        id: cosmeticCrateId++,
+        type: def.id,
+        x: point.x,
+        y: point.y,
+        hp: def.hp,
+        maxHp: def.hp,
+        size: def.size,
+        bornAt: now,
+        hitUntil: 0,
+      },
+    ];
+    setCosmeticCrates(cosmeticCratesRef.current);
+  }, []);
+
+  const destroyCosmeticCrate = useCallback((crate: CosmeticCrate, now: number) => {
+    const def = COSMETIC_CRATES.find((item) => item.id === crate.type) ?? COSMETIC_CRATES[0];
+    const credits = randomSkinCredits(def.creditMin, def.creditMax);
+    addSkinCreditsRef.current(credits);
+    if (def.shardChance > 0 && Math.random() < def.shardChance) {
+      useGame.setState((state) => ({ shards: state.shards + 1 }));
+    }
+    emitParticles(crate.x, crate.y, def.color, lowDensityRef.current ? 7 : 14, def.id === 'cosmic' ? 1.35 : 0.9);
+    pushDamageFloat(credits, crate.x, crate.y - 4, def.id !== 'basic');
+    cosmeticCratesRef.current = cosmeticCratesRef.current.filter((item) => item.id !== crate.id);
+    setCosmeticCrates(cosmeticCratesRef.current);
+  }, [emitParticles, pushDamageFloat]);
 
   const fireEnemyProjectile = useCallback((origin: Vec, target: Vec, kind: EnemyProjectileKind, damageScale = 1, angleOffset = 0) => {
     const spec = ENEMY_PROJECTILES[kind];
@@ -1419,6 +1504,10 @@ export function CombatArena() {
         playerRef.current = { ...playerRef.current, healUntil: invulnerableUntilRef.current };
         emitParticles(playerRef.current.x, playerRef.current.y, '#5cf6ff', 26, 1.35);
       }
+      if (now >= nextCosmeticCrateAtRef.current) {
+        spawnCosmeticCrate(now);
+        nextCosmeticCrateAtRef.current = now + nextCosmeticCrateDelayMs(lowDensityFrame);
+      }
       const p = clampArenaVec(playerRef.current, { x: 50, y: 70 }) as typeof playerRef.current;
       p.hitUntil = finiteNumber(playerRef.current.hitUntil) ? playerRef.current.hitUntil : 0;
       p.healUntil = finiteNumber(playerRef.current.healUntil) ? playerRef.current.healUntil : 0;
@@ -1605,8 +1694,14 @@ export function CombatArena() {
           .map((enemy) => ({ enemy, distance: dist(enemy, p) }))
           .filter((item) => item.distance < 58)
           .sort((a, b) => a.distance - b.distance)[0]?.enemy;
+        const targetCrate = !targetEnemy
+          ? cosmeticCratesRef.current
+            .map((crate) => ({ crate, distance: dist(crate, p) }))
+            .filter((item) => item.distance < 70)
+            .sort((a, b) => a.distance - b.distance)[0]?.crate
+          : undefined;
         const bossPoint = bossArenaPoint(now, activePhaseTuning.info.progress);
-        const targetPoint = targetEnemy ?? bossPoint;
+        const targetPoint = targetEnemy ?? targetCrate ?? bossPoint;
         const angle = Math.atan2(targetPoint.y - p.y, targetPoint.x - p.x);
         const crit = Math.random() < shotStats.critChance;
         const hasMultishot = activeWeaponEvolutionsFrame.has('multishot');
@@ -1626,8 +1721,8 @@ export function CombatArena() {
             id: projectileId++,
             x: p.x,
             y: p.y,
-            targetId: targetEnemy?.id ?? bossRef.current.tier,
-            targetType: targetEnemy ? 'enemy' as const : 'boss' as const,
+            targetId: targetEnemy?.id ?? targetCrate?.id ?? bossRef.current.tier,
+            targetType: targetEnemy ? 'enemy' as const : targetCrate ? 'crate' as const : 'boss' as const,
             damage: Math.floor(shotStats.damage * (crit ? shotStats.critDamage : 1)),
             crit,
             speed: shotStats.speed,
@@ -1778,6 +1873,7 @@ export function CombatArena() {
       if (CORE_DEFENSE_HOOKS.projectileFiring && projectilesRef.current.length > 0) {
         const survivors: Projectile[] = [];
         let nextEnemies = enemiesRef.current;
+        let nextCrates = cosmeticCratesRef.current.filter((crate) => now - crate.bornAt < 52_000 && crate.hp > 0);
         for (const projectile of projectilesRef.current) {
           if (
             !finiteNumber(projectile.x) ||
@@ -1792,13 +1888,16 @@ export function CombatArena() {
           const targetEnemy = projectile.targetType === 'enemy'
             ? nextEnemies.find((enemy) => enemy.id === projectile.targetId)
             : undefined;
+          const targetCrate = projectile.targetType === 'crate'
+            ? nextCrates.find((crate) => crate.id === projectile.targetId)
+            : undefined;
           const bossPoint = bossArenaPoint(now, activePhaseTuning.info.progress);
-          const targetPoint = targetEnemy ? { x: targetEnemy.x, y: targetEnemy.y } : bossPoint;
+          const targetPoint = targetEnemy ? { x: targetEnemy.x, y: targetEnemy.y } : targetCrate ? { x: targetCrate.x, y: targetCrate.y } : bossPoint;
           const dxp = targetPoint.x - projectile.x;
           const dyp = targetPoint.y - projectile.y;
           const distance = Math.hypot(dxp, dyp) || 1;
           const step = projectile.speed * dt;
-          const hitRadius = targetEnemy ? Math.max(2.8, targetEnemy.size * 0.2) : 5.4;
+          const hitRadius = targetEnemy ? Math.max(2.8, targetEnemy.size * 0.2) : targetCrate ? Math.max(3.8, targetCrate.size * 0.18) : 5.4;
           if (distance <= step + hitRadius) {
             if (targetEnemy) {
               const killedEnemies: Enemy[] = [];
@@ -1882,6 +1981,17 @@ export function CombatArena() {
                 hitStopUntilRef.current = Math.max(hitStopUntilRef.current, now + (lowDensityFrame ? 30 : 50));
                 triggerArenaPulse('crit', lowDensityFrame ? 210 : 300);
               }
+            } else if (targetCrate) {
+              const hitCrate = { ...targetCrate, hp: targetCrate.hp - 1, hitUntil: now + 180 };
+              const def = COSMETIC_CRATES.find((crate) => crate.id === targetCrate.type) ?? COSMETIC_CRATES[0];
+              if (hitCrate.hp <= 0) {
+                destroyCosmeticCrate(hitCrate, now);
+                nextCrates = nextCrates.filter((crate) => crate.id !== targetCrate.id);
+                triggerArenaPulse(targetCrate.type === 'cosmic' ? 'anomaly' : 'death', lowDensityFrame ? 180 : 260);
+              } else {
+                nextCrates = nextCrates.map((crate) => (crate.id === targetCrate.id ? hitCrate : crate));
+                emitParticles(targetPoint.x, targetPoint.y, def.color, lowDensityFrame ? 3 : 6, 0.5);
+              }
             } else {
               setBossHitUntil(now + (projectile.crit ? 260 : 150));
               pushDamageFloat(projectile.damage, targetPoint.x, targetPoint.y - 5, projectile.crit);
@@ -1908,12 +2018,13 @@ export function CombatArena() {
               x: nx,
               y: ny,
               angle: Math.atan2(dyp, dxp),
-              targetType: targetEnemy ? projectile.targetType : 'boss',
-              targetId: targetEnemy ? projectile.targetId : bossRef.current.tier,
+              targetType: targetEnemy || targetCrate ? projectile.targetType : 'boss',
+              targetId: targetEnemy || targetCrate ? projectile.targetId : bossRef.current.tier,
             });
           }
         }
         enemiesRef.current = nextEnemies;
+        cosmeticCratesRef.current = nextCrates;
         projectilesRef.current = survivors.slice(-projectileCap);
       }
 
@@ -2264,6 +2375,7 @@ export function CombatArena() {
         setPulses(pulsesRef.current);
         setProjectiles(projectilesRef.current);
         setEnemyProjectiles(enemyProjectilesRef.current);
+        setCosmeticCrates(cosmeticCratesRef.current);
         setHazards(hazardsRef.current);
         setParticles(particlesRef.current);
         setAbilityEffects(abilityEffectsRef.current);
@@ -2276,7 +2388,7 @@ export function CombatArena() {
       frameLoopTokenRef.current += 1;
       cancelAnimationFrame(raf);
     };
-  }, [addHazard, bossDamageGuardMult, damagePlayer, emitParticles, fireEnemyProjectile, pushDamageFloat, pushDodgeFloat, spawnWave, triggerArenaPulse]);
+  }, [addHazard, bossDamageGuardMult, damagePlayer, destroyCosmeticCrate, emitParticles, fireEnemyProjectile, pushDamageFloat, pushDodgeFloat, spawnCosmeticCrate, spawnWave, triggerArenaPulse]);
 
   useEffect(() => {
     if (!comboFlash) return;
@@ -2943,6 +3055,50 @@ export function CombatArena() {
         );
       })}
 
+      {cosmeticCrates.map((crate) => {
+        const def = COSMETIC_CRATES.find((item) => item.id === crate.type) ?? COSMETIC_CRATES[0];
+        const age = renderNow - crate.bornAt;
+        const hit = renderNow <= crate.hitUntil;
+        const pulse = 1 + Math.sin((renderNow + crate.id * 137) / 360) * 0.035;
+        const opacity = Math.max(0.34, 1 - Math.max(0, age - 42_000) / 10_000);
+        return (
+          <div
+            key={crate.id}
+            className="pointer-events-none absolute z-[24] -translate-x-1/2 -translate-y-1/2"
+            style={{
+              left: `${crate.x}%`,
+              top: `${crate.y}%`,
+              width: crate.size,
+              height: crate.size,
+              opacity,
+              transform: `translate(-50%, -50%) scale(${hit ? 1.14 : pulse}) rotate(${renderNow / (def.id === 'cosmic' ? 28 : 44)}deg)`,
+            }}
+          >
+            <div
+              className="absolute inset-0 rounded-[22%] border bg-black/78"
+              style={{
+                borderColor: def.color,
+                boxShadow: lowDensity ? `0 0 8px ${def.glow}` : `0 0 ${hit ? 24 : 15}px ${def.glow}`,
+                clipPath: def.id === 'cosmic'
+                  ? 'polygon(50% 0%, 90% 22%, 100% 64%, 62% 100%, 18% 86%, 0% 42%)'
+                  : 'polygon(50% 0%, 92% 26%, 82% 82%, 26% 100%, 0% 50%, 22% 14%)',
+              }}
+            />
+            <div
+              className="absolute inset-[24%] rounded-[18%] border"
+              style={{
+                borderColor: `${def.color}aa`,
+                background: `${def.color}26`,
+                boxShadow: lowDensity ? undefined : `0 0 10px ${def.color}`,
+              }}
+            />
+            <div className="absolute -bottom-2 left-1/2 h-1 w-8 -translate-x-1/2 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full" style={{ width: `${Math.max(0, (crate.hp / crate.maxHp) * 100)}%`, background: def.color }} />
+            </div>
+          </div>
+        );
+      })}
+
       {projectiles.map((projectile) => (
         <div
           key={projectile.id}
@@ -3217,13 +3373,28 @@ export function CombatArena() {
             {!lowDensity && <div className="absolute left-[-42%] top-1/2 -z-10 h-[42%] w-[120%] -translate-y-1/2 rounded-full border-l border-purple/24" />}
           </>
         )}
+        {shipSkin.visual.effect === 'eclipseHalo' && !lowDensity && (
+          <div className="absolute -inset-3 -z-10 rounded-full border border-purple/25 shadow-[0_0_18px_rgba(184,122,255,0.16)]" />
+        )}
+        {shipSkin.visual.effect === 'singularity' && (
+          <div className="absolute left-1/2 top-1/2 -z-10 h-[118%] w-[148%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-pink/24" style={{ transform: `translate(-50%, -50%) rotate(${renderNow / 72}deg)` }} />
+        )}
+        {shipSkin.visual.effect === 'iceMist' && !lowDensity && (
+          <div className="absolute left-1/2 top-[58%] -z-10 h-[36%] w-[96%] -translate-x-1/2 rounded-full border-t border-cyan/16 blur-[1px]" />
+        )}
         <div
           className="absolute left-1/2 top-[58%] z-0 -translate-x-1/2 blur-[2px]"
           style={{
-            width: `${Math.max(18, shipSkin.visual.bodyWidthPct * 0.28)}%`,
-            height: `${Math.max(28, shipSkin.visual.bodyHeightPct * 0.46)}%`,
+            width: `${Math.max(18, shipSkin.visual.bodyWidthPct * (shipSkin.visual.trailStyle === 'twin' ? 0.38 : shipSkin.visual.trailStyle === 'blade' ? 0.18 : shipSkin.visual.trailStyle === 'wake' ? 0.44 : 0.28))}%`,
+            height: `${Math.max(28, shipSkin.visual.bodyHeightPct * (shipSkin.visual.trailStyle === 'wake' ? 0.62 : 0.46))}%`,
             background: `linear-gradient(180deg, ${shipSkin.engine}b8 0%, ${shipSkin.engine}54 42%, transparent 100%)`,
-            clipPath: 'polygon(42% 0%, 58% 0%, 84% 100%, 16% 100%)',
+            clipPath: shipSkin.visual.trailStyle === 'twin'
+              ? 'polygon(22% 0%, 36% 0%, 46% 100%, 8% 100%, 22% 0%, 64% 0%, 78% 0%, 92% 100%, 54% 100%)'
+              : shipSkin.visual.trailStyle === 'blade'
+                ? 'polygon(47% 0%, 53% 0%, 100% 100%, 0% 100%)'
+                : shipSkin.visual.trailStyle === 'wake'
+                  ? 'polygon(28% 0%, 72% 0%, 100% 100%, 0% 100%)'
+                  : 'polygon(42% 0%, 58% 0%, 84% 100%, 16% 100%)',
             opacity: lowDensity ? 0.5 : 0.62,
             transform: 'translate(-50%, 0)',
           }}
@@ -3288,6 +3459,7 @@ export function CombatArena() {
           style={{
             width: `${shipSkin.visual.coreSizePct}%`,
             height: `${shipSkin.visual.coreSizePct}%`,
+            background: shipSkin.visual.coreColor,
             boxShadow: `0 0 ${lowDensity ? 5 : 7}px ${shipSkin.accent}`,
           }}
         />

@@ -1,9 +1,11 @@
 import { chapterById, type ChapterId } from './chapters';
 
-export type ShipSkinRarity = 'default' | 'rare' | 'epic' | 'legendary' | 'cosmic';
-export type ShipSkinUnlockType = 'starter' | 'chapterReached' | 'artifactCount' | 'prestigeCount' | 'ascensionCount' | 'futurePremium';
+export type ShipSkinRarity = 'default' | 'common' | 'rare' | 'epic' | 'legendary' | 'cosmic';
+export type ShipSkinUnlockType = 'starter' | 'chapterReached' | 'artifactCount' | 'prestigeCount' | 'ascensionCount' | 'skinCredits' | 'futurePremium';
 export type ShipSkinShopCategory = 'starter' | 'progression' | 'prestige' | 'premium';
-export type ShipSkinAccentEffect = 'none' | 'orbitRing' | 'fragments' | 'prestigeAura' | 'ascensionAura' | 'whaleWake';
+export type ShipSkinAccentEffect = 'none' | 'orbitRing' | 'fragments' | 'prestigeAura' | 'ascensionAura' | 'whaleWake' | 'bladeTrail' | 'iceMist' | 'dragonWake' | 'eclipseHalo' | 'singularity';
+export type ShipSkinTrailStyle = 'standard' | 'twin' | 'blade' | 'mist' | 'wake' | 'rift';
+export type ShipSkinAuraStyle = 'none' | 'soft' | 'ring' | 'prestige' | 'ascension' | 'corrupt' | 'singularity';
 
 export interface ShipSkinVisual {
   bodyClip: string;
@@ -14,6 +16,9 @@ export interface ShipSkinVisual {
   bodyRadius: string;
   coreSizePct: number;
   effect: ShipSkinAccentEffect;
+  coreColor: string;
+  trailStyle: ShipSkinTrailStyle;
+  auraStyle: ShipSkinAuraStyle;
 }
 
 export interface ShipSkinDef {
@@ -31,6 +36,7 @@ export interface ShipSkinDef {
     chapterId?: ChapterId;
     count?: number;
   };
+  priceCredits?: number;
   isPremiumPlaceholder: boolean;
   shopCategory: ShipSkinShopCategory;
   pricePlaceholder?: string;
@@ -44,6 +50,8 @@ export interface ShipSkinUnlockContext {
   artifactCount: number;
   totalPrestiges: number;
   totalAscensions: number;
+  ownedShipSkinIds: string[];
+  skinCredits: number;
 }
 
 export const SHIP_SKINS: ShipSkinDef[] = [
@@ -65,10 +73,69 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       bodyRadius: '26%',
       coreSizePct: 23,
       effect: 'none',
+      coreColor: '#ffffff',
+      trailStyle: 'standard',
+      auraStyle: 'soft',
     },
     unlock: { type: 'starter' },
     isPremiumPlaceholder: false,
     shopCategory: 'starter',
+    purchasableLater: false,
+  },
+  {
+    id: 'scoutCore',
+    rarity: 'common',
+    i18nKey: 'scoutCore',
+    accent: '#80fff4',
+    engine: '#5cf6ff',
+    hull: '#08151a',
+    glow: 'rgba(128,255,244,0.62)',
+    silhouette: 'core',
+    visual: {
+      bodyClip: 'polygon(50% 0%, 72% 24%, 84% 54%, 64% 70%, 56% 100%, 50% 82%, 44% 100%, 36% 70%, 16% 54%, 28% 24%)',
+      wingClip: 'polygon(10% 42%, 38% 24%, 50% 48%, 62% 24%, 90% 42%, 68% 72%, 50% 64%, 32% 72%)',
+      innerClip: 'polygon(50% 0%, 62% 38%, 56% 100%, 50% 78%, 44% 100%, 38% 38%)',
+      bodyWidthPct: 80,
+      bodyHeightPct: 76,
+      bodyRadius: '24%',
+      coreSizePct: 20,
+      effect: 'none',
+      coreColor: '#dffcff',
+      trailStyle: 'standard',
+      auraStyle: 'soft',
+    },
+    unlock: { type: 'skinCredits' },
+    priceCredits: 80,
+    isPremiumPlaceholder: false,
+    shopCategory: 'progression',
+    purchasableLater: false,
+  },
+  {
+    id: 'iceRunner',
+    rarity: 'rare',
+    i18nKey: 'iceRunner',
+    accent: '#bffcff',
+    engine: '#80fff4',
+    hull: '#071522',
+    glow: 'rgba(191,252,255,0.66)',
+    silhouette: 'interceptor',
+    visual: {
+      bodyClip: 'polygon(50% 0%, 74% 20%, 94% 44%, 72% 58%, 88% 96%, 54% 76%, 50% 100%, 46% 76%, 12% 96%, 28% 58%, 6% 44%, 26% 20%)',
+      wingClip: 'polygon(0% 36%, 38% 24%, 50% 4%, 62% 24%, 100% 36%, 66% 66%, 50% 92%, 34% 66%)',
+      innerClip: 'polygon(50% 6%, 68% 36%, 58% 90%, 50% 70%, 42% 90%, 32% 36%)',
+      bodyWidthPct: 92,
+      bodyHeightPct: 78,
+      bodyRadius: '10%',
+      coreSizePct: 18,
+      effect: 'iceMist',
+      coreColor: '#ffffff',
+      trailStyle: 'mist',
+      auraStyle: 'soft',
+    },
+    unlock: { type: 'skinCredits' },
+    priceCredits: 180,
+    isPremiumPlaceholder: false,
+    shopCategory: 'progression',
     purchasableLater: false,
   },
   {
@@ -89,8 +156,39 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       bodyRadius: '14%',
       coreSizePct: 18,
       effect: 'none',
+      coreColor: '#ffd166',
+      trailStyle: 'twin',
+      auraStyle: 'soft',
     },
     unlock: { type: 'chapterReached', chapterId: 'mars' },
+    isPremiumPlaceholder: false,
+    shopCategory: 'progression',
+    purchasableLater: false,
+  },
+  {
+    id: 'solarBlade',
+    rarity: 'rare',
+    i18nKey: 'solarBlade',
+    accent: '#ffb347',
+    engine: '#ff5c3d',
+    hull: '#1e0d04',
+    glow: 'rgba(255,179,71,0.68)',
+    silhouette: 'raider',
+    visual: {
+      bodyClip: 'polygon(50% 0%, 90% 44%, 70% 54%, 92% 100%, 52% 72%, 50% 96%, 48% 72%, 8% 100%, 30% 54%, 10% 44%)',
+      wingClip: 'polygon(4% 20%, 44% 34%, 50% 0%, 56% 34%, 96% 20%, 72% 64%, 50% 58%, 28% 64%)',
+      innerClip: 'polygon(50% 4%, 64% 36%, 56% 96%, 50% 72%, 44% 96%, 36% 36%)',
+      bodyWidthPct: 94,
+      bodyHeightPct: 82,
+      bodyRadius: '12%',
+      coreSizePct: 17,
+      effect: 'bladeTrail',
+      coreColor: '#fff3b0',
+      trailStyle: 'blade',
+      auraStyle: 'soft',
+    },
+    unlock: { type: 'skinCredits' },
+    priceCredits: 260,
     isPremiumPlaceholder: false,
     shopCategory: 'progression',
     purchasableLater: false,
@@ -113,8 +211,66 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       bodyRadius: '28%',
       coreSizePct: 20,
       effect: 'orbitRing',
+      coreColor: '#fff3b0',
+      trailStyle: 'standard',
+      auraStyle: 'ring',
     },
     unlock: { type: 'chapterReached', chapterId: 'saturn' },
+    isPremiumPlaceholder: false,
+    shopCategory: 'progression',
+    purchasableLater: false,
+  },
+  {
+    id: 'plasmaNeedle',
+    rarity: 'epic',
+    i18nKey: 'plasmaNeedle',
+    accent: '#ff5ce8',
+    engine: '#ffd166',
+    hull: '#18051a',
+    glow: 'rgba(255,92,232,0.7)',
+    silhouette: 'interceptor',
+    visual: {
+      bodyClip: 'polygon(50% 0%, 64% 28%, 100% 46%, 64% 60%, 54% 100%, 50% 70%, 46% 100%, 36% 60%, 0% 46%, 36% 28%)',
+      wingClip: 'polygon(0% 34%, 42% 30%, 50% 0%, 58% 30%, 100% 34%, 64% 58%, 50% 96%, 36% 58%)',
+      innerClip: 'polygon(50% 0%, 60% 40%, 54% 100%, 50% 64%, 46% 100%, 40% 40%)',
+      bodyWidthPct: 86,
+      bodyHeightPct: 92,
+      bodyRadius: '8%',
+      coreSizePct: 15,
+      effect: 'bladeTrail',
+      coreColor: '#ffd9ff',
+      trailStyle: 'blade',
+      auraStyle: 'corrupt',
+    },
+    unlock: { type: 'skinCredits' },
+    priceCredits: 700,
+    isPremiumPlaceholder: false,
+    shopCategory: 'progression',
+    purchasableLater: false,
+  },
+  {
+    id: 'frostCarrier',
+    rarity: 'epic',
+    i18nKey: 'frostCarrier',
+    accent: '#9ee7ff',
+    engine: '#ffffff',
+    hull: '#06111f',
+    glow: 'rgba(158,231,255,0.7)',
+    silhouette: 'cruiser',
+    visual: {
+      bodyClip: 'polygon(8% 52%, 22% 20%, 48% 18%, 50% 0%, 52% 18%, 78% 20%, 92% 52%, 76% 86%, 58% 78%, 50% 100%, 42% 78%, 24% 86%)',
+      wingClip: 'polygon(0% 44%, 28% 14%, 50% 34%, 72% 14%, 100% 44%, 82% 76%, 50% 66%, 18% 76%)',
+      innerClip: 'polygon(50% 4%, 70% 38%, 62% 88%, 50% 74%, 38% 88%, 30% 38%)',
+      bodyWidthPct: 108,
+      bodyHeightPct: 72,
+      bodyRadius: '32%',
+      coreSizePct: 21,
+      effect: 'iceMist',
+      coreColor: '#ffffff',
+      trailStyle: 'mist',
+      auraStyle: 'ring',
+    },
+    unlock: { type: 'chapterReached', chapterId: 'uranus' },
     isPremiumPlaceholder: false,
     shopCategory: 'progression',
     purchasableLater: false,
@@ -137,6 +293,9 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       bodyRadius: '8%',
       coreSizePct: 17,
       effect: 'fragments',
+      coreColor: '#ffb8ff',
+      trailStyle: 'rift',
+      auraStyle: 'corrupt',
     },
     unlock: { type: 'artifactCount', count: 5 },
     isPremiumPlaceholder: false,
@@ -161,10 +320,68 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       bodyRadius: '24%',
       coreSizePct: 22,
       effect: 'prestigeAura',
+      coreColor: '#fff3b0',
+      trailStyle: 'blade',
+      auraStyle: 'prestige',
     },
     unlock: { type: 'prestigeCount', count: 1 },
     isPremiumPlaceholder: false,
     shopCategory: 'prestige',
+    purchasableLater: false,
+  },
+  {
+    id: 'dragonCoreShip',
+    rarity: 'legendary',
+    i18nKey: 'dragonCoreShip',
+    accent: '#ff6b4a',
+    engine: '#ffd166',
+    hull: '#240703',
+    glow: 'rgba(255,107,74,0.74)',
+    silhouette: 'vessel',
+    visual: {
+      bodyClip: 'polygon(50% 0%, 74% 12%, 86% 40%, 100% 34%, 82% 62%, 72% 100%, 52% 82%, 50% 96%, 48% 82%, 28% 100%, 18% 62%, 0% 34%, 14% 40%, 26% 12%)',
+      wingClip: 'polygon(0% 32%, 32% 14%, 50% 38%, 68% 14%, 100% 32%, 76% 76%, 50% 62%, 24% 76%)',
+      innerClip: 'polygon(50% 4%, 68% 34%, 58% 94%, 50% 72%, 42% 94%, 32% 34%)',
+      bodyWidthPct: 104,
+      bodyHeightPct: 88,
+      bodyRadius: '18%',
+      coreSizePct: 19,
+      effect: 'dragonWake',
+      coreColor: '#fff3b0',
+      trailStyle: 'twin',
+      auraStyle: 'prestige',
+    },
+    unlock: { type: 'skinCredits' },
+    priceCredits: 1800,
+    isPremiumPlaceholder: false,
+    shopCategory: 'prestige',
+    purchasableLater: false,
+  },
+  {
+    id: 'eclipseHunter',
+    rarity: 'legendary',
+    i18nKey: 'eclipseHunter',
+    accent: '#b87aff',
+    engine: '#ff5ce8',
+    hull: '#05050d',
+    glow: 'rgba(184,122,255,0.74)',
+    silhouette: 'interceptor',
+    visual: {
+      bodyClip: 'polygon(50% 0%, 78% 20%, 96% 50%, 74% 56%, 90% 100%, 54% 74%, 50% 92%, 46% 74%, 10% 100%, 26% 56%, 4% 50%, 22% 20%)',
+      wingClip: 'polygon(2% 18%, 42% 34%, 50% 2%, 58% 34%, 98% 18%, 72% 62%, 50% 70%, 28% 62%)',
+      innerClip: 'polygon(50% 6%, 66% 36%, 58% 90%, 50% 68%, 42% 90%, 34% 36%)',
+      bodyWidthPct: 98,
+      bodyHeightPct: 82,
+      bodyRadius: '10%',
+      coreSizePct: 18,
+      effect: 'eclipseHalo',
+      coreColor: '#ffccff',
+      trailStyle: 'rift',
+      auraStyle: 'corrupt',
+    },
+    unlock: { type: 'chapterReached', chapterId: 'neptune' },
+    isPremiumPlaceholder: false,
+    shopCategory: 'progression',
     purchasableLater: false,
   },
   {
@@ -185,8 +402,39 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       bodyRadius: '30%',
       coreSizePct: 24,
       effect: 'ascensionAura',
+      coreColor: '#ffffff',
+      trailStyle: 'twin',
+      auraStyle: 'ascension',
     },
     unlock: { type: 'ascensionCount', count: 1 },
+    isPremiumPlaceholder: false,
+    shopCategory: 'prestige',
+    purchasableLater: false,
+  },
+  {
+    id: 'singularityArk',
+    rarity: 'cosmic',
+    i18nKey: 'singularityArk',
+    accent: '#ff5ce8',
+    engine: '#80fff4',
+    hull: '#03040a',
+    glow: 'rgba(255,92,232,0.78)',
+    silhouette: 'mothership',
+    visual: {
+      bodyClip: 'polygon(4% 50%, 22% 18%, 42% 24%, 50% 0%, 58% 24%, 78% 18%, 96% 50%, 78% 84%, 58% 76%, 50% 100%, 42% 76%, 22% 84%)',
+      wingClip: 'polygon(0% 48%, 16% 8%, 42% 32%, 50% 2%, 58% 32%, 84% 8%, 100% 48%, 84% 92%, 58% 68%, 50% 98%, 42% 68%, 16% 92%)',
+      innerClip: 'polygon(50% 0%, 76% 42%, 62% 84%, 50% 66%, 38% 84%, 24% 42%)',
+      bodyWidthPct: 116,
+      bodyHeightPct: 90,
+      bodyRadius: '26%',
+      coreSizePct: 21,
+      effect: 'singularity',
+      coreColor: '#ffffff',
+      trailStyle: 'rift',
+      auraStyle: 'singularity',
+    },
+    unlock: { type: 'skinCredits' },
+    priceCredits: 6000,
     isPremiumPlaceholder: false,
     shopCategory: 'prestige',
     purchasableLater: false,
@@ -209,6 +457,9 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       bodyRadius: '44%',
       coreSizePct: 19,
       effect: 'whaleWake',
+      coreColor: '#dffcff',
+      trailStyle: 'wake',
+      auraStyle: 'ascension',
     },
     unlock: { type: 'futurePremium' },
     isPremiumPlaceholder: true,
@@ -236,6 +487,8 @@ export function shipSkinRequirementKey(skin: ShipSkinDef): string {
       return 'prestige';
     case 'ascensionCount':
       return 'ascension';
+    case 'skinCredits':
+      return 'skinCredits';
     case 'futurePremium':
       return 'futurePremium';
     default:
@@ -244,6 +497,7 @@ export function shipSkinRequirementKey(skin: ShipSkinDef): string {
 }
 
 export function shipSkinUnlocked(skin: ShipSkinDef, context: ShipSkinUnlockContext): boolean {
+  if ((context.ownedShipSkinIds ?? []).includes(skin.id)) return true;
   switch (skin.unlock.type) {
     case 'starter':
       return true;
@@ -260,9 +514,35 @@ export function shipSkinUnlocked(skin: ShipSkinDef, context: ShipSkinUnlockConte
       return context.totalPrestiges >= (skin.unlock.count ?? 0);
     case 'ascensionCount':
       return context.totalAscensions >= (skin.unlock.count ?? 0);
+    case 'skinCredits':
+      return false;
     case 'futurePremium':
       return false;
     default:
       return false;
+  }
+}
+
+export function shipSkinPurchasable(skin: ShipSkinDef, context: ShipSkinUnlockContext): boolean {
+  if (shipSkinUnlocked(skin, context)) return false;
+  if (skin.unlock.type !== 'skinCredits' || skin.isPremiumPlaceholder) return false;
+  return context.skinCredits >= (skin.priceCredits ?? Number.MAX_SAFE_INTEGER);
+}
+
+export function shipSkinUnlockProgress(skin: ShipSkinDef, context: ShipSkinUnlockContext): { current: number; required: number } | null {
+  switch (skin.unlock.type) {
+    case 'skinCredits':
+      return { current: Math.min(context.skinCredits, skin.priceCredits ?? 0), required: skin.priceCredits ?? 0 };
+    case 'artifactCount':
+      return { current: context.artifactCount, required: skin.unlock.count ?? 0 };
+    case 'prestigeCount':
+      return { current: context.totalPrestiges, required: skin.unlock.count ?? 0 };
+    case 'ascensionCount':
+      return { current: context.totalAscensions, required: skin.unlock.count ?? 0 };
+    case 'chapterReached':
+      if (!skin.unlock.chapterId) return null;
+      return { current: context.bestBossTier, required: chapterById(skin.unlock.chapterId).levelStart };
+    default:
+      return null;
   }
 }

@@ -106,6 +106,8 @@
       "manaRegenIncreased": "Mana regen increased",
       "orbitDamageIncreased": "Orbit damage increased",
       "comboGainIncreased": "Combo gain increased",
+      "skinCreditsGained": "Skin Credits gained",
+      "skinPurchased": "Ship skin unlocked",
       "powerChanged": "Ship core power increased"
     },
     "unlockReq": {
@@ -1006,8 +1008,18 @@
     "subtitle": "cosmetic hulls only · no combat stats",
     "soon": "future",
     "futurePremium": "premium placeholder · {price}",
+    "credits": "Skin Credits",
+    "price": "{amount} Skin Credits",
+    "filters": {
+      "all": "All",
+      "unlocked": "Unlocked",
+      "locked": "Locked",
+      "rarePlus": "Rare+",
+      "premium": "Premium / Future"
+    },
     "rarity": {
       "default": "default",
+      "common": "common",
       "rare": "rare",
       "epic": "epic",
       "legendary": "legendary",
@@ -1020,6 +1032,7 @@
     },
     "button": {
       "equip": "equip",
+      "buy": "buy",
       "equipped": "equipped",
       "locked": "locked"
     },
@@ -1037,17 +1050,62 @@
       "artifacts": "Collect {count} artifacts.",
       "prestige": "Prestige {count} time.",
       "ascension": "Ascend {count} time.",
+      "skinCredits": "Purchase with Skin Credits.",
       "futurePremium": "Future cosmetic skin. Payments are not implemented.",
       "locked": "Locked."
     },
+    "detail": {
+      "unlock": "unlock",
+      "effect": "effect",
+      "trail": "trail",
+      "aura": "aura"
+    },
+    "effects": {
+      "none": "clean starter hull",
+      "orbitRing": "orbital ring accent",
+      "fragments": "corrupted fragments",
+      "prestigeAura": "prestige aura",
+      "ascensionAura": "ascension halo",
+      "whaleWake": "deep cosmic wake",
+      "bladeTrail": "blade exhaust",
+      "iceMist": "cold mist vents",
+      "dragonWake": "dragon wake",
+      "eclipseHalo": "eclipse halo",
+      "singularity": "singularity frame"
+    },
+    "trails": {
+      "standard": "standard exhaust",
+      "twin": "twin engines",
+      "blade": "blade trail",
+      "mist": "mist trail",
+      "wake": "cosmic wake",
+      "rift": "rift trail"
+    },
+    "auras": {
+      "none": "none",
+      "soft": "soft glow",
+      "ring": "orbit frame",
+      "prestige": "prestige field",
+      "ascension": "ascension field",
+      "corrupt": "void distortion",
+      "singularity": "singularity field"
+    },
     "skins": {
       "defaultCoreShip": { "name": "Default Core Ship" },
+      "scoutCore": { "name": "Scout Core" },
+      "iceRunner": { "name": "Ice Runner" },
       "marsRaider": { "name": "Mars Raider" },
+      "solarBlade": { "name": "Solar Blade" },
       "saturnOrbitCruiser": { "name": "Saturn Orbit Cruiser" },
       "voidInterceptor": { "name": "Void Interceptor" },
+      "plasmaNeedle": { "name": "Plasma Needle" },
+      "frostCarrier": { "name": "Frost Carrier" },
       "prestigeVessel": { "name": "Prestige Vessel" },
+      "dragonCoreShip": { "name": "Dragon Core Ship" },
+      "eclipseHunter": { "name": "Eclipse Hunter" },
       "ascendantMothership": { "name": "Ascendant Mothership" },
-      "cosmicWhaleShip": { "name": "Cosmic Whale Ship" }
+      "cosmicWhaleShip": { "name": "Cosmic Whale Ship" },
+      "singularityArk": { "name": "Singularity Ark" }
     }
   },
   "tree": {
