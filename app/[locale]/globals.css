@@ -6,6 +6,8 @@ html, body {
   background: #05010d;
   color: #f4f0ff;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
   overscroll-behavior: none;
   touch-action: manipulation;
   -webkit-user-select: none;
@@ -15,6 +17,18 @@ html, body {
 body {
   min-height: 100vh;
   min-height: 100dvh;
+  position: fixed;
+  inset: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#__next,
+main {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 input[type="range"] {

@@ -95,14 +95,14 @@ export function ShipSkinsModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-sm sm:p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/85 p-2 sm:p-6 sm:backdrop-blur-sm"
           onClick={() => setShow(false)}
         >
           <motion.div
             initial={{ scale: 0.92, y: 12 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.96, opacity: 0 }}
-            className="max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-xl border border-cyan/40 bg-black/92 p-3 shadow-[0_0_34px_rgba(92,246,255,0.14)] sm:p-4"
+            className="max-h-[calc(100dvh_-_1rem_-_env(safe-area-inset-bottom))] w-full max-w-md overflow-y-auto rounded-xl border border-cyan/40 bg-black/92 p-2.5 shadow-[0_0_20px_rgba(92,246,255,0.1)] sm:max-h-[88dvh] sm:p-4 sm:shadow-[0_0_34px_rgba(92,246,255,0.14)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-start justify-between gap-3">

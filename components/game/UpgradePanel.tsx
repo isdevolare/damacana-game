@@ -152,7 +152,7 @@ export function UpgradePanel() {
   };
 
   return (
-    <div className="px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] sm:px-3 sm:pb-3">
+    <div className="px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] sm:px-3 sm:pb-3">
       <div className="mb-1 flex items-center gap-1.5">
         <button
           type="button"
@@ -179,7 +179,7 @@ export function UpgradePanel() {
         </div>
       </div>
       <div className={clsx(
-        'grid max-h-[18dvh] grid-cols-2 gap-2 overflow-y-auto overscroll-contain sm:max-h-[25vh] sm:gap-3',
+        'grid max-h-[14dvh] grid-cols-2 gap-1.5 overflow-y-auto overscroll-contain sm:max-h-[25vh] sm:gap-3',
         collapsed && 'hidden sm:grid',
       )}>
       <div>

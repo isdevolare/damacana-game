@@ -7,6 +7,7 @@ import { fmt } from '@/lib/util';
 
 export function FloatingNumbers() {
   const nums = useGame((s) => s.floatingNumbers);
+  const lowEffectsMode = useGame((s) => s.lowEffectsMode);
   const [lowDensity, setLowDensity] = useState(false);
   // Auto-prune is handled by the slice in tapDamacana (sliding window).
   // We just render the current list.
@@ -14,13 +15,13 @@ export function FloatingNumbers() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const query = window.matchMedia('(max-width: 640px), (pointer: coarse), (prefers-reduced-motion: reduce)');
-    const update = () => setLowDensity(query.matches);
+    const update = () => setLowDensity(lowEffectsMode || query.matches);
     update();
     query.addEventListener('change', update);
     return () => query.removeEventListener('change', update);
-  }, []);
+  }, [lowEffectsMode]);
 
-  const renderedNums = lowDensity ? nums.slice(-5) : nums;
+  const renderedNums = lowDensity ? nums.slice(-3) : nums;
 
   return (
     <div className="pointer-events-none fixed inset-0 z-40">

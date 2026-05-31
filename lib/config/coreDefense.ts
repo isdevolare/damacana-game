@@ -6,7 +6,7 @@ export const CORE_DEFENSE = {
   targetLineLimitDesktop: 4,
   targetLineLimitMobile: 2,
   projectileCapDesktop: 18,
-  projectileCapMobile: 10,
+  projectileCapMobile: 6,
   baseAttackIntervalMs: 680,
   mobileAttackIntervalMs: 820,
   burstAttackIntervalMult: 0.38,

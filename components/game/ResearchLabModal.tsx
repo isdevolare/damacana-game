@@ -72,13 +72,13 @@ export function ResearchLabModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-sm sm:p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/85 p-2 sm:p-6 sm:backdrop-blur-sm"
           onClick={() => setShow(false)}
         >
           <motion.div
             initial={{ scale: 0.92, y: 10 }}
             animate={{ scale: 1, y: 0 }}
-            className="max-h-[88dvh] w-full max-w-md overflow-hidden rounded-xl border border-cyan/35 bg-black/95 shadow-[0_0_34px_rgba(92,246,255,0.16)]"
+            className="max-h-[calc(100dvh_-_1rem_-_env(safe-area-inset-bottom))] w-full max-w-md overflow-hidden rounded-xl border border-cyan/35 bg-black/95 shadow-[0_0_20px_rgba(92,246,255,0.1)] sm:max-h-[88dvh] sm:shadow-[0_0_34px_rgba(92,246,255,0.16)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="border-b border-white/10 p-4">
@@ -88,7 +88,7 @@ export function ResearchLabModal() {
               </div>
             </div>
 
-            <div className="max-h-[68dvh] space-y-5 overflow-y-auto p-4">
+            <div className="max-h-[calc(100dvh_-_8.5rem_-_env(safe-area-inset-bottom))] space-y-4 overflow-y-auto p-3 sm:max-h-[68dvh] sm:space-y-5 sm:p-4">
               {Object.entries(grouped).map(([category, items]) => (
                 <section key={category}>
                   <div className="mb-2 font-space text-[10px] uppercase tracking-[0.24em] text-purple">
@@ -219,4 +219,3 @@ export function ResearchLabModal() {
     </AnimatePresence>
   );
 }
-

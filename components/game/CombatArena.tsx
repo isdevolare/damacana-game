@@ -234,31 +234,31 @@ const COMBO_TIERS = [
 
 const ARENA_PERF = {
   desktopRenderMs: 24,
-  mobileRenderMs: 42,
-  mobileCollisionMs: 80,
+  mobileRenderMs: 58,
+  mobileCollisionMs: 115,
   desktopEnemyCap: 9,
-  mobileEnemyCap: 6,
+  mobileEnemyCap: 4,
   desktopParticleCap: 34,
-  mobileParticleCap: 16,
+  mobileParticleCap: 8,
   desktopEffectCap: 4,
-  mobileEffectCap: 3,
+  mobileEffectCap: 2,
   desktopHpFloatCap: 5,
-  mobileHpFloatCap: 3,
+  mobileHpFloatCap: 2,
   desktopEnemyProjectileCap: 14,
-  mobileEnemyProjectileCap: 7,
+  mobileEnemyProjectileCap: 4,
   desktopDodgeFloatCap: 4,
-  mobileDodgeFloatCap: 2,
+  mobileDodgeFloatCap: 1,
   desktopMultishotExtraCap: 3,
-  mobileMultishotExtraCap: 2,
+  mobileMultishotExtraCap: 1,
   desktopChainCap: 2,
   mobileChainCap: 1,
 };
 
 const WEAPON_EVOLUTION_TIMING = {
   orbitCannonMs: 1850,
-  orbitCannonMobileMs: 2600,
+  orbitCannonMobileMs: 3200,
   beamPulseMs: 6400,
-  beamPulseMobileMs: 8400,
+  beamPulseMobileMs: 10200,
 };
 
 const ENEMY_PROJECTILES: Record<EnemyProjectileKind, {
@@ -560,6 +560,7 @@ export function CombatArena() {
   const dismissEnemyDiscoveryToast = useGame((s) => s.dismissEnemyDiscoveryToast);
   const discoverEnemyType = useGame((s) => s.discoverEnemyType);
   const rollArtifactReward = useGame((s) => s.rollArtifactReward);
+  const lowEffectsMode = useGame((s) => s.lowEffectsMode);
   const sfxEnabled = useGame((s) => !s.audio.muted);
 
   const chapter = currentChapter(completedChapters);
@@ -627,6 +628,7 @@ export function CombatArena() {
   const lowDensityRef = useRef(false);
   const lastRenderRef = useRef(0);
   const lastCollisionCheckRef = useRef(0);
+  const frameLoopTokenRef = useRef(0);
   const hitStopUntilRef = useRef(0);
   const shieldWasActiveRef = useRef(false);
 
@@ -726,7 +728,7 @@ export function CombatArena() {
       window.matchMedia('(prefers-reduced-motion: reduce)'),
     ];
     const update = () => {
-      const next = queries.some((query) => query.matches);
+      const next = lowEffectsMode || queries.some((query) => query.matches);
       lowDensityRef.current = next;
       setLowDensity(next);
     };
@@ -735,7 +737,7 @@ export function CombatArena() {
     return () => {
       queries.forEach((query) => query.removeEventListener('change', update));
     };
-  }, []);
+  }, [lowEffectsMode]);
 
   useEffect(() => {
     for (const evolution of activeWeaponEvolutions) {
@@ -868,7 +870,7 @@ export function CombatArena() {
     });
     const cap = low ? ARENA_PERF.mobileParticleCap : ARENA_PERF.desktopParticleCap;
     particlesRef.current = [...particlesRef.current.slice(-cap), ...burst].slice(-cap);
-    setParticles(particlesRef.current);
+    if (!low) setParticles(particlesRef.current);
   }, []);
 
   const pushHpFloat = useCallback((value: number, x: number, y: number) => {
@@ -889,7 +891,7 @@ export function CombatArena() {
     if (!finiteNumber(value)) return;
     const point = clampArenaVec({ x, y }, playerRef.current);
     const id = damageFloatId++;
-    const cap = lowDensityRef.current ? 5 : 9;
+    const cap = lowDensityRef.current ? 3 : 9;
     setDamageFloats((items) => [
       ...items.slice(-(cap - 1)),
       { id, value, x: point.x, y: point.y, crit, bornAt: Date.now() },
@@ -997,7 +999,7 @@ export function CombatArena() {
       setPlayer(playerRef.current);
       useGame.setState({ shake: { intensity: 'hard', at: now } });
       useGame.setState((state) => ({ boss: healedBoss, combo: 0, lastTapAt: 0 }));
-      emitParticles(p.x, p.y, '#ff3d6e', 28, 1.8);
+      emitParticles(p.x, p.y, '#ff3d6e', lowDensityRef.current ? 8 : 28, lowDensityRef.current ? 0.9 : 1.8);
     } else {
       reduceCombatComboRef.current(0.18);
     }
@@ -1009,7 +1011,7 @@ export function CombatArena() {
   }, []);
 
   const addHazard = useCallback((kind: ArenaHazardKind, now: number, origin?: Partial<Vec>, power = 1) => {
-    const cap = lowDensityRef.current ? 2 : 4;
+    const cap = lowDensityRef.current ? 1 : 4;
     if (hazardsRef.current.length >= cap) return;
     const playerPoint = playerRef.current;
     const bossPoint = bossArenaPoint(now, bossPhaseInfo(bossRef.current.tier).progress);
@@ -1030,7 +1032,7 @@ export function CombatArena() {
       y,
       bornAt: now,
       fireAt: now + (kind === 'voidZone' || kind === 'gravityWell' ? Math.floor(warningMs * 0.55) : warningMs),
-      until: now + (kind === 'gravityWell' ? 4600 : kind === 'voidZone' ? 4200 : kind === 'laserSweep' ? warningMs + 760 : warningMs + 520),
+      until: now + (kind === 'gravityWell' ? (lowDensityRef.current ? 3200 : 4600) : kind === 'voidZone' ? (lowDensityRef.current ? 3000 : 4200) : kind === 'laserSweep' ? warningMs + (lowDensityRef.current ? 520 : 760) : warningMs + (lowDensityRef.current ? 360 : 520)),
       radius,
       damage: COMBAT.bossPulseDamage * (kind === 'laserSweep' ? 0.62 : kind === 'pulseMine' ? 0.54 : 0.18) * power,
       angle: kind === 'laserSweep' ? Math.atan2(playerPoint.y - bossPoint.y, playerPoint.x - bossPoint.x) + (Math.random() - 0.5) * 0.32 : 0,
@@ -1040,7 +1042,7 @@ export function CombatArena() {
       manaDrain: kind === 'voidZone' ? 5 * power : 0,
     };
     hazardsRef.current = [...hazardsRef.current, hazard].slice(-cap);
-    setHazards(hazardsRef.current);
+    if (!lowDensityRef.current) setHazards(hazardsRef.current);
   }, []);
 
   const addWaveHazard = useCallback((waveTypeId: WaveTypeId, now: number) => {
@@ -1356,7 +1358,10 @@ export function CombatArena() {
   useEffect(() => {
     let raf = 0;
     let last = performance.now();
+    const loopToken = frameLoopTokenRef.current + 1;
+    frameLoopTokenRef.current = loopToken;
     const frame = (nowPerf: number) => {
+      if (frameLoopTokenRef.current !== loopToken) return;
       const now = Date.now();
       const dt = Math.min(42, nowPerf - last);
       last = nowPerf;
@@ -2257,7 +2262,10 @@ export function CombatArena() {
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      frameLoopTokenRef.current += 1;
+      cancelAnimationFrame(raf);
+    };
   }, [addHazard, bossDamageGuardMult, damagePlayer, emitParticles, fireEnemyProjectile, pushDamageFloat, pushDodgeFloat, spawnWave, triggerArenaPulse]);
 
   useEffect(() => {
@@ -2396,13 +2404,13 @@ export function CombatArena() {
   const weakPointRadius = bossProfile.rotatingWeakPoint?.radiusPx ?? 0;
   const weakPointX = Math.cos(weakPointAngle) * weakPointRadius;
   const weakPointY = Math.sin(weakPointAngle) * weakPointRadius;
-  const playerGlow = lowDensity ? 0.62 : 1;
+  const playerGlow = lowDensity ? 0.42 : 1;
   const renderedPulses = lowDensity ? pulses.slice(-1) : pulses;
-  const renderedHazards = lowDensity ? hazards.slice(-3) : hazards;
+  const renderedHazards = lowDensity ? hazards.slice(-1) : hazards;
   const renderedEnemyProjectiles = lowDensity ? enemyProjectiles.slice(-ARENA_PERF.mobileEnemyProjectileCap) : enemyProjectiles;
   const renderedParticles = lowDensity ? particles.slice(-ARENA_PERF.mobileParticleCap) : particles;
   const renderedHpFloats = lowDensity ? hpFloats.slice(-ARENA_PERF.mobileHpFloatCap) : hpFloats;
-  const renderedDamageFloats = lowDensity ? damageFloats.slice(-5) : damageFloats;
+  const renderedDamageFloats = lowDensity ? damageFloats.slice(-3) : damageFloats;
   const renderedDodgeFloats = lowDensity ? dodgeFloats.slice(-ARENA_PERF.mobileDodgeFloatCap) : dodgeFloats;
   const renderedBeamEffects = lowDensity ? beamEffects.slice(-1) : beamEffects;
   const activeEvolutionIndicators = activeWeaponEvolutions.slice(0, lowDensity ? 3 : 6);
@@ -2436,7 +2444,8 @@ export function CombatArena() {
       onPointerCancel={() => { dragRef.current = false; }}
       className="relative mx-2 mt-1.5 flex-1 overflow-hidden rounded-lg border border-cyan/25 bg-black/35 shadow-[0_0_22px_rgba(92,246,255,0.1)] outline-none sm:mx-3 sm:mt-2 sm:shadow-[0_0_34px_rgba(92,246,255,0.12)]"
       style={{
-        minHeight: 'clamp(280px, calc(100dvh - 270px), 420px)',
+        minHeight: 'clamp(220px, calc(100dvh - 315px), 400px)',
+        maxHeight: 'calc(100dvh - 245px - env(safe-area-inset-bottom))',
         touchAction: 'none',
         transform: hitStopActive ? 'scale(0.998)' : undefined,
         borderColor: arenaPulseActive ? pulseAccent : planetTheme.arenaBorder,

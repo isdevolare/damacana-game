@@ -46,8 +46,8 @@ export function GameScreen({ locale }: { locale: string }) {
     <>
       <Background />
       <div
-        className="relative z-10 mx-auto flex min-h-dvh w-full max-w-md flex-col overflow-x-hidden overflow-y-hidden"
-        style={{ minHeight: '100dvh', transform: `translate(${offset.x}px, ${offset.y}px)` }}
+        className="relative z-10 mx-auto flex h-dvh max-h-dvh w-full max-w-md flex-col overflow-hidden"
+        style={{ minHeight: '100dvh', maxHeight: '100dvh', transform: `translate(${offset.x}px, ${offset.y}px)` }}
       >
         <TopBar />
         <Counter />

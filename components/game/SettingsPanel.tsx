@@ -20,6 +20,8 @@ export function SettingsPanel({ locale }: { locale: string }) {
   const totalPrestiges = useGame((s) => s.totalPrestiges);
   const shards = useGame((s) => s.shards);
   const collectedFacts = useGame((s) => s.collectedFacts);
+  const lowEffectsMode = useGame((s) => s.lowEffectsMode);
+  const setLowEffectsMode = useGame((s) => s.setLowEffectsMode);
   const audioSettings = useGame((s) => s.audio);
   const set = useGame((s) => s.setAudioSetting);
   const reset = useGame((s) => s.reset);
@@ -55,13 +57,13 @@ export function SettingsPanel({ locale }: { locale: string }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-sm sm:p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/85 p-2 sm:p-6 sm:backdrop-blur-sm"
           onClick={() => setShow(false)}
         >
           <motion.div
             initial={{ scale: 0.9, y: 10 }}
             animate={{ scale: 1, y: 0 }}
-            className="max-h-[88dvh] w-full max-w-sm overflow-y-auto rounded-xl border border-purple/50 bg-black/90 p-4 sm:p-5"
+            className="max-h-[calc(100dvh_-_1rem_-_env(safe-area-inset-bottom))] w-full max-w-sm overflow-y-auto rounded-xl border border-purple/50 bg-black/90 p-3 sm:max-h-[88dvh] sm:p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4">
@@ -198,6 +200,18 @@ export function SettingsPanel({ locale }: { locale: string }) {
               <div className="mt-1 font-space text-[9px] leading-relaxed text-white/35">
                 {t('performanceAuto')}
               </div>
+              <button
+                type="button"
+                onClick={() => setLowEffectsMode(!lowEffectsMode)}
+                className={`mt-3 flex w-full items-center justify-between rounded-md border px-2.5 py-2 font-space text-[10px] uppercase tracking-[0.14em] transition active:scale-[0.98] ${
+                  lowEffectsMode
+                    ? 'border-cyan/45 bg-cyan/10 text-cyan'
+                    : 'border-white/15 bg-white/[0.03] text-white/55'
+                }`}
+              >
+                <span>{t('lowEffectsMode')}</span>
+                <span>{lowEffectsMode ? t('on') : t('off')}</span>
+              </button>
             </div>
 
             <div className="mt-4 flex gap-2">

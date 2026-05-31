@@ -179,6 +179,7 @@ interface Persisted {
   ascensionUnlockedAt: number;
   equippedShipSkinId: string;
   shop: { tapBoost: number; flowBoost: number; shardBoost: number };
+  lowEffectsMode: boolean;
   // audio settings
   audio: { master: number; music: number; sfx: number; muted: boolean };
   // first-time gate
@@ -273,6 +274,7 @@ export interface GameState extends Persisted {
   buyAscensionUpgrade: (id: string) => void;
   setShowShipSkins: (v: boolean) => void;
   equipShipSkin: (id: string) => void;
+  setLowEffectsMode: (v: boolean) => void;
   setAudioSetting: (partial: Partial<Persisted['audio']>) => void;
   start: () => void;
   reset: () => void;
@@ -880,6 +882,7 @@ const initialState: Persisted = {
   ascensionUnlockedAt: 0,
   equippedShipSkinId: DEFAULT_SHIP_SKIN_ID,
   shop: { tapBoost: 0, flowBoost: 0, shardBoost: 0 },
+  lowEffectsMode: false,
   audio: { master: 0.7, music: 0.6, sfx: 0.8, muted: false },
   hasStarted: false,
 };
@@ -1361,6 +1364,8 @@ export const useGame = create<GameState>()(
         if (!unlocked) return;
         set({ equippedShipSkinId: skin.id });
       },
+
+      setLowEffectsMode: (v) => set({ lowEffectsMode: v }),
 
       dismissEvolution: () => set({ showEvolution: null }),
       dismissChapterComplete: () => set({ showChapterComplete: null }),
@@ -2083,6 +2088,7 @@ export const useGame = create<GameState>()(
         ascensionUnlockedAt: s.ascensionUnlockedAt,
         equippedShipSkinId: s.equippedShipSkinId,
         shop: s.shop,
+        lowEffectsMode: s.lowEffectsMode,
         audio: s.audio,
         hasStarted: s.hasStarted,
         lastBulbAt: s.lastBulbAt,
