@@ -40,6 +40,12 @@ export interface ShipSkinVisual {
   auraStyle: ShipSkinAuraStyle;
 }
 
+export interface ShipSkinAsset {
+  previewSrc?: string;
+  combatSrc?: string;
+  altKey?: string;
+}
+
 export interface ShipSkinDef {
   id: string;
   rarity: ShipSkinRarity;
@@ -50,6 +56,8 @@ export interface ShipSkinDef {
   glow: string;
   silhouette: 'core' | 'raider' | 'cruiser' | 'interceptor' | 'vessel' | 'mothership' | 'whale';
   archetype: ShipSkinArchetype;
+  // Future premium asset packs can provide SVG/PNG files here. CSS shapes stay as a lightweight fallback.
+  asset?: ShipSkinAsset;
   visual: ShipSkinVisual;
   unlock: {
     type: ShipSkinUnlockType;
@@ -73,6 +81,8 @@ export interface ShipSkinUnlockContext {
   ownedShipSkinIds: string[];
   skinCredits: number;
 }
+
+export const SHIP_SKIN_ASSET_BASE_PATH = '/assets/ship-skins';
 
 export const SHIP_SKINS: ShipSkinDef[] = [
   {
@@ -379,7 +389,7 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       bodyHeightPct: 80,
       bodyRadius: '8%',
       coreSizePct: 17,
-      effect: 'fragments',
+      effect: 'none',
       coreColor: '#ffb8ff',
       trailStyle: 'rift',
       auraStyle: 'corrupt',
@@ -650,9 +660,19 @@ export const SHIP_SKINS: ShipSkinDef[] = [
 ];
 
 export const DEFAULT_SHIP_SKIN_ID = 'defaultCoreShip';
+export const SHOP_SHIP_SKIN_IDS = [
+  'defaultCoreShip',
+  'marsRaider',
+  'saturnOrbitCruiser',
+  'voidInterceptor',
+  'prestigeVessel',
+  'ascendantMothership',
+] as const;
+
+export const SHOP_SHIP_SKINS = SHIP_SKINS.filter((skin) => SHOP_SHIP_SKIN_IDS.includes(skin.id as typeof SHOP_SHIP_SKIN_IDS[number]));
 
 export function shipSkinById(id: string | undefined | null): ShipSkinDef {
-  return SHIP_SKINS.find((skin) => skin.id === id) ?? SHIP_SKINS[0];
+  return SHOP_SHIP_SKINS.find((skin) => skin.id === id) ?? SHOP_SHIP_SKINS[0] ?? SHIP_SKINS[0];
 }
 
 export function shipSkinRequirementKey(skin: ShipSkinDef): string {

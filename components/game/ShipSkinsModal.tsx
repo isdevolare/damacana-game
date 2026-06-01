@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { useGame } from '@/lib/store';
 import { currentChapter } from '@/lib/config/chapters';
 import {
-  SHIP_SKINS,
+  SHOP_SHIP_SKINS,
   shipSkinById,
   shipSkinPurchasable,
   shipSkinRequirementKey,
@@ -69,6 +69,7 @@ const FILTERS: SkinFilter[] = ['all', 'owned', 'purchasable', 'locked', 'cosmic'
 const RARITY_FILTERS: RarityFilter[] = ['all', 'common', 'rare', 'epic', 'legendary', 'cosmic'];
 
 function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef; small?: boolean; hero?: boolean }) {
+  const assetSrc = skin.asset?.previewSrc ?? skin.asset?.combatSrc;
   const frameWidth = hero ? 284 : small ? 96 : 160;
   const frameHeight = hero ? 190 : small ? 76 : 118;
   const bodyWidth = `${skin.visual.bodyWidthPct}%`;
@@ -214,44 +215,56 @@ function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef;
           opacity: hero ? 0.66 : 0.54,
         }}
       />
-      <div
-        className="absolute border"
-        style={{
-          width: bodyWidth,
-          height: bodyHeight,
-          borderRadius: skin.visual.bodyRadius,
-          borderColor: `${skin.accent}88`,
-          background: `linear-gradient(110deg, ${skin.hull} 8%, ${skin.accent}55 46%, ${skin.hull} 88%)`,
-          boxShadow: `0 0 ${hero ? 18 : 10}px ${skin.glow}`,
-          clipPath: skin.visual.wingClip,
-          opacity: 0.86,
-        }}
-      />
-      <div
-        className="absolute border"
-        style={{
-          width: bodyWidth,
-          height: bodyHeight,
-          borderRadius: skin.visual.bodyRadius,
-          borderColor: `${skin.accent}a0`,
-          background: `linear-gradient(180deg, ${skin.accent}62 0%, ${skin.hull} 42%, ${skin.hull} 74%, ${skin.accent}24 100%)`,
-          boxShadow: `0 0 ${hero ? 24 : 14}px ${skin.glow}`,
-          clipPath: skin.visual.bodyClip,
-        }}
-      />
-      <div
-        className="absolute border border-white/10"
-        style={{
-          width: innerWidth,
-          height: innerHeight,
-          background: `${skin.hull}d8`,
-          clipPath: skin.visual.innerClip,
-        }}
-      />
-      <div
-        className="absolute left-1/2 top-[33%] -translate-x-1/2 rounded-full bg-white/88"
-        style={{ width: coreSize, height: coreSize, background: skin.visual.coreColor, boxShadow: `0 0 14px ${skin.accent}` }}
-      />
+      {assetSrc ? (
+        <img
+          src={assetSrc}
+          alt=""
+          className="absolute left-1/2 top-1/2 max-h-[82%] max-w-[88%] -translate-x-1/2 -translate-y-1/2 object-contain"
+          style={{ filter: `drop-shadow(0 0 ${hero ? 18 : 10}px ${skin.glow})` }}
+          draggable={false}
+        />
+      ) : (
+        <>
+          <div
+            className="absolute border"
+            style={{
+              width: bodyWidth,
+              height: bodyHeight,
+              borderRadius: skin.visual.bodyRadius,
+              borderColor: `${skin.accent}66`,
+              background: `linear-gradient(110deg, ${skin.hull} 12%, ${skin.accent}40 46%, ${skin.hull} 88%)`,
+              boxShadow: `0 0 ${hero ? 10 : 6}px ${skin.glow}`,
+              clipPath: skin.visual.wingClip,
+              opacity: 0.86,
+            }}
+          />
+          <div
+            className="absolute border"
+            style={{
+              width: bodyWidth,
+              height: bodyHeight,
+              borderRadius: skin.visual.bodyRadius,
+              borderColor: `${skin.accent}88`,
+              background: `linear-gradient(180deg, ${skin.accent}4f 0%, ${skin.hull} 38%, ${skin.hull} 78%, ${skin.accent}1c 100%)`,
+              boxShadow: `0 0 ${hero ? 12 : 8}px ${skin.glow}`,
+              clipPath: skin.visual.bodyClip,
+            }}
+          />
+          <div
+            className="absolute border border-white/10"
+            style={{
+              width: innerWidth,
+              height: innerHeight,
+              background: `${skin.hull}d8`,
+              clipPath: skin.visual.innerClip,
+            }}
+          />
+          <div
+            className="absolute left-1/2 top-[33%] -translate-x-1/2 rounded-full bg-white/88"
+            style={{ width: coreSize, height: coreSize, background: skin.visual.coreColor, boxShadow: `0 0 9px ${skin.accent}` }}
+          />
+        </>
+      )}
     </motion.div>
   );
 }
@@ -274,7 +287,7 @@ export function ShipSkinsModal() {
   const ui = useTranslations('ui');
   const [filter, setFilter] = useState<SkinFilter>('all');
   const [rarityFilter, setRarityFilter] = useState<RarityFilter>('all');
-  const [selectedSkinId, setSelectedSkinId] = useState(SHIP_SKINS[0]?.id ?? 'defaultCoreShip');
+  const [selectedSkinId, setSelectedSkinId] = useState(SHOP_SHIP_SKINS[0]?.id ?? 'defaultCoreShip');
   const chapter = currentChapter(completedChapters);
   const context = {
     completedChapters,
@@ -292,7 +305,7 @@ export function ShipSkinsModal() {
   const selectedEquipped = equippedShipSkinId === selectedSkin.id || (!equippedShipSkinId && selectedSkin.id === 'defaultCoreShip');
   const selectedProgress = shipSkinUnlockProgress(selectedSkin, context);
   const selectedRarity = RARITY_STYLE[selectedSkin.rarity];
-  const filteredSkins = useMemo(() => SHIP_SKINS.filter((skin) => {
+  const filteredSkins = useMemo(() => SHOP_SHIP_SKINS.filter((skin) => {
     const unlocked = shipSkinUnlocked(skin, context);
     const purchasable = shipSkinPurchasable(skin, context);
     const categoryPass =
@@ -323,7 +336,7 @@ export function ShipSkinsModal() {
       : selectedPurchasable
         ? t('state.purchasable')
         : t('state.locked');
-  const ownedCount = SHIP_SKINS.filter((skin) => shipSkinUnlocked(skin, context)).length;
+  const ownedCount = SHOP_SHIP_SKINS.filter((skin) => shipSkinUnlocked(skin, context)).length;
 
   return (
     <AnimatePresence>
@@ -351,7 +364,7 @@ export function ShipSkinsModal() {
                     {t('credits')}: {skinCredits ?? 0}
                   </div>
                   <div className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 font-space text-[10px] uppercase tracking-[0.16em] text-white/45">
-                    {ownedCount}/{SHIP_SKINS.length} {t('ownedCount')}
+                    {ownedCount}/{SHOP_SHIP_SKINS.length} {t('ownedCount')}
                   </div>
                 </div>
               </div>

@@ -3440,70 +3440,82 @@ export function CombatArena() {
             transform: 'translate(-50%, 0)',
           }}
         />
-        <div
-          className="absolute left-1/2 top-1/2 z-10 border"
-          style={{
-            width: `${shipSkin.visual.bodyWidthPct * shipBodyScale}%`,
-            height: `${shipSkin.visual.bodyHeightPct * shipBodyScale}%`,
-            borderRadius: shipSkin.visual.bodyRadius,
-            borderColor: `${shipSkin.accent}88`,
-            background: `linear-gradient(110deg, ${shipSkin.hull} 8%, ${shipSkin.accent}52 46%, ${shipSkin.hull} 88%)`,
-            boxShadow: lowDensity ? undefined : `0 0 7px ${shipSkin.glow}`,
-            clipPath: shipSkin.visual.wingClip,
-            opacity: 0.82,
-            transform: 'translate(-50%, -50%)',
-          }}
-        />
-        <div
-          className="absolute left-1/2 top-1/2 z-20 border"
-          style={{
-            width: `${shipSkin.visual.bodyWidthPct * shipBodyScale}%`,
-            height: `${shipSkin.visual.bodyHeightPct * shipBodyScale}%`,
-            borderRadius: shipSkin.visual.bodyRadius,
-            borderColor: `${shipSkin.accent}a0`,
-            background: `linear-gradient(180deg, ${shipSkin.accent}70 0%, ${shipSkin.hull} 42%, ${shipSkin.hull} 76%, ${shipSkin.accent}26 100%)`,
-            boxShadow: `0 0 ${lowDensity ? 7 : 10}px ${shipSkin.glow}`,
-            filter: lowDensity ? undefined : `drop-shadow(0 0 2px ${shipSkin.accent})`,
-            clipPath: shipSkin.visual.bodyClip,
-            transform: 'translate(-50%, -50%)',
-          }}
-        />
-        <div
-          className="absolute left-1/2 top-1/2 z-30 border border-white/10"
-          style={{
-            width: `${shipSkin.visual.bodyWidthPct * shipBodyScale * 0.52}%`,
-            height: `${shipSkin.visual.bodyHeightPct * shipBodyScale * 0.74}%`,
-            background: `${shipSkin.hull}cc`,
-            clipPath: shipSkin.visual.innerClip,
-            transform: 'translate(-50%, -50%)',
-          }}
-        />
-        <div
-          className="absolute left-1/2 top-[24%] z-40 -translate-x-1/2 rounded-full"
-          style={{
-            width: '5%',
-            height: '42%',
-            background: `linear-gradient(180deg, ${shipSkin.accent}d8, ${shipSkin.accent}38 70%, transparent)`,
-            boxShadow: lowDensity ? undefined : `0 0 5px ${shipSkin.accent}`,
-          }}
-        />
-        <div
-          className="absolute left-[31%] top-[53%] z-40 h-[3px] w-[13%] rounded-full"
-          style={{ background: `${shipSkin.accent}80` }}
-        />
-        <div
-          className="absolute right-[31%] top-[53%] z-40 h-[3px] w-[13%] rounded-full"
-          style={{ background: `${shipSkin.accent}80` }}
-        />
-        <div
-          className="absolute left-1/2 top-[34%] z-40 -translate-x-1/2 rounded-full bg-white/88"
-          style={{
-            width: `${shipSkin.visual.coreSizePct}%`,
-            height: `${shipSkin.visual.coreSizePct}%`,
-            background: shipSkin.visual.coreColor,
-            boxShadow: `0 0 ${lowDensity ? 5 : 7}px ${shipSkin.accent}`,
-          }}
-        />
+        {shipSkin.asset?.combatSrc || shipSkin.asset?.previewSrc ? (
+          <img
+            src={shipSkin.asset.combatSrc ?? shipSkin.asset.previewSrc}
+            alt=""
+            className="absolute left-1/2 top-1/2 z-30 max-h-[92%] max-w-[92%] -translate-x-1/2 -translate-y-1/2 object-contain"
+            style={{ filter: lowDensity ? undefined : `drop-shadow(0 0 6px ${shipSkin.glow})` }}
+            draggable={false}
+          />
+        ) : (
+          <>
+            <div
+              className="absolute left-1/2 top-1/2 z-10 border"
+              style={{
+                width: `${shipSkin.visual.bodyWidthPct * shipBodyScale}%`,
+                height: `${shipSkin.visual.bodyHeightPct * shipBodyScale}%`,
+                borderRadius: shipSkin.visual.bodyRadius,
+                borderColor: `${shipSkin.accent}66`,
+                background: `linear-gradient(110deg, ${shipSkin.hull} 10%, ${shipSkin.accent}3f 46%, ${shipSkin.hull} 88%)`,
+                boxShadow: lowDensity ? undefined : `0 0 4px ${shipSkin.glow}`,
+                clipPath: shipSkin.visual.wingClip,
+                opacity: 0.86,
+                transform: 'translate(-50%, -50%)',
+              }}
+            />
+            <div
+              className="absolute left-1/2 top-1/2 z-20 border"
+              style={{
+                width: `${shipSkin.visual.bodyWidthPct * shipBodyScale}%`,
+                height: `${shipSkin.visual.bodyHeightPct * shipBodyScale}%`,
+                borderRadius: shipSkin.visual.bodyRadius,
+                borderColor: `${shipSkin.accent}8a`,
+                background: `linear-gradient(180deg, ${shipSkin.accent}58 0%, ${shipSkin.hull} 40%, ${shipSkin.hull} 78%, ${shipSkin.accent}20 100%)`,
+                boxShadow: `0 0 ${lowDensity ? 4 : 7}px ${shipSkin.glow}`,
+                filter: lowDensity ? undefined : `drop-shadow(0 0 1px ${shipSkin.accent})`,
+                clipPath: shipSkin.visual.bodyClip,
+                transform: 'translate(-50%, -50%)',
+              }}
+            />
+            <div
+              className="absolute left-1/2 top-1/2 z-30 border border-white/10"
+              style={{
+                width: `${shipSkin.visual.bodyWidthPct * shipBodyScale * 0.52}%`,
+                height: `${shipSkin.visual.bodyHeightPct * shipBodyScale * 0.74}%`,
+                background: `${shipSkin.hull}cc`,
+                clipPath: shipSkin.visual.innerClip,
+                transform: 'translate(-50%, -50%)',
+              }}
+            />
+            <div
+              className="absolute left-1/2 top-[24%] z-40 -translate-x-1/2 rounded-full"
+              style={{
+                width: '5%',
+                height: '42%',
+                background: `linear-gradient(180deg, ${shipSkin.accent}c0, ${shipSkin.accent}30 70%, transparent)`,
+                boxShadow: lowDensity ? undefined : `0 0 3px ${shipSkin.accent}`,
+              }}
+            />
+            <div
+              className="absolute left-[31%] top-[53%] z-40 h-[3px] w-[13%] rounded-full"
+              style={{ background: `${shipSkin.accent}72` }}
+            />
+            <div
+              className="absolute right-[31%] top-[53%] z-40 h-[3px] w-[13%] rounded-full"
+              style={{ background: `${shipSkin.accent}72` }}
+            />
+            <div
+              className="absolute left-1/2 top-[34%] z-40 -translate-x-1/2 rounded-full bg-white/88"
+              style={{
+                width: `${shipSkin.visual.coreSizePct}%`,
+                height: `${shipSkin.visual.coreSizePct}%`,
+                background: shipSkin.visual.coreColor,
+                boxShadow: `0 0 ${lowDensity ? 4 : 5}px ${shipSkin.accent}`,
+              }}
+            />
+          </>
+        )}
         {(burstFireActive || activeAttackSurgeActive || projectileSurgeActive || flowSurgeActive || orbitSurgeActive) && (
           <div
             className="absolute left-1/2 top-[66%] z-0 -translate-x-1/2 blur-[3px]"
