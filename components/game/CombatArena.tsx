@@ -2563,7 +2563,7 @@ export function CombatArena() {
   const bossSize = Math.round((visualLowDensity ? (finalBoss || mega ? 112 : 92) : (finalBoss || mega ? 128 : 104)) * CORE_DEFENSE.bossControllerScale);
   const coreSize = visualLowDensity ? CORE_DEFENSE.mobilePlayerCoreSizePx : CORE_DEFENSE.playerCoreSizePx;
   const coreShieldSize = visualLowDensity ? CORE_DEFENSE.playerShieldSizePx - 10 : CORE_DEFENSE.playerShieldSizePx;
-  const shipBodyScale = visualLowDensity ? 1.18 : 1.28;
+  const shipBodyScale = visualLowDensity ? 1.26 : 1.4;
   const weakPointAngle = bossProfile.rotatingWeakPoint ? (renderNow / 1000) * bossProfile.rotatingWeakPoint.speed : 0;
   const weakPointRadius = bossProfile.rotatingWeakPoint?.radiusPx ?? 0;
   const weakPointX = Math.cos(weakPointAngle) * weakPointRadius;
@@ -3305,25 +3305,25 @@ export function CombatArena() {
           height: coreSize,
           borderColor: playerHit ? 'rgba(255,61,110,0.62)' : collapseActive || flowSurgeActive || orbitSurgeActive ? `${shipSkin.accent}72` : activeAttackSurgeActive || projectileSurgeActive ? `${shipSkin.engine}70` : comboSurgeActive ? 'rgba(255,209,102,0.58)' : `${shipSkin.accent}62`,
           background: playerHit
-            ? 'rgba(255,61,110,0.12)'
+            ? 'rgba(255,61,110,0.08)'
             : burstFireActive || activeAttackSurgeActive || projectileSurgeActive
-              ? 'rgba(255,92,232,0.07)'
+              ? 'rgba(255,92,232,0.035)'
               : collapseActive || flowSurgeActive || orbitSurgeActive
-                ? 'rgba(92,246,255,0.08)'
+                ? 'rgba(92,246,255,0.04)'
                 : comboSurgeActive
-                  ? 'rgba(255,209,102,0.06)'
-                  : 'rgba(2,16,24,0.34)',
+                  ? 'rgba(255,209,102,0.03)'
+                  : 'rgba(2,16,24,0.08)',
           boxShadow: playerHit
-            ? `0 0 ${18 * playerGlow}px rgba(255,61,110,0.52)`
+            ? `0 0 ${12 * playerGlow}px rgba(255,61,110,0.38)`
             : collapseActive
-              ? `0 0 ${24 * playerGlow}px rgba(92,246,255,0.42)`
+              ? `0 0 ${16 * playerGlow}px rgba(92,246,255,0.26)`
               : burstFireActive || activeAttackSurgeActive || projectileSurgeActive
-                ? `0 0 ${22 * playerGlow}px ${shipSkin.engine}`
+                ? `0 0 ${14 * playerGlow}px ${shipSkin.engine}`
                 : flowSurgeActive || orbitSurgeActive
-                  ? `0 0 ${22 * playerGlow}px ${shipSkin.glow}`
+                  ? `0 0 ${14 * playerGlow}px ${shipSkin.glow}`
                   : comboSurgeActive
-                    ? `0 0 ${20 * playerGlow}px rgba(255,209,102,0.34)`
-                : `0 0 ${(8 + intensity * 14) * playerGlow}px ${combo >= 15 ? shipSkin.engine : shipSkin.glow}`,
+                    ? `0 0 ${12 * playerGlow}px rgba(255,209,102,0.22)`
+                : `0 0 ${(4 + intensity * 7) * playerGlow}px ${combo >= 15 ? shipSkin.engine : shipSkin.glow}`,
         }}
       >
         <div
@@ -3331,8 +3331,8 @@ export function CombatArena() {
           style={{
             width: coreShieldSize,
             height: coreShieldSize,
-            opacity: playerHpPct > 66 ? 0.24 : playerHpPct > 33 ? 0.18 : 0.1,
-            boxShadow: lowDensity ? undefined : `0 0 ${playerHit ? 12 : 8}px ${shipSkin.glow}`,
+            opacity: playerHpPct > 66 ? 0.16 : playerHpPct > 33 ? 0.13 : 0.08,
+            boxShadow: lowDensity ? undefined : `0 0 ${playerHit ? 8 : 5}px ${shipSkin.glow}`,
           }}
         />
         {combo >= 15 && (

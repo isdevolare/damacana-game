@@ -1074,12 +1074,33 @@
       "locked": "Locked."
     },
     "detail": {
+      "archetype": "archetype",
       "unlock": "unlock",
       "effect": "effect",
       "trail": "trail",
       "aura": "aura",
       "price": "price",
       "progress": "progress"
+    },
+    "archetypes": {
+      "coreDiamond": "compact diamond core",
+      "scout": "fast scout frame",
+      "fighter": "aggressive fighter hull",
+      "spear": "long needle interceptor",
+      "solarGlider": "wide solar glider",
+      "haloCruiser": "orbital halo cruiser",
+      "voidRazor": "stealth V-razor",
+      "falcon": "swept falcon fighter",
+      "carrier": "heavy armored carrier",
+      "striker": "asymmetric nebula striker",
+      "crown": "regal crown vessel",
+      "eclipse": "dark crescent hunter",
+      "dragon": "dragon-core warframe",
+      "mothership": "layered mothership hull",
+      "ark": "tall ascendant ark",
+      "whale": "smooth cosmic whale form",
+      "singularity": "broken singularity vessel",
+      "leviathan": "massive starborn leviathan"
     },
     "effects": {
       "none": "clean starter hull",

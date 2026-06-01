@@ -33,32 +33,32 @@ const RARITY_STYLE: Record<ShipSkinRarity, { border: string; text: string; bg: s
     glow: '0 0 18px rgba(92,246,255,0.1)',
   },
   rare: {
-    border: 'border-cyan/40',
+    border: 'border-cyan/45',
     text: 'text-cyan',
     bg: 'bg-cyan/[0.06]',
     badge: 'border-cyan/35 bg-cyan/10',
-    glow: '0 0 22px rgba(92,246,255,0.13)',
+    glow: '0 0 26px rgba(92,246,255,0.18)',
   },
   epic: {
-    border: 'border-purple/45',
+    border: 'border-purple/55',
     text: 'text-purple',
     bg: 'bg-purple/[0.08]',
     badge: 'border-purple/40 bg-purple/10',
-    glow: '0 0 26px rgba(184,122,255,0.16)',
+    glow: '0 0 34px rgba(184,122,255,0.24)',
   },
   legendary: {
-    border: 'border-gold/55',
+    border: 'border-gold/65',
     text: 'text-gold',
     bg: 'bg-gold/[0.08]',
     badge: 'border-gold/50 bg-gold/10',
-    glow: '0 0 30px rgba(255,209,102,0.2)',
+    glow: '0 0 42px rgba(255,209,102,0.3), inset 0 0 30px rgba(255,209,102,0.08)',
   },
   cosmic: {
-    border: 'border-pink/55',
+    border: 'border-pink/70',
     text: 'text-pink',
     bg: 'bg-pink/[0.08]',
     badge: 'border-pink/45 bg-pink/10',
-    glow: '0 0 34px rgba(255,92,232,0.22)',
+    glow: '0 0 52px rgba(255,92,232,0.34), inset 0 0 34px rgba(92,246,255,0.08)',
   },
 };
 
@@ -69,12 +69,21 @@ const FILTERS: SkinFilter[] = ['all', 'owned', 'purchasable', 'locked', 'cosmic'
 const RARITY_FILTERS: RarityFilter[] = ['all', 'common', 'rare', 'epic', 'legendary', 'cosmic'];
 
 function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef; small?: boolean; hero?: boolean }) {
-  const frameSize = hero ? 174 : small ? 82 : 132;
+  const frameWidth = hero ? 284 : small ? 96 : 160;
+  const frameHeight = hero ? 190 : small ? 76 : 118;
   const bodyWidth = `${skin.visual.bodyWidthPct}%`;
   const bodyHeight = `${skin.visual.bodyHeightPct}%`;
   const innerWidth = `${skin.visual.bodyWidthPct * 0.52}%`;
   const innerHeight = `${skin.visual.bodyHeightPct * 0.74}%`;
   const coreSize = `${skin.visual.coreSizePct}%`;
+  const exhaustWidth = skin.visual.trailStyle === 'twin' ? '32%' : skin.visual.trailStyle === 'wake' ? '46%' : skin.visual.trailStyle === 'blade' ? '18%' : '26%';
+  const exhaustClip = skin.visual.trailStyle === 'twin'
+    ? 'polygon(20% 0%, 34% 0%, 44% 100%, 4% 100%, 20% 0%, 66% 0%, 80% 0%, 96% 100%, 56% 100%)'
+    : skin.visual.trailStyle === 'wake'
+      ? 'polygon(24% 0%, 76% 0%, 100% 100%, 0% 100%)'
+      : skin.visual.trailStyle === 'blade'
+        ? 'polygon(46% 0%, 54% 0%, 100% 100%, 0% 100%)'
+        : 'polygon(38% 0%, 62% 0%, 84% 100%, 16% 100%)';
   const renderEffect = () => {
     switch (skin.visual.effect) {
       case 'orbitRing':
@@ -177,24 +186,33 @@ function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef;
   };
 
   return (
-    <div
-      className={clsx('relative mx-auto flex shrink-0 items-center justify-center', hero ? 'h-44 w-full max-w-[260px]' : small ? 'h-[86px] w-[104px]' : 'h-32 w-40')}
+    <motion.div
+      animate={hero ? { y: [0, -4, 0], rotate: [0, 0.35, 0] } : undefined}
+      transition={hero ? { duration: 4.8, repeat: Infinity, ease: 'easeInOut' } : undefined}
+      className={clsx('relative mx-auto flex shrink-0 items-center justify-center', hero ? 'h-56 w-full max-w-[340px]' : small ? 'h-[92px] w-[116px]' : 'h-36 w-44')}
       aria-hidden
     >
       <div
-        className="absolute left-1/2 top-1/2 rounded-full border opacity-55"
+        className="absolute left-1/2 top-1/2 rounded-[24px] border opacity-65"
         style={{
-          width: frameSize,
-          height: frameSize,
+          width: frameWidth,
+          height: frameHeight,
           borderColor: `${skin.accent}66`,
-          boxShadow: `0 0 ${small ? 16 : 22}px ${skin.glow}`,
+          boxShadow: `inset 0 0 ${small ? 18 : hero ? 46 : 28}px ${skin.glow}, 0 0 ${small ? 12 : hero ? 34 : 22}px ${skin.glow}`,
+          clipPath: 'polygon(14% 0%, 86% 0%, 100% 20%, 100% 80%, 86% 100%, 14% 100%, 0% 80%, 0% 20%)',
           transform: 'translate(-50%, -50%)',
         }}
       />
       {renderEffect()}
       <div
-        className="absolute bottom-0 left-1/2 h-8 w-5 -translate-x-1/2 rounded-full blur-md"
-        style={{ background: skin.engine, opacity: 0.7, boxShadow: `0 0 16px ${skin.engine}` }}
+        className="absolute left-1/2 top-[58%] -translate-x-1/2 blur-[2px]"
+        style={{
+          width: exhaustWidth,
+          height: hero ? '38%' : small ? '30%' : '34%',
+          background: `linear-gradient(180deg, ${skin.engine}aa 0%, ${skin.engine}40 48%, transparent 100%)`,
+          clipPath: exhaustClip,
+          opacity: hero ? 0.66 : 0.54,
+        }}
       />
       <div
         className="absolute border"
@@ -204,9 +222,9 @@ function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef;
           borderRadius: skin.visual.bodyRadius,
           borderColor: `${skin.accent}88`,
           background: `linear-gradient(110deg, ${skin.hull} 8%, ${skin.accent}55 46%, ${skin.hull} 88%)`,
-          boxShadow: `0 0 12px ${skin.glow}`,
+          boxShadow: `0 0 ${hero ? 18 : 10}px ${skin.glow}`,
           clipPath: skin.visual.wingClip,
-          opacity: 0.72,
+          opacity: 0.86,
         }}
       />
       <div
@@ -216,8 +234,8 @@ function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef;
           height: bodyHeight,
           borderRadius: skin.visual.bodyRadius,
           borderColor: `${skin.accent}a0`,
-          background: `linear-gradient(180deg, ${skin.accent}44, ${skin.hull} 62%)`,
-          boxShadow: `0 0 18px ${skin.glow}`,
+          background: `linear-gradient(180deg, ${skin.accent}62 0%, ${skin.hull} 42%, ${skin.hull} 74%, ${skin.accent}24 100%)`,
+          boxShadow: `0 0 ${hero ? 24 : 14}px ${skin.glow}`,
           clipPath: skin.visual.bodyClip,
         }}
       />
@@ -234,7 +252,7 @@ function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef;
         className="absolute left-1/2 top-[33%] -translate-x-1/2 rounded-full bg-white/88"
         style={{ width: coreSize, height: coreSize, background: skin.visual.coreColor, boxShadow: `0 0 14px ${skin.accent}` }}
       />
-    </div>
+    </motion.div>
   );
 }
 
@@ -351,11 +369,18 @@ export function ShipSkinsModal() {
               style={{ boxShadow: `inset 0 0 42px ${selectedSkin.glow}, ${selectedRarity.glow}` }}
             >
               <div className="pointer-events-none absolute inset-x-12 -top-20 h-40 rounded-full blur-3xl" style={{ background: selectedSkin.accent, opacity: 0.16 }} />
-              <div className="grid gap-3 md:grid-cols-[minmax(260px,1fr)_300px]">
-                <div className="relative overflow-hidden rounded-lg border border-white/10 bg-black/45 py-3">
+              {selectedSkin.rarity === 'cosmic' && (
+                <div className="pointer-events-none absolute inset-0 opacity-30">
+                  <div className="absolute left-1/2 top-1/2 h-[150%] w-[64%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan/20 animate-spinslow" />
+                  <div className="absolute left-1/2 top-1/2 h-[88%] w-[120%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-pink/20" />
+                </div>
+              )}
+              <div className="grid gap-3 md:grid-cols-[minmax(300px,1fr)_320px]">
+                <div className="relative overflow-hidden rounded-lg border border-white/10 bg-black/45 py-4">
                   <div className="absolute left-4 top-3 rounded border border-white/10 bg-black/40 px-2 py-1 font-space text-[8px] uppercase tracking-[0.16em] text-white/45">
                     {t('heroPreview')}
                   </div>
+                  <div className="pointer-events-none absolute inset-x-8 bottom-5 h-8 rounded-full bg-black/45 blur-xl" />
                   <ShipPreview skin={selectedSkin} hero />
                 </div>
                 <div className="relative rounded-lg border border-white/10 bg-black/40 p-3">
@@ -373,6 +398,7 @@ export function ShipSkinsModal() {
                     </div>
                   </div>
                   <div className="mt-3 grid gap-2 font-space text-[9px] uppercase tracking-[0.12em] text-white/45">
+                    <div><span className="text-white/70">{t('detail.archetype')}</span> · {t(`archetypes.${selectedSkin.archetype}` as any)}</div>
                     <div><span className="text-white/70">{t('detail.unlock')}</span> · {t(`requirements.${shipSkinRequirementKey(selectedSkin)}` as any, { count: selectedSkin.unlock.count ?? 0 })}</div>
                     <div><span className="text-white/70">{t('detail.effect')}</span> · {t(`effects.${selectedSkin.visual.effect}` as any)}</div>
                     <div><span className="text-white/70">{t('detail.trail')}</span> · {t(`trails.${selectedSkin.visual.trailStyle}` as any)}</div>
@@ -469,10 +495,10 @@ export function ShipSkinsModal() {
                       'relative overflow-hidden rounded-lg border p-2 text-left transition active:scale-[0.99]',
                       rarity.border,
                       rarity.bg,
-                      selectedSkinId === skin.id && 'ring-1 ring-cyan/45',
+                      selectedSkinId === skin.id && 'ring-2 ring-cyan/55',
                       !unlocked && 'opacity-[0.82]',
                     )}
-                    style={{ boxShadow: unlocked ? rarity.glow : 'inset 0 0 24px rgba(0,0,0,0.28)' }}
+                    style={{ boxShadow: selectedSkinId === skin.id ? `${rarity.glow}, 0 0 0 1px ${skin.accent}55` : unlocked ? rarity.glow : 'inset 0 0 24px rgba(0,0,0,0.28)' }}
                   >
                     <div
                       className="pointer-events-none absolute inset-x-8 -top-10 h-16 rounded-full blur-2xl"
@@ -484,7 +510,7 @@ export function ShipSkinsModal() {
                         style={{ boxShadow: `inset 0 0 ${unlocked ? 18 : 10}px ${skin.glow}` }}
                       >
                         <ShipPreview skin={skin} small />
-                        {!unlocked && <div className="absolute inset-0 bg-black/48 backdrop-saturate-50" />}
+                        {!unlocked && <div className="absolute inset-0 bg-black/34 backdrop-saturate-50" />}
                         {equipped && <div className="absolute inset-x-2 bottom-1 rounded-full border border-cyan/50 bg-cyan/15 px-1 py-0.5 text-center font-space text-[7px] uppercase tracking-[0.12em] text-cyan">{t('state.equipped')}</div>}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -502,9 +528,10 @@ export function ShipSkinsModal() {
                           </span>
                         </div>
                         <div className="mt-1 line-clamp-2 font-space text-[9px] leading-relaxed text-white/45">
-                          {t(`requirements.${shipSkinRequirementKey(skin)}` as any, {
-                            count: skin.unlock.count ?? 0,
-                          })}
+                          {t(`archetypes.${skin.archetype}` as any)}
+                        </div>
+                        <div className="mt-0.5 line-clamp-1 font-space text-[8px] uppercase tracking-[0.12em] text-white/32">
+                          {t(`effects.${skin.visual.effect}` as any)}
                         </div>
                         {progress && progress.required > 0 && (
                           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">

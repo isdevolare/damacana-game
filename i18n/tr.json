@@ -1074,12 +1074,33 @@
       "locked": "Kilitli."
     },
     "detail": {
+      "archetype": "arketip",
       "unlock": "açılma",
       "effect": "efekt",
       "trail": "iz",
       "aura": "aura",
       "price": "fiyat",
       "progress": "ilerleme"
+    },
+    "archetypes": {
+      "coreDiamond": "kompakt elmas çekirdek",
+      "scout": "hızlı keşif gövdesi",
+      "fighter": "saldırgan savaşçı gövde",
+      "spear": "uzun iğne önleyici",
+      "solarGlider": "geniş güneş planörü",
+      "haloCruiser": "yörünge haleli kruvazör",
+      "voidRazor": "gizli V-ustura",
+      "falcon": "geriye süpürülmüş şahin",
+      "carrier": "ağır zırhlı taşıyıcı",
+      "striker": "asimetrik nebula vurucusu",
+      "crown": "asil taç gemisi",
+      "eclipse": "karanlık hilal avcısı",
+      "dragon": "ejder çekirdek savaş gövdesi",
+      "mothership": "katmanlı ana gemi gövdesi",
+      "ark": "uzun yükseliş arkı",
+      "whale": "pürüzsüz kozmik balina formu",
+      "singularity": "kırık tekillik gemisi",
+      "leviathan": "dev yıldız leviathanı"
     },
     "effects": {
       "none": "temiz başlangıç gövdesi",
