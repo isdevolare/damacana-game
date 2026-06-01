@@ -48,11 +48,11 @@ export function ProfileStatsModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[52] bg-black/92 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[52] overflow-hidden bg-black/92 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur-sm sm:p-4"
           onClick={() => setShow(false)}
         >
-          <div className="min-h-full flex items-center" onClick={(e) => e.stopPropagation()}>
-            <div className="w-full max-w-md mx-auto rounded-xl border border-white/20 bg-black/90 p-4">
+          <div className="flex min-h-full items-center" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto max-h-[calc(100dvh_-_1.5rem_-_env(safe-area-inset-bottom))] w-full max-w-md overflow-y-auto rounded-xl border border-white/20 bg-black/90 p-4">
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <div className="font-major text-lg text-white">{t('profile.title')}</div>

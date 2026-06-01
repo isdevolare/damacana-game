@@ -37,7 +37,7 @@ export function FactCard() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[55] flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+        className="fixed inset-0 z-[55] flex items-center justify-center overflow-hidden bg-black/85 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur-md sm:p-4"
       >
         {glitching ? (
           <motion.div
@@ -52,7 +52,7 @@ export function FactCard() {
           <motion.div
             initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-xl border bg-black/90 p-5"
+            className="max-h-[calc(100dvh_-_1.5rem_-_env(safe-area-inset-bottom))] w-full max-w-md overflow-y-auto rounded-xl border bg-black/90 p-4 sm:p-5"
             style={{ borderColor: color }}
           >
             <div className="text-[11px] font-space tracking-[0.3em] mb-3" style={{ color }}>

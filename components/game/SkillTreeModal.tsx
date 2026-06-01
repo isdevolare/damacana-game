@@ -47,12 +47,12 @@ export function SkillTreeModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm overflow-y-auto"
+          className="fixed inset-0 z-50 overflow-y-auto overflow-x-hidden bg-black/90 backdrop-blur-sm"
         >
           <motion.div
             initial={{ y: 40 }}
             animate={{ y: 0 }}
-            className="min-h-full p-3 flex flex-col"
+            className="mx-auto flex min-h-full w-full max-w-md flex-col p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:max-w-5xl"
           >
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -84,7 +84,7 @@ export function SkillTreeModal() {
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 flex-1 sm:grid-cols-4">
+            <div className="grid flex-1 grid-cols-1 gap-2 min-[380px]:grid-cols-2 sm:grid-cols-4">
               {BRANCHES.map((b) => {
                 const meta = BRANCH_META[b];
                 const nodes = nodesOfBranch(b);

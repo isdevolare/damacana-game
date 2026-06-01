@@ -20,9 +20,9 @@ export function AchievementsModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/92 backdrop-blur-sm overflow-y-auto"
+          className="fixed inset-0 z-50 overflow-y-auto overflow-x-hidden bg-black/92 backdrop-blur-sm"
         >
-          <div className="min-h-full p-3">
+          <div className="mx-auto min-h-full w-full max-w-md p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:max-w-3xl">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <div className="font-major text-lg text-gold">{t('ui.achievements')}</div>
@@ -37,7 +37,7 @@ export function AchievementsModal() {
                 {t('ui.close')}
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
               {ACHIEVEMENTS.map((a) => {
                 const has = ownedSet.has(a.id);
                 return (

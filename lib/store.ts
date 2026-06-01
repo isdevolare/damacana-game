@@ -333,6 +333,18 @@ function safeRecord(value: unknown): Record<string, number> {
   );
 }
 
+function safeNumericShape<T extends object>(value: unknown, fallback: T): T {
+  const incoming = value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+  return Object.fromEntries(
+    Object.entries(fallback as Record<string, number>).map(([key, val]) => [
+      key,
+      finiteOr(typeof incoming[key] === 'number' ? incoming[key] as number : undefined, val),
+    ]),
+  ) as T;
+}
+
 function safeStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
 }
@@ -389,19 +401,24 @@ function sanitizeLoadedState(state: GameState): GameState {
     discoveredEnemyTypeIds: safeStringArray(state.discoveredEnemyTypeIds) as EnemyVariantId[],
     knowledgeBulbsCollected: Math.floor(finiteOr(state.knowledgeBulbsCollected, 0)),
     nextKnowledgeBulbAt: finiteOr(state.nextKnowledgeBulbAt, 0),
+    combatStatBonuses: safeNumericShape(state.combatStatBonuses, EMPTY_COMBAT_STAT_BONUSES),
     combatAbilityCooldowns: safeRecord(state.combatAbilityCooldowns),
     completedResearchIds: safeStringArray(state.completedResearchIds),
     claimedResearchIds: safeStringArray(state.claimedResearchIds),
     activeResearchId: typeof state.activeResearchId === 'string' ? state.activeResearchId : null,
     activeResearchStartAt: finiteOr(state.activeResearchStartAt, 0),
     activeResearchEndAt: finiteOr(state.activeResearchEndAt, 0),
+    researchBonuses: safeNumericShape(state.researchBonuses, EMPTY_RESEARCH_BONUSES),
     ownedBuildNodeIds: safeStringArray(state.ownedBuildNodeIds),
+    buildBonuses: safeNumericShape(state.buildBonuses, EMPTY_BUILD_BONUSES),
     runArtifacts: Array.isArray(state.runArtifacts) ? state.runArtifacts : [],
     permanentArtifacts: Array.isArray(state.permanentArtifacts) ? state.permanentArtifacts : [],
+    artifactBonuses: safeNumericShape(state.artifactBonuses, EMPTY_ARTIFACT_BONUSES),
     seenWeaponEvolutionIds: safeStringArray(state.seenWeaponEvolutionIds) as WeaponEvolutionId[],
     ascensionPoints: finiteOr(state.ascensionPoints, 0),
     totalAscensions: Math.floor(finiteOr(state.totalAscensions, 0)),
     ascensionUpgradeLevels: safeRecord(state.ascensionUpgradeLevels),
+    ascensionBonuses: safeNumericShape(state.ascensionBonuses, EMPTY_ASCENSION_BONUSES),
     ascensionUnlockedAt: finiteOr(state.ascensionUnlockedAt, 0),
     skinCredits: finiteOr(state.skinCredits, 0, 0, SKIN_CREDIT_LIMIT),
     ownedShipSkinIds,

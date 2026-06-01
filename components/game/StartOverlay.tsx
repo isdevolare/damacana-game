@@ -17,7 +17,7 @@ export function StartOverlay() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-y-0 left-0 z-[60] flex w-screen flex-col items-center justify-center bg-black/95 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex w-full flex-col items-center justify-center overflow-hidden bg-black/95 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-[calc(env(safe-area-inset-top)+1rem)] backdrop-blur-sm"
     >
       <div className="max-w-[92vw] break-words text-center font-major text-2xl text-purple drop-shadow-[0_0_18px_rgba(184,122,255,0.7)] sm:text-3xl">
         damacana.exe

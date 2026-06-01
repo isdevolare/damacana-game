@@ -22,11 +22,11 @@ export function ShopModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[53] bg-black/92 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[53] flex items-center justify-center overflow-hidden bg-black/92 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur-sm sm:p-4"
           onClick={() => setShow(false)}
         >
           <div
-            className="w-full max-w-sm rounded-xl border border-cyan/50 bg-black/90 p-4"
+            className="max-h-[calc(100dvh_-_1.5rem_-_env(safe-area-inset-bottom))] w-full max-w-sm overflow-y-auto rounded-xl border border-cyan/50 bg-black/90 p-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-1">

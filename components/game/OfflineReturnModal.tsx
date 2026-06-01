@@ -27,14 +27,14 @@ export function OfflineReturnModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[56] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[56] flex items-center justify-center overflow-hidden bg-black/70 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur-sm sm:p-4"
           onClick={dismiss}
         >
           <motion.div
             initial={{ y: 18, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 18, opacity: 0 }}
-            className="w-full max-w-sm rounded-xl border border-purple/50 bg-black/90 p-4 text-center shadow-[0_0_28px_rgba(184,122,255,0.24)]"
+            className="max-h-[calc(100dvh_-_1.5rem_-_env(safe-area-inset-bottom))] w-full max-w-sm overflow-y-auto rounded-xl border border-purple/50 bg-black/90 p-4 text-center shadow-[0_0_28px_rgba(184,122,255,0.24)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="font-major text-lg text-purple">{t('offline.title')}</div>
