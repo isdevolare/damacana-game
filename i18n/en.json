@@ -1034,6 +1034,24 @@
     },
     "ownedCount": "owned",
     "heroPreview": "selected hull",
+    "sections": {
+      "planetFleet": {
+        "title": "Planet Fleet",
+        "subtitle": "milestone ships from Earth to Neptune"
+      },
+      "starFleet": {
+        "title": "Star Fleet",
+        "subtitle": "post-planet arc vessels"
+      },
+      "prestigeFleet": {
+        "title": "Prestige / Ascension",
+        "subtitle": "long-term reset trophies"
+      },
+      "mythicFleet": {
+        "title": "Mythic / Coming Soon",
+        "subtitle": "future premium asset-ready hulls"
+      }
+    },
     "rarity": {
       "default": "default",
       "common": "common",
@@ -1071,6 +1089,8 @@
       "ascension": "Ascend {count} time.",
       "skinCredits": "Purchase with Skin Credits.",
       "futurePremium": "Coming soon.",
+      "prestigeOrSupernova": "Prestige 10 or complete Supernova once.",
+      "ascensionAndSupernova": "Ascend 1 time and reach Supernova.",
       "locked": "Locked."
     },
     "detail": {
@@ -1098,7 +1118,9 @@
       "dragon": "dragon-core warframe",
       "mothership": "layered mothership hull",
       "ark": "tall ascendant ark",
+      "dreadnought": "astral crown dreadnought",
       "whale": "smooth cosmic whale form",
+      "eventLeviathan": "event horizon leviathan",
       "singularity": "broken singularity vessel",
       "leviathan": "massive starborn leviathan"
     },
@@ -1133,26 +1155,28 @@
       "singularity": "singularity field"
     },
     "skins": {
-      "defaultCoreShip": { "name": "Default Core Ship" },
+      "defaultCoreShip": { "name": "Earth Core Vessel", "desc": "Clean blue explorer hull for the first planetary mission." },
       "scoutCore": { "name": "Blue Scout" },
-      "crimsonDart": { "name": "Crimson Dart" },
-      "iceRunner": { "name": "Ice Needle" },
-      "marsRaider": { "name": "Mars Raider" },
+      "crimsonDart": { "name": "Red Dwarf Ember Scout", "desc": "Small red ember fighter with a hot exposed engine core." },
+      "iceRunner": { "name": "Uranus Ice Spear", "desc": "Long cold interceptor with an icy blade profile." },
+      "marsRaider": { "name": "Mars Raider", "desc": "Aggressive red attack ship with wide wings and twin thrusters." },
       "solarBlade": { "name": "Solar Wing" },
       "dustRunner": { "name": "Dust Runner" },
-      "saturnOrbitCruiser": { "name": "Saturn Halo Cruiser" },
+      "saturnOrbitCruiser": { "name": "Saturn Ring Cruiser", "desc": "Gold cruiser hull wrapped by a visible orbital halo." },
       "voidInterceptor": { "name": "Void Razor" },
-      "plasmaNeedle": { "name": "Plasma Falcon" },
+      "plasmaNeedle": { "name": "White Dwarf Needle", "desc": "Bright white-blue spear ship built around compact stellar pressure." },
       "frostCarrier": { "name": "Frost Ark" },
-      "nebulaStriker": { "name": "Nebula Striker" },
-      "prestigeVessel": { "name": "Prestige Crown" },
+      "nebulaStriker": { "name": "Supernova Breaker", "desc": "Volatile purple-orange warship with fractured hull energy." },
+      "prestigeVessel": { "name": "Prestige Crownship", "desc": "Royal gold-pink hull unlocked by the first prestige." },
+      "astralCrownDreadnought": { "name": "Astral Crown Dreadnought", "desc": "A regal endgame dreadnought with crown armor, gold-pink aura, and layered command cores." },
       "dragonCoreShip": { "name": "Dragon Core" },
-      "eclipseHunter": { "name": "Eclipse Hunter" },
-      "goldenMothership": { "name": "Golden Mothership" },
-      "ascendantMothership": { "name": "Ascendant Ark" },
+      "eclipseHunter": { "name": "Neptune Storm Frigate", "desc": "Dark storm frigate with curved fins and void-blue pressure." },
+      "goldenMothership": { "name": "Giant Star Carrier", "desc": "Large armored orange-gold carrier shaped for solar pressure." },
+      "ascendantMothership": { "name": "Ascendant Ark", "desc": "Sacred white-cyan ark awarded by the first ascension." },
       "cosmicWhaleShip": { "name": "Cosmic Whale" },
-      "singularityArk": { "name": "Singularity Vessel" },
-      "starbornLeviathan": { "name": "Starborn Leviathan" }
+      "singularityArk": { "name": "Singularity Vessel", "desc": "Broken-ring black-hole vessel reserved for a later mythic layer." },
+      "eventHorizonLeviathan": { "name": "Event Horizon Leviathan", "desc": "A rare cosmic leviathan with an event-horizon core, curved organic hull, and deep purple-cyan gravity glow." },
+      "starbornLeviathan": { "name": "Cosmic Leviathan", "desc": "Long organic cosmic body prepared for future premium art." }
     }
   },
   "tree": {

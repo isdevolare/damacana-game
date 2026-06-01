@@ -1,11 +1,21 @@
 import { chapterById, type ChapterId } from './chapters';
 
 export type ShipSkinRarity = 'default' | 'common' | 'rare' | 'epic' | 'legendary' | 'cosmic';
-export type ShipSkinUnlockType = 'starter' | 'chapterReached' | 'artifactCount' | 'prestigeCount' | 'ascensionCount' | 'skinCredits' | 'futurePremium';
+export type ShipSkinUnlockType =
+  | 'starter'
+  | 'chapterReached'
+  | 'artifactCount'
+  | 'prestigeCount'
+  | 'ascensionCount'
+  | 'skinCredits'
+  | 'futurePremium'
+  | 'prestigeOrChapter'
+  | 'ascensionAndChapter';
 export type ShipSkinShopCategory = 'starter' | 'progression' | 'prestige' | 'premium';
 export type ShipSkinAccentEffect = 'none' | 'orbitRing' | 'fragments' | 'prestigeAura' | 'ascensionAura' | 'whaleWake' | 'bladeTrail' | 'iceMist' | 'dragonWake' | 'eclipseHalo' | 'singularity';
 export type ShipSkinTrailStyle = 'standard' | 'twin' | 'blade' | 'mist' | 'wake' | 'rift';
 export type ShipSkinAuraStyle = 'none' | 'soft' | 'ring' | 'prestige' | 'ascension' | 'corrupt' | 'singularity';
+export type ShipSkinCollectionId = 'planetFleet' | 'starFleet' | 'prestigeFleet' | 'mythicFleet';
 export type ShipSkinArchetype =
   | 'coreDiamond'
   | 'scout'
@@ -22,7 +32,9 @@ export type ShipSkinArchetype =
   | 'dragon'
   | 'mothership'
   | 'ark'
+  | 'dreadnought'
   | 'whale'
+  | 'eventLeviathan'
   | 'singularity'
   | 'leviathan';
 
@@ -63,6 +75,8 @@ export interface ShipSkinDef {
     type: ShipSkinUnlockType;
     chapterId?: ChapterId;
     count?: number;
+    prestigeCount?: number;
+    ascensionCount?: number;
   };
   priceCredits?: number;
   isPremiumPlaceholder: boolean;
@@ -165,8 +179,7 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       trailStyle: 'mist',
       auraStyle: 'soft',
     },
-    unlock: { type: 'skinCredits' },
-    priceCredits: 180,
+    unlock: { type: 'chapterReached', chapterId: 'uranus' },
     isPremiumPlaceholder: false,
     shopCategory: 'progression',
     purchasableLater: false,
@@ -222,8 +235,7 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       trailStyle: 'blade',
       auraStyle: 'soft',
     },
-    unlock: { type: 'skinCredits' },
-    priceCredits: 220,
+    unlock: { type: 'chapterReached', chapterId: 'redDwarf' },
     isPremiumPlaceholder: false,
     shopCategory: 'progression',
     purchasableLater: false,
@@ -337,8 +349,7 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       trailStyle: 'blade',
       auraStyle: 'corrupt',
     },
-    unlock: { type: 'skinCredits' },
-    priceCredits: 700,
+    unlock: { type: 'chapterReached', chapterId: 'whiteDwarf' },
     isPremiumPlaceholder: false,
     shopCategory: 'progression',
     purchasableLater: false,
@@ -422,8 +433,7 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       trailStyle: 'rift',
       auraStyle: 'corrupt',
     },
-    unlock: { type: 'skinCredits' },
-    priceCredits: 920,
+    unlock: { type: 'chapterReached', chapterId: 'supernova' },
     isPremiumPlaceholder: false,
     shopCategory: 'progression',
     purchasableLater: false,
@@ -486,6 +496,34 @@ export const SHIP_SKINS: ShipSkinDef[] = [
     purchasableLater: false,
   },
   {
+    id: 'astralCrownDreadnought',
+    rarity: 'legendary',
+    i18nKey: 'astralCrownDreadnought',
+    accent: '#ffd166',
+    engine: '#ff5ce8',
+    hull: '#241006',
+    glow: 'rgba(255,209,102,0.82)',
+    silhouette: 'mothership',
+    archetype: 'dreadnought',
+    visual: {
+      bodyClip: 'polygon(0% 54%, 12% 24%, 30% 30%, 42% 12%, 50% 0%, 58% 12%, 70% 30%, 88% 24%, 100% 54%, 86% 84%, 64% 76%, 56% 100%, 50% 86%, 44% 100%, 36% 76%, 14% 84%)',
+      wingClip: 'polygon(0% 48%, 12% 12%, 36% 36%, 50% 16%, 64% 36%, 88% 12%, 100% 48%, 88% 92%, 64% 72%, 50% 88%, 36% 72%, 12% 92%)',
+      innerClip: 'polygon(50% 8%, 76% 40%, 68% 76%, 56% 68%, 50% 82%, 44% 68%, 32% 76%, 24% 40%)',
+      bodyWidthPct: 148,
+      bodyHeightPct: 88,
+      bodyRadius: '22%',
+      coreSizePct: 16,
+      effect: 'prestigeAura',
+      coreColor: '#fff3b0',
+      trailStyle: 'twin',
+      auraStyle: 'prestige',
+    },
+    unlock: { type: 'prestigeOrChapter', prestigeCount: 10, chapterId: 'supernova' },
+    isPremiumPlaceholder: false,
+    shopCategory: 'prestige',
+    purchasableLater: false,
+  },
+  {
     id: 'goldenMothership',
     rarity: 'legendary',
     i18nKey: 'goldenMothership',
@@ -508,8 +546,7 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       trailStyle: 'twin',
       auraStyle: 'prestige',
     },
-    unlock: { type: 'skinCredits' },
-    priceCredits: 2600,
+    unlock: { type: 'chapterReached', chapterId: 'giantStar' },
     isPremiumPlaceholder: false,
     shopCategory: 'prestige',
     purchasableLater: false,
@@ -622,10 +659,38 @@ export const SHIP_SKINS: ShipSkinDef[] = [
       trailStyle: 'rift',
       auraStyle: 'singularity',
     },
-    unlock: { type: 'skinCredits' },
-    priceCredits: 6000,
+    unlock: { type: 'futurePremium' },
+    isPremiumPlaceholder: true,
+    shopCategory: 'premium',
+    pricePlaceholder: 'future',
+    purchasableLater: true,
+  },
+  {
+    id: 'eventHorizonLeviathan',
+    rarity: 'cosmic',
+    i18nKey: 'eventHorizonLeviathan',
+    accent: '#80fff4',
+    engine: '#b87aff',
+    hull: '#03040f',
+    glow: 'rgba(128,255,244,0.82)',
+    silhouette: 'whale',
+    archetype: 'eventLeviathan',
+    visual: {
+      bodyClip: 'polygon(4% 42%, 24% 18%, 52% 4%, 80% 10%, 100% 38%, 88% 68%, 58% 78%, 48% 100%, 38% 76%, 12% 70%, 0% 52%)',
+      wingClip: 'polygon(0% 48%, 28% 14%, 72% 8%, 100% 34%, 92% 78%, 56% 86%, 18% 68%)',
+      innerClip: 'polygon(24% 36%, 56% 12%, 84% 28%, 78% 58%, 58% 68%, 48% 90%, 36% 66%, 14% 56%)',
+      bodyWidthPct: 152,
+      bodyHeightPct: 84,
+      bodyRadius: '44%',
+      coreSizePct: 24,
+      effect: 'singularity',
+      coreColor: '#03040a',
+      trailStyle: 'wake',
+      auraStyle: 'singularity',
+    },
+    unlock: { type: 'ascensionAndChapter', ascensionCount: 1, chapterId: 'supernova' },
     isPremiumPlaceholder: false,
-    shopCategory: 'prestige',
+    shopCategory: 'premium',
     purchasableLater: false,
   },
   {
@@ -664,12 +729,39 @@ export const SHOP_SHIP_SKIN_IDS = [
   'defaultCoreShip',
   'marsRaider',
   'saturnOrbitCruiser',
-  'voidInterceptor',
+  'iceRunner',
+  'eclipseHunter',
+  'crimsonDart',
+  'plasmaNeedle',
+  'goldenMothership',
+  'nebulaStriker',
   'prestigeVessel',
+  'astralCrownDreadnought',
   'ascendantMothership',
+  'singularityArk',
+  'eventHorizonLeviathan',
+  'starbornLeviathan',
 ] as const;
 
 export const SHOP_SHIP_SKINS = SHIP_SKINS.filter((skin) => SHOP_SHIP_SKIN_IDS.includes(skin.id as typeof SHOP_SHIP_SKIN_IDS[number]));
+export const SHIP_SKIN_COLLECTIONS: { id: ShipSkinCollectionId; skinIds: readonly string[] }[] = [
+  {
+    id: 'planetFleet',
+    skinIds: ['defaultCoreShip', 'marsRaider', 'saturnOrbitCruiser', 'iceRunner', 'eclipseHunter'],
+  },
+  {
+    id: 'starFleet',
+    skinIds: ['crimsonDart', 'plasmaNeedle', 'goldenMothership', 'nebulaStriker'],
+  },
+  {
+    id: 'prestigeFleet',
+    skinIds: ['prestigeVessel', 'astralCrownDreadnought', 'ascendantMothership'],
+  },
+  {
+    id: 'mythicFleet',
+    skinIds: ['singularityArk', 'eventHorizonLeviathan', 'starbornLeviathan'],
+  },
+];
 
 export function shipSkinById(id: string | undefined | null): ShipSkinDef {
   return SHOP_SHIP_SKINS.find((skin) => skin.id === id) ?? SHOP_SHIP_SKINS[0] ?? SHIP_SKINS[0];
@@ -691,6 +783,10 @@ export function shipSkinRequirementKey(skin: ShipSkinDef): string {
       return 'skinCredits';
     case 'futurePremium':
       return 'futurePremium';
+    case 'prestigeOrChapter':
+      return 'prestigeOrSupernova';
+    case 'ascensionAndChapter':
+      return 'ascensionAndSupernova';
     default:
       return 'locked';
   }
@@ -714,6 +810,24 @@ export function shipSkinUnlocked(skin: ShipSkinDef, context: ShipSkinUnlockConte
       return context.totalPrestiges >= (skin.unlock.count ?? 0);
     case 'ascensionCount':
       return context.totalAscensions >= (skin.unlock.count ?? 0);
+    case 'prestigeOrChapter': {
+      const prestigeMet = context.totalPrestiges >= (skin.unlock.prestigeCount ?? skin.unlock.count ?? 0);
+      const chapterMet = skin.unlock.chapterId ? (
+        context.currentChapterId === skin.unlock.chapterId ||
+        context.completedChapters.includes(skin.unlock.chapterId) ||
+        context.bestBossTier >= chapterById(skin.unlock.chapterId).levelEnd
+      ) : false;
+      return prestigeMet || chapterMet;
+    }
+    case 'ascensionAndChapter': {
+      const ascensionMet = context.totalAscensions >= (skin.unlock.ascensionCount ?? skin.unlock.count ?? 0);
+      const chapterMet = skin.unlock.chapterId ? (
+        context.currentChapterId === skin.unlock.chapterId ||
+        context.completedChapters.includes(skin.unlock.chapterId) ||
+        context.bestBossTier >= chapterById(skin.unlock.chapterId).levelStart
+      ) : false;
+      return ascensionMet && chapterMet;
+    }
     case 'skinCredits':
       return false;
     case 'futurePremium':
@@ -739,6 +853,22 @@ export function shipSkinUnlockProgress(skin: ShipSkinDef, context: ShipSkinUnloc
       return { current: context.totalPrestiges, required: skin.unlock.count ?? 0 };
     case 'ascensionCount':
       return { current: context.totalAscensions, required: skin.unlock.count ?? 0 };
+    case 'prestigeOrChapter': {
+      const prestigeRequired = skin.unlock.prestigeCount ?? skin.unlock.count ?? 0;
+      const chapterRequired = skin.unlock.chapterId ? chapterById(skin.unlock.chapterId).levelEnd : 0;
+      const prestigeProgress = prestigeRequired > 0 ? context.totalPrestiges / prestigeRequired : 0;
+      const chapterProgress = chapterRequired > 0 ? context.bestBossTier / chapterRequired : 0;
+      if (prestigeProgress >= chapterProgress) return { current: context.totalPrestiges, required: prestigeRequired };
+      return { current: context.bestBossTier, required: chapterRequired };
+    }
+    case 'ascensionAndChapter': {
+      const ascensionRequired = skin.unlock.ascensionCount ?? skin.unlock.count ?? 0;
+      const chapterRequired = skin.unlock.chapterId ? chapterById(skin.unlock.chapterId).levelStart : 0;
+      const ascensionProgress = ascensionRequired > 0 ? context.totalAscensions / ascensionRequired : 1;
+      const chapterProgress = chapterRequired > 0 ? context.bestBossTier / chapterRequired : 1;
+      if (ascensionProgress <= chapterProgress) return { current: context.totalAscensions, required: ascensionRequired };
+      return { current: context.bestBossTier, required: chapterRequired };
+    }
     case 'chapterReached':
       if (!skin.unlock.chapterId) return null;
       return { current: context.bestBossTier, required: chapterById(skin.unlock.chapterId).levelStart };

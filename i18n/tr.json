@@ -1034,6 +1034,24 @@
     },
     "ownedCount": "sahip olunan",
     "heroPreview": "seçili gövde",
+    "sections": {
+      "planetFleet": {
+        "title": "Gezegen Filosu",
+        "subtitle": "Dünya'dan Neptün'e kilometre taşı gemileri"
+      },
+      "starFleet": {
+        "title": "Yıldız Filosu",
+        "subtitle": "gezegen arkı sonrası gövdeler"
+      },
+      "prestigeFleet": {
+        "title": "Prestij / Yükseliş",
+        "subtitle": "uzun vadeli sıfırlama ganimetleri"
+      },
+      "mythicFleet": {
+        "title": "Mitik / Yakında",
+        "subtitle": "gelecekteki premium varlıklara hazır gövdeler"
+      }
+    },
     "rarity": {
       "default": "varsayılan",
       "common": "yaygın",
@@ -1071,6 +1089,8 @@
       "ascension": "{count} kez kozmik yükseliş yap.",
       "skinCredits": "Gemi Kredisi ile satın alınır.",
       "futurePremium": "Yakında.",
+      "prestigeOrSupernova": "Prestij 10 veya Süpernova'yı bir kez tamamla.",
+      "ascensionAndSupernova": "1 kez kozmik yükseliş yap ve Süpernova'ya ulaş.",
       "locked": "Kilitli."
     },
     "detail": {
@@ -1098,7 +1118,9 @@
       "dragon": "ejder çekirdek savaş gövdesi",
       "mothership": "katmanlı ana gemi gövdesi",
       "ark": "uzun yükseliş arkı",
+      "dreadnought": "astral taç dretnotu",
       "whale": "pürüzsüz kozmik balina formu",
+      "eventLeviathan": "olay ufku leviathanı",
       "singularity": "kırık tekillik gemisi",
       "leviathan": "dev yıldız leviathanı"
     },
@@ -1133,26 +1155,28 @@
       "singularity": "tekillik alanı"
     },
     "skins": {
-      "defaultCoreShip": { "name": "Varsayılan Çekirdek Gemisi" },
+      "defaultCoreShip": { "name": "Dünya Çekirdek Gemisi", "desc": "İlk gezegen görevi için temiz mavi keşif gövdesi." },
       "scoutCore": { "name": "Mavi Keşifçi" },
-      "crimsonDart": { "name": "Kızıl Ok" },
-      "iceRunner": { "name": "Buz İğnesi" },
-      "marsRaider": { "name": "Mars Akıncısı" },
+      "crimsonDart": { "name": "Kızıl Cüce Kor Gemisi", "desc": "Sıcak açık motor çekirdeğine sahip küçük kırmızı kor savaşçısı." },
+      "iceRunner": { "name": "Uranüs Buz Mızrağı", "desc": "Buz gibi bıçak profiline sahip uzun ve ince önleyici." },
+      "marsRaider": { "name": "Mars Akıncısı", "desc": "Geniş kanatlı ve çift iticili saldırgan kırmızı saldırı gemisi." },
       "solarBlade": { "name": "Güneş Kanadı" },
       "dustRunner": { "name": "Toz Koşucusu" },
-      "saturnOrbitCruiser": { "name": "Satürn Hale Kruvazörü" },
+      "saturnOrbitCruiser": { "name": "Satürn Halka Kruvazörü", "desc": "Görünür yörünge halesiyle sarılmış altın kruvazör gövdesi." },
       "voidInterceptor": { "name": "Boşluk Usturası" },
-      "plasmaNeedle": { "name": "Plazma Şahini" },
+      "plasmaNeedle": { "name": "Beyaz Cüce İğnesi", "desc": "Yoğun yıldız basıncı etrafında kurulan parlak beyaz-mavi mızrak gemisi." },
       "frostCarrier": { "name": "Buz Arkı" },
-      "nebulaStriker": { "name": "Nebula Vurucusu" },
-      "prestigeVessel": { "name": "Prestij Tacı" },
+      "nebulaStriker": { "name": "Süpernova Kırıcı", "desc": "Kırık gövde enerjisi taşıyan uçucu mor-turuncu savaş gemisi." },
+      "prestigeVessel": { "name": "Prestij Taç Gemisi", "desc": "İlk prestijle açılan asil altın-pembe gövde." },
+      "astralCrownDreadnought": { "name": "Astral Taç Dretnotu", "desc": "Taç zırhı, altın-pembe aurası ve katmanlı komuta çekirdekleriyle seçkin oyun sonu dretnotu." },
       "dragonCoreShip": { "name": "Ejder Çekirdeği" },
-      "eclipseHunter": { "name": "Tutulma Avcısı" },
-      "goldenMothership": { "name": "Altın Ana Gemi" },
-      "ascendantMothership": { "name": "Yükselen Ark" },
+      "eclipseHunter": { "name": "Neptün Fırtına Fırkateyni", "desc": "Kıvrımlı yüzgeçli, boşluk-mavi basınç taşıyan karanlık fırtına fırkateyni." },
+      "goldenMothership": { "name": "Dev Yıldız Taşıyıcısı", "desc": "Güneş basıncı için şekillendirilmiş büyük zırhlı turuncu-altın taşıyıcı." },
+      "ascendantMothership": { "name": "Yükselen Ark", "desc": "İlk kozmik yükselişle verilen kutsal beyaz-camgöbeği ark." },
       "cosmicWhaleShip": { "name": "Kozmik Balina" },
-      "singularityArk": { "name": "Tekillik Gemisi" },
-      "starbornLeviathan": { "name": "Yıldız Doğumlu Leviathan" }
+      "singularityArk": { "name": "Tekillik Gemisi", "desc": "Gelecekteki mitik katman için ayrılmış kırık halkalı kara delik gemisi." },
+      "eventHorizonLeviathan": { "name": "Olay Ufku Leviathanı", "desc": "Olay ufku çekirdeği, kıvrımlı organik gövdesi ve derin mor-camgöbeği yerçekimi parıltısıyla nadir kozmik leviathan." },
+      "starbornLeviathan": { "name": "Kozmik Leviathan", "desc": "Gelecekteki premium çizime hazır uzun ve organik kozmik gövde." }
     }
   },
   "tree": {

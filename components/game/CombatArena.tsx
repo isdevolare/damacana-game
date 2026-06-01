@@ -3514,6 +3514,18 @@ export function CombatArena() {
                 boxShadow: `0 0 ${lowDensity ? 4 : 5}px ${shipSkin.accent}`,
               }}
             />
+            {shipSkin.archetype === 'dreadnought' && (
+              <>
+                <div className="absolute left-[34%] top-[50%] z-40 h-1 w-1 rounded-full" style={{ background: shipSkin.engine, boxShadow: lowDensity ? undefined : `0 0 5px ${shipSkin.engine}` }} />
+                <div className="absolute right-[34%] top-[50%] z-40 h-1 w-1 rounded-full" style={{ background: shipSkin.engine, boxShadow: lowDensity ? undefined : `0 0 5px ${shipSkin.engine}` }} />
+              </>
+            )}
+            {shipSkin.archetype === 'eventLeviathan' && !lowDensity && (
+              <>
+                <div className="absolute left-[22%] top-[38%] z-40 h-1 w-1 rounded-full border border-cyan/35 bg-purple/35" />
+                <div className="absolute right-[20%] top-[46%] z-40 h-1 w-1 rounded-full border border-cyan/35 bg-purple/35" />
+              </>
+            )}
           </>
         )}
         {(burstFireActive || activeAttackSurgeActive || projectileSurgeActive || flowSurgeActive || orbitSurgeActive) && (

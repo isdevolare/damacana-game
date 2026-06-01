@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { useGame } from '@/lib/store';
 import { currentChapter } from '@/lib/config/chapters';
 import {
+  SHIP_SKIN_COLLECTIONS,
   SHOP_SHIP_SKINS,
   shipSkinById,
   shipSkinPurchasable,
@@ -190,16 +191,16 @@ function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef;
     <motion.div
       animate={hero ? { y: [0, -4, 0], rotate: [0, 0.35, 0] } : undefined}
       transition={hero ? { duration: 4.8, repeat: Infinity, ease: 'easeInOut' } : undefined}
-      className={clsx('relative mx-auto flex shrink-0 items-center justify-center', hero ? 'h-56 w-full max-w-[340px]' : small ? 'h-[92px] w-[116px]' : 'h-36 w-44')}
+      className={clsx('relative mx-auto flex shrink-0 items-center justify-center', hero ? 'h-56 w-full max-w-[360px]' : small ? 'h-[92px] w-[122px]' : 'h-36 w-48')}
       aria-hidden
     >
       <div
-        className="absolute left-1/2 top-1/2 rounded-[24px] border opacity-65"
+        className="absolute left-1/2 top-1/2 rounded-[24px] border opacity-35"
         style={{
           width: frameWidth,
           height: frameHeight,
           borderColor: `${skin.accent}66`,
-          boxShadow: `inset 0 0 ${small ? 18 : hero ? 46 : 28}px ${skin.glow}, 0 0 ${small ? 12 : hero ? 34 : 22}px ${skin.glow}`,
+          boxShadow: `inset 0 0 ${small ? 10 : hero ? 28 : 18}px ${skin.glow}, 0 0 ${small ? 7 : hero ? 18 : 12}px ${skin.glow}`,
           clipPath: 'polygon(14% 0%, 86% 0%, 100% 20%, 100% 80%, 86% 100%, 14% 100%, 0% 80%, 0% 20%)',
           transform: 'translate(-50%, -50%)',
         }}
@@ -219,7 +220,7 @@ function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef;
         <img
           src={assetSrc}
           alt=""
-          className="absolute left-1/2 top-1/2 max-h-[82%] max-w-[88%] -translate-x-1/2 -translate-y-1/2 object-contain"
+          className="absolute left-1/2 top-1/2 max-h-[88%] max-w-[94%] -translate-x-1/2 -translate-y-1/2 object-contain"
           style={{ filter: `drop-shadow(0 0 ${hero ? 18 : 10}px ${skin.glow})` }}
           draggable={false}
         />
@@ -233,7 +234,7 @@ function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef;
               borderRadius: skin.visual.bodyRadius,
               borderColor: `${skin.accent}66`,
               background: `linear-gradient(110deg, ${skin.hull} 12%, ${skin.accent}40 46%, ${skin.hull} 88%)`,
-              boxShadow: `0 0 ${hero ? 10 : 6}px ${skin.glow}`,
+              boxShadow: `0 0 ${hero ? 7 : 4}px ${skin.glow}`,
               clipPath: skin.visual.wingClip,
               opacity: 0.86,
             }}
@@ -246,7 +247,7 @@ function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef;
               borderRadius: skin.visual.bodyRadius,
               borderColor: `${skin.accent}88`,
               background: `linear-gradient(180deg, ${skin.accent}4f 0%, ${skin.hull} 38%, ${skin.hull} 78%, ${skin.accent}1c 100%)`,
-              boxShadow: `0 0 ${hero ? 12 : 8}px ${skin.glow}`,
+              boxShadow: `0 0 ${hero ? 9 : 5}px ${skin.glow}`,
               clipPath: skin.visual.bodyClip,
             }}
           />
@@ -263,6 +264,37 @@ function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef;
             className="absolute left-1/2 top-[33%] -translate-x-1/2 rounded-full bg-white/88"
             style={{ width: coreSize, height: coreSize, background: skin.visual.coreColor, boxShadow: `0 0 9px ${skin.accent}` }}
           />
+          {skin.archetype === 'dreadnought' && (
+            <>
+              {[34, 66].map((left) => (
+                <div
+                  key={left}
+                  className="absolute top-[48%] rounded-full"
+                  style={{
+                    left: `${left}%`,
+                    width: hero ? 8 : small ? 4 : 6,
+                    height: hero ? 8 : small ? 4 : 6,
+                    background: skin.engine,
+                    boxShadow: `0 0 8px ${skin.engine}`,
+                  }}
+                />
+              ))}
+            </>
+          )}
+          {skin.archetype === 'eventLeviathan' && (
+            <>
+              {[[-22, -14], [24, -5], [-10, 20]].map(([x, y]) => (
+                <div
+                  key={`${x}-${y}`}
+                  className="absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full border border-cyan/40 bg-purple/30"
+                  style={{
+                    boxShadow: `0 0 8px ${skin.glow}`,
+                    transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
+                  }}
+                />
+              ))}
+            </>
+          )}
         </>
       )}
     </motion.div>
@@ -317,6 +349,7 @@ export function ShipSkinsModal() {
     const rarityPass = rarityFilter === 'all' || skin.rarity === rarityFilter;
     return categoryPass && rarityPass;
   }), [context, filter, rarityFilter]);
+  const filteredSkinIds = useMemo(() => new Set(filteredSkins.map((skin) => skin.id)), [filteredSkins]);
 
   const actionLabel = selectedEquipped
     ? t('button.equipped')
@@ -411,6 +444,7 @@ export function ShipSkinsModal() {
                     </div>
                   </div>
                   <div className="mt-3 grid gap-2 font-space text-[9px] uppercase tracking-[0.12em] text-white/45">
+                    <div className="normal-case tracking-normal text-white/58">{t(`skins.${selectedSkin.i18nKey}.desc` as any)}</div>
                     <div><span className="text-white/70">{t('detail.archetype')}</span> · {t(`archetypes.${selectedSkin.archetype}` as any)}</div>
                     <div><span className="text-white/70">{t('detail.unlock')}</span> · {t(`requirements.${shipSkinRequirementKey(selectedSkin)}` as any, { count: selectedSkin.unlock.count ?? 0 })}</div>
                     <div><span className="text-white/70">{t('detail.effect')}</span> · {t(`effects.${selectedSkin.visual.effect}` as any)}</div>
@@ -488,8 +522,25 @@ export function ShipSkinsModal() {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 lg:grid-cols-3">
-              {filteredSkins.map((skin) => {
+            <div className="space-y-3">
+              {SHIP_SKIN_COLLECTIONS.map((section) => {
+                const sectionSkins = section.skinIds
+                  .map((id) => SHOP_SHIP_SKINS.find((skin) => skin.id === id))
+                  .filter((skin): skin is ShipSkinDef => Boolean(skin && filteredSkinIds.has(skin.id)));
+                if (sectionSkins.length === 0) return null;
+                return (
+                  <section key={section.id} className="rounded-lg border border-white/10 bg-white/[0.025] p-2">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <div>
+                        <div className="font-space text-[10px] uppercase tracking-[0.18em] text-white/80">{t(`sections.${section.id}.title` as any)}</div>
+                        <div className="mt-0.5 font-space text-[8px] uppercase tracking-[0.14em] text-white/35">{t(`sections.${section.id}.subtitle` as any)}</div>
+                      </div>
+                      <div className="rounded border border-white/10 px-1.5 py-0.5 font-space text-[8px] uppercase tracking-[0.14em] text-white/35">
+                        {sectionSkins.length}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 lg:grid-cols-3">
+                      {sectionSkins.map((skin) => {
                 const unlocked = shipSkinUnlocked(skin, context);
                 const purchasable = shipSkinPurchasable(skin, context);
                 const equipped = equippedShipSkinId === skin.id || (!equippedShipSkinId && skin.id === 'defaultCoreShip');
@@ -541,7 +592,7 @@ export function ShipSkinsModal() {
                           </span>
                         </div>
                         <div className="mt-1 line-clamp-2 font-space text-[9px] leading-relaxed text-white/45">
-                          {t(`archetypes.${skin.archetype}` as any)}
+                          {t(`skins.${skin.i18nKey}.desc` as any)}
                         </div>
                         <div className="mt-0.5 line-clamp-1 font-space text-[8px] uppercase tracking-[0.12em] text-white/32">
                           {t(`effects.${skin.visual.effect}` as any)}
@@ -581,6 +632,10 @@ export function ShipSkinsModal() {
                       </div>
                     </div>
                   </div>
+                );
+                      })}
+                    </div>
+                  </section>
                 );
               })}
             </div>
