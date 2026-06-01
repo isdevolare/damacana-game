@@ -1027,11 +1027,13 @@
     "price": "{amount} Skin Credits",
     "filters": {
       "all": "All",
-      "unlocked": "Unlocked",
+      "owned": "Owned",
+      "purchasable": "Purchasable",
       "locked": "Locked",
-      "rarePlus": "Rare+",
-      "premium": "Coming Soon"
+      "cosmic": "Cosmic"
     },
+    "ownedCount": "owned",
+    "heroPreview": "selected hull",
     "rarity": {
       "default": "default",
       "common": "common",
@@ -1043,6 +1045,8 @@
     "state": {
       "locked": "locked",
       "unlocked": "unlocked",
+      "owned": "owned",
+      "purchasable": "available",
       "equipped": "equipped"
     },
     "button": {
@@ -1073,7 +1077,9 @@
       "unlock": "unlock",
       "effect": "effect",
       "trail": "trail",
-      "aura": "aura"
+      "aura": "aura",
+      "price": "price",
+      "progress": "progress"
     },
     "effects": {
       "none": "clean starter hull",
@@ -1107,20 +1113,25 @@
     },
     "skins": {
       "defaultCoreShip": { "name": "Default Core Ship" },
-      "scoutCore": { "name": "Scout Core" },
-      "iceRunner": { "name": "Ice Runner" },
+      "scoutCore": { "name": "Blue Scout" },
+      "crimsonDart": { "name": "Crimson Dart" },
+      "iceRunner": { "name": "Ice Needle" },
       "marsRaider": { "name": "Mars Raider" },
-      "solarBlade": { "name": "Solar Blade" },
-      "saturnOrbitCruiser": { "name": "Saturn Orbit Cruiser" },
-      "voidInterceptor": { "name": "Void Interceptor" },
-      "plasmaNeedle": { "name": "Plasma Needle" },
-      "frostCarrier": { "name": "Frost Carrier" },
-      "prestigeVessel": { "name": "Prestige Vessel" },
-      "dragonCoreShip": { "name": "Dragon Core Ship" },
+      "solarBlade": { "name": "Solar Wing" },
+      "dustRunner": { "name": "Dust Runner" },
+      "saturnOrbitCruiser": { "name": "Saturn Halo Cruiser" },
+      "voidInterceptor": { "name": "Void Razor" },
+      "plasmaNeedle": { "name": "Plasma Falcon" },
+      "frostCarrier": { "name": "Frost Ark" },
+      "nebulaStriker": { "name": "Nebula Striker" },
+      "prestigeVessel": { "name": "Prestige Crown" },
+      "dragonCoreShip": { "name": "Dragon Core" },
       "eclipseHunter": { "name": "Eclipse Hunter" },
-      "ascendantMothership": { "name": "Ascendant Mothership" },
-      "cosmicWhaleShip": { "name": "Cosmic Whale Ship" },
-      "singularityArk": { "name": "Singularity Ark" }
+      "goldenMothership": { "name": "Golden Mothership" },
+      "ascendantMothership": { "name": "Ascendant Ark" },
+      "cosmicWhaleShip": { "name": "Cosmic Whale" },
+      "singularityArk": { "name": "Singularity Vessel" },
+      "starbornLeviathan": { "name": "Starborn Leviathan" }
     }
   },
   "tree": {

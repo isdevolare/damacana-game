@@ -1027,11 +1027,13 @@
     "price": "{amount} Gemi Kredisi",
     "filters": {
       "all": "Hepsi",
-      "unlocked": "Açık",
+      "owned": "Sahip olunan",
+      "purchasable": "Alınabilir",
       "locked": "Kilitli",
-      "rarePlus": "Nadir+",
-      "premium": "Yakında"
+      "cosmic": "Kozmik"
     },
+    "ownedCount": "sahip olunan",
+    "heroPreview": "seçili gövde",
     "rarity": {
       "default": "varsayılan",
       "common": "yaygın",
@@ -1043,6 +1045,8 @@
     "state": {
       "locked": "kilitli",
       "unlocked": "açık",
+      "owned": "sahip",
+      "purchasable": "alınabilir",
       "equipped": "takılı"
     },
     "button": {
@@ -1073,7 +1077,9 @@
       "unlock": "açılma",
       "effect": "efekt",
       "trail": "iz",
-      "aura": "aura"
+      "aura": "aura",
+      "price": "fiyat",
+      "progress": "ilerleme"
     },
     "effects": {
       "none": "temiz başlangıç gövdesi",
@@ -1107,20 +1113,25 @@
     },
     "skins": {
       "defaultCoreShip": { "name": "Varsayılan Çekirdek Gemisi" },
-      "scoutCore": { "name": "Keşif Çekirdeği" },
-      "iceRunner": { "name": "Buz Koşucusu" },
+      "scoutCore": { "name": "Mavi Keşifçi" },
+      "crimsonDart": { "name": "Kızıl Ok" },
+      "iceRunner": { "name": "Buz İğnesi" },
       "marsRaider": { "name": "Mars Akıncısı" },
-      "solarBlade": { "name": "Güneş Bıçağı" },
-      "saturnOrbitCruiser": { "name": "Satürn Yörünge Kruvazörü" },
-      "voidInterceptor": { "name": "Boşluk Önleyicisi" },
-      "plasmaNeedle": { "name": "Plazma İğnesi" },
-      "frostCarrier": { "name": "Don Taşıyıcısı" },
-      "prestigeVessel": { "name": "Prestij Gemisi" },
-      "dragonCoreShip": { "name": "Ejder Çekirdek Gemisi" },
+      "solarBlade": { "name": "Güneş Kanadı" },
+      "dustRunner": { "name": "Toz Koşucusu" },
+      "saturnOrbitCruiser": { "name": "Satürn Hale Kruvazörü" },
+      "voidInterceptor": { "name": "Boşluk Usturası" },
+      "plasmaNeedle": { "name": "Plazma Şahini" },
+      "frostCarrier": { "name": "Buz Arkı" },
+      "nebulaStriker": { "name": "Nebula Vurucusu" },
+      "prestigeVessel": { "name": "Prestij Tacı" },
+      "dragonCoreShip": { "name": "Ejder Çekirdeği" },
       "eclipseHunter": { "name": "Tutulma Avcısı" },
-      "ascendantMothership": { "name": "Yükselen Ana Gemi" },
-      "cosmicWhaleShip": { "name": "Kozmik Balina Gemisi" },
-      "singularityArk": { "name": "Tekillik Gemisi" }
+      "goldenMothership": { "name": "Altın Ana Gemi" },
+      "ascendantMothership": { "name": "Yükselen Ark" },
+      "cosmicWhaleShip": { "name": "Kozmik Balina" },
+      "singularityArk": { "name": "Tekillik Gemisi" },
+      "starbornLeviathan": { "name": "Yıldız Doğumlu Leviathan" }
     }
   },
   "tree": {

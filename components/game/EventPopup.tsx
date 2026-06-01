@@ -36,7 +36,7 @@ export function EventPopup() {
           className="pointer-events-none fixed left-1/2 top-[max(3.25rem,env(safe-area-inset-top))] z-40 w-[calc(100vw_-_0.75rem)] max-w-md -translate-x-1/2 sm:top-20 sm:w-[88%]"
         >
           <div
-            className={`pointer-events-auto max-h-[calc(100dvh_-_6.75rem_-_env(safe-area-inset-bottom))] overflow-y-auto overflow-x-hidden rounded-lg border bg-black/90 p-2 sm:max-h-[calc(100dvh_-_8rem)] sm:p-3 sm:backdrop-blur-sm ${RARITY_STYLE[ev.rarity]}`}
+            className={`pointer-events-auto max-h-[calc(var(--app-height,100dvh)_-_6.75rem_-_env(safe-area-inset-bottom))] overflow-y-auto overflow-x-hidden rounded-lg border bg-black/90 p-2 sm:max-h-[calc(var(--app-height,100dvh)_-_8rem)] sm:p-3 sm:backdrop-blur-sm ${RARITY_STYLE[ev.rarity]}`}
           >
             <div className="mb-1 flex items-center justify-between gap-2">
               <div className="min-w-0 break-words font-major text-xs uppercase tracking-wide text-white/90 sm:text-sm">

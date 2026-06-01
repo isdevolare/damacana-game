@@ -133,7 +133,7 @@ export function SettingsPanel({ locale }: { locale: string }) {
           <motion.div
             initial={{ scale: 0.9, y: 10 }}
             animate={{ scale: 1, y: 0 }}
-            className="max-h-[calc(100dvh_-_1rem_-_env(safe-area-inset-bottom))] w-full max-w-sm overflow-y-auto rounded-xl border border-purple/50 bg-black/90 p-3 sm:max-h-[88dvh] sm:p-5"
+            className="max-h-[calc(var(--app-height,100dvh)_-_1rem_-_env(safe-area-inset-bottom))] w-full max-w-sm overflow-y-auto rounded-xl border border-purple/50 bg-black/90 p-3 sm:max-h-[88dvh] sm:p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4">

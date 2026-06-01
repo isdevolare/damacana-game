@@ -179,7 +179,7 @@ export function UpgradePanel() {
         </div>
       </div>
       <div className={clsx(
-        'grid max-h-[14dvh] grid-cols-2 gap-1.5 overflow-y-auto overscroll-contain sm:max-h-[25vh] sm:gap-3',
+        'grid max-h-[min(14svh,96px)] grid-cols-2 gap-1.5 overflow-y-auto overscroll-contain sm:max-h-[25vh] sm:gap-3',
         collapsed && 'hidden sm:grid',
       )}>
       <div>

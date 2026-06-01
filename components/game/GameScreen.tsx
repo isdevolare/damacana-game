@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Background } from './Background';
 import { TopBar } from './TopBar';
 import { Counter } from './Counter';
@@ -43,13 +44,44 @@ export function GameScreen({ locale }: { locale: string }) {
   useGameLoop();
   useAchievements();
   const offset = useScreenShake();
+  const [standalone, setStandalone] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const updateViewport = () => {
+      const height = window.visualViewport?.height ?? window.innerHeight;
+      document.documentElement.style.setProperty('--app-height', `${Math.max(320, Math.floor(height))}px`);
+      const standaloneMode = window.matchMedia('(display-mode: standalone)').matches ||
+        Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone);
+      setStandalone(standaloneMode);
+      document.documentElement.dataset.displayMode = standaloneMode ? 'standalone' : 'browser';
+    };
+    updateViewport();
+    window.visualViewport?.addEventListener('resize', updateViewport);
+    window.visualViewport?.addEventListener('scroll', updateViewport);
+    window.addEventListener('resize', updateViewport);
+    window.addEventListener('orientationchange', updateViewport);
+    return () => {
+      window.visualViewport?.removeEventListener('resize', updateViewport);
+      window.visualViewport?.removeEventListener('scroll', updateViewport);
+      window.removeEventListener('resize', updateViewport);
+      window.removeEventListener('orientationchange', updateViewport);
+    };
+  }, []);
 
   return (
     <>
       <Background />
       <div
-        className="relative z-10 mx-auto flex h-dvh max-h-dvh w-full max-w-md flex-col overflow-hidden"
-        style={{ minHeight: '100dvh', maxHeight: '100dvh', transform: `translate(${offset.x}px, ${offset.y}px)` }}
+        className="relative z-10 mx-auto flex w-full max-w-md flex-col overflow-hidden"
+        data-standalone={standalone ? 'true' : 'false'}
+        style={{
+          height: 'var(--app-height, 100dvh)',
+          minHeight: 'var(--app-height, 100dvh)',
+          maxHeight: 'var(--app-height, 100dvh)',
+          paddingTop: 'env(safe-area-inset-top)',
+          transform: `translate(${offset.x}px, ${offset.y}px)`,
+        }}
       >
         <TopBar />
         <Counter />

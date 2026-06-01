@@ -51,7 +51,7 @@ export function BuildTreeModal() {
           <motion.div
             initial={{ scale: 0.94, y: 10 }}
             animate={{ scale: 1, y: 0 }}
-            className="max-h-[calc(100dvh_-_1rem_-_env(safe-area-inset-bottom))] w-full max-w-md overflow-hidden rounded-xl border border-cyan/30 bg-black/95 shadow-[0_0_20px_rgba(92,246,255,0.1)] sm:max-h-[88dvh] sm:shadow-[0_0_32px_rgba(92,246,255,0.14)]"
+            className="max-h-[calc(var(--app-height,100dvh)_-_1rem_-_env(safe-area-inset-bottom))] w-full max-w-md overflow-hidden rounded-xl border border-cyan/30 bg-black/95 shadow-[0_0_20px_rgba(92,246,255,0.1)] sm:max-h-[88dvh] sm:shadow-[0_0_32px_rgba(92,246,255,0.14)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="border-b border-white/10 p-4">
@@ -95,7 +95,7 @@ export function BuildTreeModal() {
               </div>
             </div>
 
-            <div className="max-h-[calc(100dvh_-_11rem_-_env(safe-area-inset-bottom))] overflow-y-auto p-3 sm:max-h-[64dvh] sm:p-4">
+            <div className="max-h-[calc(var(--app-height,100dvh)_-_11rem_-_env(safe-area-inset-bottom))] overflow-y-auto p-3 sm:max-h-[64dvh] sm:p-4">
               <div
                 className="rounded-lg border p-3"
                 style={{ borderColor: `${activeBranch.accent}66`, background: `${activeBranch.accent}0f` }}

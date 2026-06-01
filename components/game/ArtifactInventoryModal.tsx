@@ -41,7 +41,7 @@ export function ArtifactInventoryModal() {
           <motion.div
             initial={{ scale: 0.94, y: 10 }}
             animate={{ scale: 1, y: 0 }}
-            className="max-h-[calc(100dvh_-_1rem_-_env(safe-area-inset-bottom))] w-full max-w-md overflow-hidden rounded-xl border border-gold/35 bg-black/92 shadow-[0_0_20px_rgba(255,209,102,0.08)] sm:max-h-[calc(100dvh_-_2rem)] sm:shadow-[0_0_36px_rgba(255,209,102,0.12)]"
+            className="max-h-[calc(var(--app-height,100dvh)_-_1rem_-_env(safe-area-inset-bottom))] w-full max-w-md overflow-hidden rounded-xl border border-gold/35 bg-black/92 shadow-[0_0_20px_rgba(255,209,102,0.08)] sm:max-h-[calc(var(--app-height,100dvh)_-_2rem)] sm:shadow-[0_0_36px_rgba(255,209,102,0.12)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="border-b border-white/10 p-4">
@@ -50,7 +50,7 @@ export function ArtifactInventoryModal() {
                 {t('artifacts.subtitle')}
               </div>
             </div>
-            <div className="max-h-[calc(100dvh_-_10rem_-_env(safe-area-inset-bottom))] space-y-2 overflow-y-auto p-2.5 sm:max-h-[66dvh] sm:p-3">
+            <div className="max-h-[calc(var(--app-height,100dvh)_-_10rem_-_env(safe-area-inset-bottom))] space-y-2 overflow-y-auto p-2.5 sm:max-h-[66dvh] sm:p-3">
               {owned.length === 0 && (
                 <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4 text-center font-space text-[10px] uppercase tracking-widest text-white/45">
                   {t('artifacts.empty')}
