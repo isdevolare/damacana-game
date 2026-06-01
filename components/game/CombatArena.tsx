@@ -23,7 +23,7 @@ import {
   pickEnemyVariant,
 } from '@/lib/config/enemyVariants';
 import { isMegaBoss } from '@/lib/config/bosses';
-import { shipSkinById } from '@/lib/config/shipSkins';
+import { shipSkinById, type ShipSkinDef } from '@/lib/config/shipSkins';
 import {
   COSMETIC_CRATE_SPAWN,
   COSMETIC_CRATES,
@@ -527,6 +527,507 @@ function projectileStats(args: {
   };
 }
 
+function canvasX(x: number, width: number) {
+  return clamp(x, -20, 120) * width / 100;
+}
+
+function canvasY(y: number, height: number) {
+  return clamp(y, -20, 120) * height / 100;
+}
+
+function drawCanvasPolygon(
+  ctx: CanvasRenderingContext2D,
+  points: Array<[number, number]>,
+  fill: string | CanvasGradient | CanvasPattern,
+  stroke?: string,
+) {
+  ctx.beginPath();
+  points.forEach(([x, y], index) => {
+    if (index === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+  if (stroke) {
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+}
+
+function drawCanvasShip(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  skin: ShipSkinDef,
+  renderNow: number,
+  lowDensity: boolean,
+  playerHit: boolean,
+  collapseActive: boolean,
+  burstFireActive: boolean,
+) {
+  const bodyWidth = size * clamp(skin.visual.bodyWidthPct / 72, 0.72, 1.8);
+  const bodyHeight = size * clamp(skin.visual.bodyHeightPct / 80, 0.76, 1.72);
+  const halfW = bodyWidth / 2;
+  const halfH = bodyHeight / 2;
+  const glow = playerHit ? '#ff3d6e' : burstFireActive ? skin.engine : skin.accent;
+  const pulse = lowDensity ? 1 : 1 + Math.sin(renderNow / 260) * 0.018;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(pulse, pulse);
+
+  ctx.globalAlpha = collapseActive ? 0.32 : 0.16;
+  ctx.strokeStyle = collapseActive ? '#80fff4' : skin.accent;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, size * 0.82, size * 0.62, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.globalAlpha = lowDensity ? 0.38 : 0.48;
+  const trailHeight = skin.visual.trailStyle === 'wake' ? halfH * 1.3 : halfH * 0.95;
+  const trailWidth = skin.visual.trailStyle === 'twin' ? halfW * 0.72 : halfW * 0.46;
+  const trailGradient = ctx.createLinearGradient(0, halfH * 0.35, 0, halfH + trailHeight);
+  trailGradient.addColorStop(0, skin.engine);
+  trailGradient.addColorStop(0.58, `${skin.engine}66`);
+  trailGradient.addColorStop(1, 'rgba(0,0,0,0)');
+  drawCanvasPolygon(ctx, [
+    [-trailWidth * 0.46, halfH * 0.35],
+    [trailWidth * 0.46, halfH * 0.35],
+    [trailWidth, halfH + trailHeight],
+    [-trailWidth, halfH + trailHeight],
+  ], trailGradient);
+
+  ctx.globalAlpha = 0.9;
+  ctx.shadowBlur = lowDensity ? 0 : 5;
+  ctx.shadowColor = glow;
+  const wingFill = ctx.createLinearGradient(-halfW, -halfH, halfW, halfH);
+  wingFill.addColorStop(0, `${skin.hull}ee`);
+  wingFill.addColorStop(0.5, `${skin.accent}66`);
+  wingFill.addColorStop(1, `${skin.hull}ee`);
+
+  const archetype = skin.archetype;
+  const wingPoints: Array<[number, number]> = archetype === 'haloCruiser'
+    ? [[-halfW * 1.1, -halfH * 0.08], [-halfW * 0.36, -halfH * 0.56], [0, -halfH * 0.34], [halfW * 0.36, -halfH * 0.56], [halfW * 1.1, -halfH * 0.08], [halfW * 0.7, halfH * 0.55], [0, halfH * 0.35], [-halfW * 0.7, halfH * 0.55]]
+    : archetype === 'mothership' || archetype === 'carrier' || archetype === 'dreadnought'
+      ? [[-halfW, -halfH * 0.16], [-halfW * 0.62, -halfH * 0.7], [0, -halfH * 0.48], [halfW * 0.62, -halfH * 0.7], [halfW, -halfH * 0.16], [halfW * 0.78, halfH * 0.68], [0, halfH * 0.46], [-halfW * 0.78, halfH * 0.68]]
+      : archetype === 'spear'
+        ? [[-halfW * 0.45, -halfH * 0.05], [-halfW * 0.1, -halfH], [0, -halfH * 1.2], [halfW * 0.1, -halfH], [halfW * 0.45, -halfH * 0.05], [halfW * 0.16, halfH], [0, halfH * 1.08], [-halfW * 0.16, halfH]]
+        : archetype === 'whale' || archetype === 'eventLeviathan' || archetype === 'leviathan'
+          ? [[-halfW, -halfH * 0.2], [-halfW * 0.55, -halfH * 0.72], [halfW * 0.52, -halfH * 0.55], [halfW, -halfH * 0.08], [halfW * 0.66, halfH * 0.52], [-halfW * 0.62, halfH * 0.62]]
+          : [[0, -halfH], [halfW * 0.72, -halfH * 0.16], [halfW, halfH * 0.5], [halfW * 0.32, halfH * 0.28], [0, halfH], [-halfW * 0.32, halfH * 0.28], [-halfW, halfH * 0.5], [-halfW * 0.72, -halfH * 0.16]];
+  drawCanvasPolygon(ctx, wingPoints, wingFill, `${skin.accent}99`);
+
+  ctx.shadowBlur = lowDensity ? 0 : 3;
+  const bodyFill = ctx.createLinearGradient(0, -halfH, 0, halfH);
+  bodyFill.addColorStop(0, `${skin.accent}88`);
+  bodyFill.addColorStop(0.4, skin.hull);
+  bodyFill.addColorStop(1, `${skin.hull}f2`);
+  drawCanvasPolygon(ctx, [
+    [0, -halfH * 0.95],
+    [halfW * 0.35, -halfH * 0.32],
+    [halfW * 0.24, halfH * 0.74],
+    [0, halfH * 0.98],
+    [-halfW * 0.24, halfH * 0.74],
+    [-halfW * 0.35, -halfH * 0.32],
+  ], bodyFill, `${skin.accent}aa`);
+
+  ctx.globalAlpha = playerHit ? 0.92 : 0.78;
+  ctx.shadowBlur = lowDensity ? 0 : 8;
+  ctx.shadowColor = playerHit ? '#ff3d6e' : skin.accent;
+  ctx.fillStyle = playerHit ? '#ff3d6e' : skin.visual.coreColor;
+  ctx.beginPath();
+  ctx.arc(0, -halfH * 0.14, Math.max(3, size * skin.visual.coreSizePct / 210), 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawCanvasEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy, player: Vec, width: number, height: number, renderNow: number, weakColor: string, lowDensity: boolean) {
+  const variant = enemyVariantById(enemy.variantId);
+  const x = canvasX(enemy.x, width);
+  const y = canvasY(enemy.y, height);
+  const size = enemy.size;
+  const weak = renderNow <= enemy.weakUntil;
+  const hit = renderNow <= enemy.hitUntil;
+  const shielded = enemy.shieldHitsLeft > 0;
+  const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x) + Math.PI / 2;
+  const color = weak ? weakColor : shielded ? '#ffffff' : variant.accent;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.scale(hit ? 1.12 : 1, hit ? 1.12 : 1);
+  ctx.globalAlpha = 0.86;
+  ctx.shadowBlur = lowDensity ? 0 : hit ? 10 : 5;
+  ctx.shadowColor = color;
+  drawCanvasPolygon(ctx, [
+    [0, -size],
+    [size * 0.78, -size * 0.18],
+    [size * 0.9, size * 0.58],
+    [size * 0.22, size * 0.3],
+    [0, size * 0.92],
+    [-size * 0.22, size * 0.3],
+    [-size * 0.9, size * 0.58],
+    [-size * 0.78, -size * 0.18],
+  ], `${color}99`, color);
+  ctx.globalAlpha = 0.92;
+  drawCanvasPolygon(ctx, [
+    [0, -size * 0.74],
+    [size * 0.34, -size * 0.08],
+    [size * 0.22, size * 0.62],
+    [0, size * 0.46],
+    [-size * 0.22, size * 0.62],
+    [-size * 0.34, -size * 0.08],
+  ], 'rgba(0,0,0,0.72)', `${color}aa`);
+  if (shielded) {
+    ctx.globalAlpha = 0.44;
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 1.15, size * 0.95, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  if (weak) {
+    ctx.globalAlpha = 0.94;
+    ctx.fillStyle = '#ffd166';
+    ctx.beginPath();
+    ctx.arc(0, 0, Math.max(3, size * 0.24), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  const hpPct = clamp(enemy.hp / Math.max(1, enemy.maxHp), 0, 1);
+  ctx.save();
+  ctx.globalAlpha = 0.78;
+  ctx.fillStyle = 'rgba(255,255,255,0.13)';
+  ctx.fillRect(x - 14, y + size + 5, 28, 2);
+  ctx.fillStyle = color;
+  ctx.fillRect(x - 14, y + size + 5, 28 * hpPct, 2);
+  ctx.restore();
+}
+
+interface CombatCanvasProps {
+  active: boolean;
+  renderNow: number;
+  player: Vec;
+  playerHit: boolean;
+  collapseActive: boolean;
+  burstFireActive: boolean;
+  combo: number;
+  intensity: number;
+  coreSize: number;
+  coreShieldSize: number;
+  shipSkin: ShipSkinDef;
+  enemies: Enemy[];
+  projectiles: Projectile[];
+  enemyProjectiles: EnemyProjectile[];
+  particles: Particle[];
+  pulses: Pulse[];
+  hazards: ArenaHazard[];
+  abilityEffects: AbilityEffect[];
+  beamEffects: BeamEffect[];
+  cosmeticCrates: CosmeticCrate[];
+  hpFloats: HpFloat[];
+  damageFloats: DamageFloat[];
+  dodgeFloats: DodgeFloat[];
+  bossPoint: Vec;
+  weakColor: string;
+  lowDensity: boolean;
+  orbitEffectSize: number;
+  onFailure: () => void;
+}
+
+function CombatCanvas({
+  active,
+  renderNow,
+  player,
+  playerHit,
+  collapseActive,
+  burstFireActive,
+  combo,
+  intensity,
+  coreSize,
+  coreShieldSize,
+  shipSkin,
+  enemies,
+  projectiles,
+  enemyProjectiles,
+  particles,
+  pulses,
+  hazards,
+  abilityEffects,
+  beamEffects,
+  cosmeticCrates,
+  hpFloats,
+  damageFloats,
+  dodgeFloats,
+  bossPoint,
+  weakColor,
+  lowDensity,
+  orbitEffectSize,
+  onFailure,
+}: CombatCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    if (!active) return;
+    const canvas = canvasRef.current;
+    const parent = canvas?.parentElement;
+    if (!canvas || !parent) return;
+
+    try {
+      const rect = parent.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, lowDensity ? 1.5 : 2);
+      const width = Math.floor(rect.width);
+      const height = Math.floor(rect.height);
+      const pixelWidth = Math.max(1, Math.floor(width * dpr));
+      const pixelHeight = Math.max(1, Math.floor(height * dpr));
+      if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+        canvas.width = pixelWidth;
+        canvas.height = pixelHeight;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+      }
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        onFailure();
+        return;
+      }
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      hazards.forEach((hazard) => {
+        const styleDef = HAZARD_STYLE[hazard.kind];
+        const x = canvasX(hazard.x, width);
+        const y = canvasY(hazard.y, height);
+        const warning = renderNow < hazard.fireAt;
+        const progress = warning
+          ? clamp((renderNow - hazard.bornAt) / Math.max(1, hazard.fireAt - hazard.bornAt), 0, 1)
+          : clamp((renderNow - hazard.fireAt) / Math.max(1, hazard.until - hazard.fireAt), 0, 1);
+        const opacity = warning ? 0.34 + progress * 0.28 : hazard.hit ? 0.18 : 0.42;
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.strokeStyle = styleDef.color;
+        ctx.fillStyle = warning ? `${styleDef.color}12` : `${styleDef.color}1d`;
+        ctx.shadowBlur = lowDensity ? 0 : 12;
+        ctx.shadowColor = styleDef.color;
+        if (hazard.kind === 'laserSweep') {
+          const length = width * hazard.length / 100;
+          ctx.translate(x, y);
+          ctx.rotate(hazard.angle);
+          ctx.lineWidth = warning ? 2 : lowDensity ? 4 : 6;
+          ctx.beginPath();
+          ctx.moveTo(-length / 2, 0);
+          ctx.lineTo(length / 2, 0);
+          ctx.stroke();
+        } else {
+          const radius = Math.max(8, Math.min(width, height) * hazard.radius / 100 * (hazard.kind === 'pulseMine' && !warning ? 1 + progress * 0.3 : 1));
+          ctx.lineWidth = warning ? 1.5 : 2.5;
+          ctx.setLineDash(warning ? [6, 6] : []);
+          ctx.beginPath();
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        ctx.restore();
+      });
+
+      pulses.forEach((pulse) => {
+        const warning = renderNow < pulse.fireAt;
+        const age = warning ? renderNow - pulse.bornAt : renderNow - pulse.fireAt;
+        const radiusPct = warning ? 11 + (age / pulse.warningMs) * (pulse.kind === 'sweep' ? 10 : 7) : age * pulse.speed;
+        const radius = Math.max(4, Math.min(width, height) * radiusPct / 100);
+        const color = pulse.canceled ? '#5cf6ff' : pulse.kind === 'corrupted' ? '#b87aff' : warning ? '#ffd166' : '#ff3d6e';
+        ctx.save();
+        ctx.globalAlpha = pulse.canceled ? 0.18 : warning ? 0.58 : Math.max(0, 0.46 * (1 - age / 2400));
+        ctx.strokeStyle = color;
+        ctx.lineWidth = pulse.kind === 'corrupted' && !warning ? 4 : warning ? 2 : 3;
+        ctx.setLineDash(warning ? [7, 7] : []);
+        ctx.shadowBlur = lowDensity ? 0 : 12;
+        ctx.shadowColor = color;
+        ctx.beginPath();
+        ctx.arc(canvasX(bossPoint.x, width), canvasY(bossPoint.y, height), radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      beamEffects.forEach((effect) => {
+        const age = renderNow - effect.bornAt;
+        const opacity = Math.max(0, 1 - age / Math.max(1, effect.until - effect.bornAt));
+        ctx.save();
+        ctx.globalAlpha = opacity * (lowDensity ? 0.58 : 1);
+        ctx.strokeStyle = effect.color;
+        ctx.lineWidth = lowDensity ? 2 : 4;
+        ctx.shadowBlur = lowDensity ? 0 : 14;
+        ctx.shadowColor = effect.color;
+        ctx.beginPath();
+        ctx.moveTo(canvasX(effect.x1, width), canvasY(effect.y1, height));
+        ctx.lineTo(canvasX(effect.x2, width), canvasY(effect.y2, height));
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      abilityEffects.forEach((effect) => {
+        const age = renderNow - effect.bornAt;
+        const duration = Math.max(1, effect.until - effect.bornAt);
+        const progress = clamp(age / duration, 0, 1);
+        const color = effect.kind === 'coreHeal' ? '#5cf6ff' : effect.kind === 'orbitSlash' ? '#ff5ce8' : '#5cf6ff';
+        const radius = effect.kind === 'waveBurst'
+          ? (17 + progress * 85)
+          : effect.kind === 'coreHeal'
+            ? (30 + progress * 29)
+            : orbitEffectSize / 2;
+        ctx.save();
+        ctx.globalAlpha = effect.kind === 'orbitSlash' ? 0.46 : Math.max(0, 1 - progress);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.setLineDash(effect.kind === 'orbitSlash' ? [8, 6] : []);
+        ctx.shadowBlur = lowDensity ? 0 : 12;
+        ctx.shadowColor = color;
+        ctx.beginPath();
+        ctx.arc(canvasX(effect.x, width), canvasY(effect.y, height), radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      cosmeticCrates.forEach((crate) => {
+        const def = COSMETIC_CRATES.find((item) => item.id === crate.type) ?? COSMETIC_CRATES[0];
+        const x = canvasX(crate.x, width);
+        const y = canvasY(crate.y, height);
+        const size = crate.size * (renderNow <= crate.hitUntil ? 1.12 : 1);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(renderNow / (def.id === 'cosmic' ? 280 : 420));
+        ctx.globalAlpha = 0.82;
+        ctx.shadowBlur = lowDensity ? 0 : 8;
+        ctx.shadowColor = def.color;
+        drawCanvasPolygon(ctx, [
+          [0, -size / 2],
+          [size * 0.44, -size * 0.22],
+          [size * 0.36, size * 0.38],
+          [-size * 0.18, size / 2],
+          [-size * 0.5, 0],
+          [-size * 0.26, -size * 0.42],
+        ], 'rgba(0,0,0,0.72)', def.color);
+        ctx.fillStyle = `${def.color}44`;
+        ctx.fillRect(-size * 0.14, -size * 0.14, size * 0.28, size * 0.28);
+        ctx.restore();
+      });
+
+      enemies.forEach((enemy) => drawCanvasEnemy(ctx, enemy, player, width, height, renderNow, weakColor, lowDensity));
+
+      projectiles.forEach((projectile) => {
+        const age = renderNow - projectile.bornAt;
+        const opacity = Math.max(0.22, 1 - age / 1850);
+        const x = canvasX(projectile.x, width);
+        const y = canvasY(projectile.y, height);
+        const trail = (combo >= 50 ? 34 + intensity * 20 : 24) * (burstFireActive ? 1.12 : 1);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(projectile.angle);
+        ctx.globalAlpha = opacity;
+        ctx.strokeStyle = projectile.crit ? '#ffd166' : projectile.color;
+        ctx.fillStyle = projectile.color;
+        ctx.lineWidth = projectile.crit ? 3 : 2;
+        ctx.shadowBlur = lowDensity ? 0 : projectile.crit ? 12 : 7;
+        ctx.shadowColor = projectile.color;
+        ctx.beginPath();
+        ctx.moveTo(-trail, 0);
+        ctx.lineTo(8, 0);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(4, 0, projectile.crit ? 5 : 4, 2.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      enemyProjectiles.forEach((projectile) => {
+        const spec = ENEMY_PROJECTILES[projectile.kind];
+        const age = renderNow - projectile.bornAt;
+        const opacity = Math.max(0.22, 1 - age / spec.lifeMs);
+        const x = canvasX(projectile.x, width);
+        const y = canvasY(projectile.y, height);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(projectile.angle);
+        ctx.globalAlpha = opacity;
+        ctx.strokeStyle = projectile.color;
+        ctx.fillStyle = projectile.kind === 'heavy' ? '#ffd16666' : projectile.kind === 'leech' ? '#b87aff66' : projectile.kind === 'anomaly' ? '#ff5ce866' : '#ff6b4a66';
+        ctx.lineWidth = 1.5;
+        ctx.shadowBlur = lowDensity ? 0 : 8;
+        ctx.shadowColor = projectile.color;
+        ctx.beginPath();
+        ctx.moveTo(-Math.max(10, projectile.size * 1.8), 0);
+        ctx.lineTo(0, 0);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(0, 0, projectile.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      particles.forEach((particle) => {
+        const x = canvasX(particle.x, width);
+        const y = canvasY(particle.y, height);
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, particle.life / particle.maxLife);
+        ctx.fillStyle = particle.color;
+        ctx.shadowBlur = lowDensity ? 0 : 5;
+        ctx.shadowColor = particle.color;
+        ctx.beginPath();
+        ctx.arc(x, y, particle.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      const playerX = canvasX(player.x, width);
+      const playerY = canvasY(player.y, height);
+      if (combo >= 15) {
+        ctx.save();
+        ctx.globalAlpha = lowDensity ? 0.12 + intensity * 0.08 : 0.18 + intensity * 0.12;
+        ctx.strokeStyle = combo >= 500 ? '#ffd166' : '#ff5ce8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(playerX, playerY, (coreShieldSize + (combo >= 250 ? 24 : 10)) / 2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+      drawCanvasShip(ctx, playerX, playerY, coreSize * 0.52, shipSkin, renderNow, lowDensity, playerHit, collapseActive, burstFireActive);
+
+      const drawFloat = (xPct: number, yPct: number, text: string, color: string, age: number, life: number, size = 12) => {
+        const opacity = Math.max(0, 1 - age / life);
+        if (opacity <= 0) return;
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.fillStyle = color;
+        ctx.font = `${size}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.shadowBlur = lowDensity ? 0 : 7;
+        ctx.shadowColor = color;
+        ctx.fillText(text, canvasX(xPct, width), canvasY(yPct, height) - age * 0.022);
+        ctx.restore();
+      };
+      hpFloats.forEach((item) => drawFloat(item.x, item.y, `-${item.value} HP`, '#ff3d6e', renderNow - item.bornAt, 900, 14));
+      damageFloats.forEach((item) => drawFloat(item.x, item.y, `${item.crit ? 'CRIT ' : ''}${fmt(item.value)}`, item.crit ? '#ffd166' : '#bffcff', renderNow - item.bornAt, 720, item.crit ? 13 : 11));
+      dodgeFloats.forEach((item) => drawFloat(item.x, item.y, 'NEAR MISS', '#5cf6ff', renderNow - item.bornAt, 680, 9));
+    } catch {
+      onFailure();
+    }
+  }, [active, abilityEffects, beamEffects, bossPoint, burstFireActive, collapseActive, combo, coreShieldSize, coreSize, cosmeticCrates, damageFloats, dodgeFloats, enemies, enemyProjectiles, hazards, hpFloats, intensity, lowDensity, onFailure, orbitEffectSize, particles, player, playerHit, projectiles, pulses, renderNow, shipSkin, weakColor]);
+
+  if (!active) return null;
+  return <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 z-[19]" aria-hidden="true" />;
+}
+
 let enemyId = 1;
 let particleId = 1;
 let pulseId = 1;
@@ -690,6 +1191,7 @@ export function CombatArena() {
   const [arenaPulse, setArenaPulse] = useState<{ kind: ArenaPulseKind; until: number } | null>(null);
   const [shieldCrackUntil, setShieldCrackUntil] = useState(0);
   const [upgradeSurge, setUpgradeSurge] = useState<{ labelKey: string; until: number } | null>(null);
+  const [canvasFailed, setCanvasFailed] = useState(false);
 
   const perTapRef = useRef(perTap);
   const perSecRef = useRef(perSec);
@@ -2577,6 +3079,8 @@ export function CombatArena() {
   const renderedDamageFloats = visualLowDensity ? damageFloats.slice(-2) : damageFloats;
   const renderedDodgeFloats = visualLowDensity ? dodgeFloats.slice(-ARENA_PERF.mobileDodgeFloatCap) : dodgeFloats;
   const renderedBeamEffects = visualLowDensity ? beamEffects.slice(-1) : beamEffects;
+  const canvasVisualsActive = visualLowDensity && !canvasFailed;
+  const orbitEffectSize = 112 * (1 + buildBonuses.orbitSlashRadiusPct + artifactBonuses.orbitRadiusPct + upgradeBonuses.orbitRadiusPct);
   const activeEvolutionIndicators = activeWeaponEvolutions.slice(0, visualLowDensity ? 2 : 6);
   const weaponEvolutionToastDef = weaponEvolutionToast ? weaponEvolutionById(weaponEvolutionToast) : undefined;
   const activeHazardWarning = renderedHazards.find((hazard) => renderNow < hazard.fireAt) ?? renderedHazards.find((hazard) => renderNow < hazard.until);
@@ -2685,6 +3189,37 @@ export function CombatArena() {
           }}
         />
       )}
+
+      <CombatCanvas
+        active={canvasVisualsActive}
+        renderNow={renderNow}
+        player={player}
+        playerHit={playerHit}
+        collapseActive={collapseActive}
+        burstFireActive={burstFireActive}
+        combo={combo}
+        intensity={intensity}
+        coreSize={coreSize}
+        coreShieldSize={coreShieldSize}
+        shipSkin={shipSkin}
+        enemies={enemies}
+        projectiles={projectiles}
+        enemyProjectiles={renderedEnemyProjectiles}
+        particles={renderedParticles}
+        pulses={renderedPulses}
+        hazards={renderedHazards}
+        abilityEffects={abilityEffects}
+        beamEffects={renderedBeamEffects}
+        cosmeticCrates={cosmeticCrates}
+        hpFloats={renderedHpFloats}
+        damageFloats={renderedDamageFloats}
+        dodgeFloats={renderedDodgeFloats}
+        bossPoint={renderBossPoint}
+        weakColor={style.weak}
+        lowDensity={visualLowDensity}
+        orbitEffectSize={orbitEffectSize}
+        onFailure={() => setCanvasFailed(true)}
+      />
 
       <div className="pointer-events-none absolute left-2 right-2 top-2 z-20 sm:left-3 sm:right-3 sm:top-3">
         <div className="flex items-start justify-between gap-3">
@@ -2982,7 +3517,7 @@ export function CombatArena() {
         <div className="relative font-vt text-3xl drop-shadow-[0_0_12px_currentColor]">{chapter.planetGlyph}</div>
       </motion.button>
 
-      {renderedHazards.map((hazard) => {
+      {!canvasVisualsActive && renderedHazards.map((hazard) => {
         const styleDef = HAZARD_STYLE[hazard.kind];
         const warning = renderNow < hazard.fireAt;
         const progress = warning
@@ -3040,7 +3575,7 @@ export function CombatArena() {
         );
       })}
 
-      {renderedPulses.map((pulse) => {
+      {!canvasVisualsActive && renderedPulses.map((pulse) => {
         const warning = renderNow < pulse.fireAt;
         const age = warning ? renderNow - pulse.bornAt : renderNow - pulse.fireAt;
         const radius = warning ? 11 + (age / pulse.warningMs) * (pulse.kind === 'sweep' ? 10 : 7) : age * pulse.speed;
@@ -3072,7 +3607,7 @@ export function CombatArena() {
         );
       })}
 
-      {renderedBeamEffects.map((effect) => {
+      {!canvasVisualsActive && renderedBeamEffects.map((effect) => {
         const age = renderNow - effect.bornAt;
         const opacity = Math.max(0, 1 - age / Math.max(1, effect.until - effect.bornAt));
         const dx = effect.x2 - effect.x1;
@@ -3096,7 +3631,7 @@ export function CombatArena() {
         );
       })}
 
-      {cosmeticCrates.map((crate) => {
+      {!canvasVisualsActive && cosmeticCrates.map((crate) => {
         const def = COSMETIC_CRATES.find((item) => item.id === crate.type) ?? COSMETIC_CRATES[0];
         const age = renderNow - crate.bornAt;
         const hit = renderNow <= crate.hitUntil;
@@ -3140,7 +3675,7 @@ export function CombatArena() {
         );
       })}
 
-      {projectiles.map((projectile) => (
+      {!canvasVisualsActive && projectiles.map((projectile) => (
         <div
           key={projectile.id}
           className="pointer-events-none absolute z-[31] h-1.5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full"
@@ -3172,7 +3707,7 @@ export function CombatArena() {
         </div>
       ))}
 
-      {renderedEnemyProjectiles.map((projectile) => {
+      {!canvasVisualsActive && renderedEnemyProjectiles.map((projectile) => {
         const spec = ENEMY_PROJECTILES[projectile.kind];
         const age = renderNow - projectile.bornAt;
         const opacity = Math.max(0.22, 1 - age / spec.lifeMs);
@@ -3214,7 +3749,7 @@ export function CombatArena() {
         );
       })}
 
-      {renderedTargetLines.map(({ enemy, distance, angle }) => (
+      {!canvasVisualsActive && renderedTargetLines.map(({ enemy, distance, angle }) => (
         <div
           key={`target-${enemy.id}`}
           className="pointer-events-none absolute z-[12] h-px origin-left bg-cyan/20"
@@ -3238,6 +3773,23 @@ export function CombatArena() {
         const hitShakeX = hit ? Math.sin((renderNow + enemy.id * 31) / 28) * (lowDensity ? 1.1 : 2.4) : 0;
         const hitShakeY = hit ? Math.cos((renderNow + enemy.id * 47) / 33) * (lowDensity ? 0.7 : 1.6) : 0;
         const toCoreAngle = Math.atan2(player.y - enemy.y, player.x - enemy.x) + Math.PI / 2;
+        if (canvasVisualsActive) {
+          return (
+            <button
+              key={enemy.id}
+              onPointerDown={(e) => strikeEnemy(enemy.id, e)}
+              className="absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-transparent opacity-0"
+              style={{
+                left: `${enemy.x}%`,
+                top: `${enemy.y}%`,
+                width: `${Math.max(28, enemy.size * 2.4)}px`,
+                height: `${Math.max(28, enemy.size * 2.4)}px`,
+              }}
+              aria-label={t(`enemyVariants.${variant.i18nKey}.name` as any)}
+              title={t(`enemyVariants.${variant.i18nKey}.name` as any)}
+            />
+          );
+        }
         return (
           <button
             key={enemy.id}
@@ -3296,6 +3848,7 @@ export function CombatArena() {
         );
       })}
 
+      {!canvasVisualsActive && (
       <div
         className="pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-[32%] border"
         style={{
@@ -3547,8 +4100,9 @@ export function CombatArena() {
           />
         )}
       </div>
+      )}
 
-      {renderedParticles.map((particle) => (
+      {!canvasVisualsActive && renderedParticles.map((particle) => (
         <div
           key={particle.id}
           className="pointer-events-none absolute z-40 rounded-full"
@@ -3564,7 +4118,7 @@ export function CombatArena() {
         />
       ))}
 
-      {abilityEffects.map((effect) => {
+      {!canvasVisualsActive && abilityEffects.map((effect) => {
         const age = renderNow - effect.bornAt;
         const duration = Math.max(1, effect.until - effect.bornAt);
         const progress = Math.min(1, age / duration);
@@ -3593,7 +4147,7 @@ export function CombatArena() {
         );
       })}
 
-      {renderedHpFloats.map((item) => {
+      {!canvasVisualsActive && renderedHpFloats.map((item) => {
         const age = Date.now() - item.bornAt;
         return (
           <div
@@ -3610,7 +4164,7 @@ export function CombatArena() {
         );
       })}
 
-      {renderedDamageFloats.map((item) => {
+      {!canvasVisualsActive && renderedDamageFloats.map((item) => {
         const age = Date.now() - item.bornAt;
         return (
           <div
@@ -3629,7 +4183,7 @@ export function CombatArena() {
         );
       })}
 
-      {renderedDodgeFloats.map((item) => {
+      {!canvasVisualsActive && renderedDodgeFloats.map((item) => {
         const age = Date.now() - item.bornAt;
         return (
           <div
