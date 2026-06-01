@@ -1087,6 +1087,14 @@ export function CombatArena() {
   const rollArtifactReward = useGame((s) => s.rollArtifactReward);
   const addSkinCredits = useGame((s) => s.addSkinCredits);
   const lowEffectsMode = useGame((s) => s.lowEffectsMode);
+  const showTutorial = useGame((s) => s.showTutorial);
+  const showSettings = useGame((s) => s.showSettings);
+  const showTree = useGame((s) => s.showTree);
+  const showBuildTree = useGame((s) => s.showBuildTree);
+  const showResearch = useGame((s) => s.showResearch);
+  const showArtifacts = useGame((s) => s.showArtifacts);
+  const showProgression = useGame((s) => s.showProgression);
+  const showShipSkins = useGame((s) => s.showShipSkins);
   const sfxEnabled = useGame((s) => !s.audio.muted);
 
   const chapter = currentChapter(completedChapters);
@@ -1161,6 +1169,8 @@ export function CombatArena() {
   const frameLoopTokenRef = useRef(0);
   const hitStopUntilRef = useRef(0);
   const shieldWasActiveRef = useRef(false);
+  const heavyOverlayOpenRef = useRef(false);
+  const tutorialOpenRef = useRef(false);
 
   const [player, setPlayer] = useState(playerRef.current);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
@@ -1254,6 +1264,10 @@ export function CombatArena() {
   useEffect(() => { discoverEnemyTypeRef.current = discoverEnemyType; }, [discoverEnemyType]);
   useEffect(() => { rollArtifactRewardRef.current = rollArtifactReward; }, [rollArtifactReward]);
   useEffect(() => { addSkinCreditsRef.current = addSkinCredits; }, [addSkinCredits]);
+  useEffect(() => {
+    heavyOverlayOpenRef.current = showTutorial || showSettings || showTree || showBuildTree || showResearch || showArtifacts || showProgression || showShipSkins;
+    tutorialOpenRef.current = showTutorial;
+  }, [showArtifacts, showBuildTree, showProgression, showResearch, showSettings, showShipSkins, showTree, showTutorial]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1999,6 +2013,27 @@ export function CombatArena() {
       const dt = Math.min(42, rawDt);
       last = nowPerf;
       const lowDensityFrame = lowDensityRef.current || now < emergencyLowUntilRef.current;
+      const overlayPauseFrame = lowDensityFrame && heavyOverlayOpenRef.current;
+      if (overlayPauseFrame) {
+        const overlayRenderMs = tutorialOpenRef.current ? 700 : 420;
+        emergencyLowUntilRef.current = Math.max(emergencyLowUntilRef.current, now + 900);
+        if (nowPerf - lastRenderRef.current >= overlayRenderMs) {
+          lastRenderRef.current = nowPerf;
+          setEmergencyLowDensity(true);
+          setPlayer(playerRef.current);
+          setEnemies([]);
+          setPulses([]);
+          setProjectiles([]);
+          setEnemyProjectiles([]);
+          setCosmeticCrates([]);
+          setHazards([]);
+          setParticles([]);
+          setAbilityEffects([]);
+          setBeamEffects([]);
+        }
+        raf = requestAnimationFrame(frame);
+        return;
+      }
       const activePhaseTuning = bossPhaseCombatTuning(bossRef.current.tier, lowDensityFrame);
       const enemyCap = Math.min(lowDensityFrame ? ARENA_PERF.mobileEnemyCap : ARENA_PERF.desktopEnemyCap, activePhaseTuning.maxMinions);
       const checkCollision = !lowDensityFrame || now - lastCollisionCheckRef.current >= ARENA_PERF.mobileCollisionMs;
@@ -3135,19 +3170,19 @@ export function CombatArena() {
           style={{ borderColor: planetTheme.uiAccent, boxShadow: `0 0 26px ${planetTheme.ambientGlow}` }}
         />
       )}
-      {planetTheme.effect === 'storm' && (
+      {planetTheme.effect === 'storm' && !visualLowDensity && (
         <div
           className="pointer-events-none absolute inset-x-[-10%] top-[22%] z-[4] h-32 opacity-20"
           style={{ background: `repeating-linear-gradient(155deg, transparent 0 18px, ${planetTheme.dustColor} 20px 23px, transparent 24px 40px)` }}
         />
       )}
-      {planetTheme.effect === 'dust' && (
+      {planetTheme.effect === 'dust' && !visualLowDensity && (
         <div
           className="pointer-events-none absolute inset-x-[-8%] top-[34%] z-[4] h-20"
           style={{ opacity: 0.18, background: `linear-gradient(105deg, transparent, ${planetTheme.dustColor}, transparent)` }}
         />
       )}
-      {planetTheme.effect === 'ember' && (
+      {planetTheme.effect === 'ember' && !visualLowDensity && (
         <div
           className="pointer-events-none absolute inset-x-[-10%] top-[24%] z-[4] h-28 opacity-20"
           style={{ background: `repeating-linear-gradient(130deg, transparent 0 16px, ${planetTheme.dustColor} 18px 20px, transparent 22px 44px)` }}
@@ -3264,7 +3299,7 @@ export function CombatArena() {
         </div>
       </div>
 
-      {activeEvolutionIndicators.length > 0 && (
+      {activeEvolutionIndicators.length > 0 && !visualLowDensity && (
         <div className="pointer-events-none absolute left-2 top-[4.8rem] z-20 flex max-w-[58%] flex-wrap gap-1 sm:left-3 sm:top-[5.2rem] sm:max-w-[70%]">
           {activeEvolutionIndicators.map((evolution) => (
             <span
@@ -3422,6 +3457,7 @@ export function CombatArena() {
         </motion.div>
       )}
 
+      {!visualLowDensity && (
       <motion.div
         key={`boss-entrance-${entrance}`}
         initial={{ opacity: 0.85, scale: 0.2 }}
@@ -3436,6 +3472,7 @@ export function CombatArena() {
           boxShadow: lowDensity ? undefined : `0 0 32px ${chapter.glow}`,
         }}
       />
+      )}
 
       <motion.button
         key={entrance}

@@ -1094,6 +1094,7 @@
       "locked": "Kilitli."
     },
     "detail": {
+      "title": "detaylar",
       "archetype": "arketip",
       "unlock": "açılma",
       "effect": "efekt",

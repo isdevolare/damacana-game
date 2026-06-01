@@ -71,8 +71,8 @@ const RARITY_FILTERS: RarityFilter[] = ['all', 'common', 'rare', 'epic', 'legend
 
 function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef; small?: boolean; hero?: boolean }) {
   const assetSrc = skin.asset?.previewSrc ?? skin.asset?.combatSrc;
-  const frameWidth = hero ? 284 : small ? 96 : 160;
-  const frameHeight = hero ? 190 : small ? 76 : 118;
+  const frameWidth = hero ? 284 : small ? 70 : 160;
+  const frameHeight = hero ? 190 : small ? 54 : 118;
   const bodyWidth = `${skin.visual.bodyWidthPct}%`;
   const bodyHeight = `${skin.visual.bodyHeightPct}%`;
   const innerWidth = `${skin.visual.bodyWidthPct * 0.52}%`;
@@ -191,7 +191,7 @@ function ShipPreview({ skin, small = false, hero = false }: { skin: ShipSkinDef;
     <motion.div
       animate={hero ? { y: [0, -4, 0], rotate: [0, 0.35, 0] } : undefined}
       transition={hero ? { duration: 4.8, repeat: Infinity, ease: 'easeInOut' } : undefined}
-      className={clsx('relative mx-auto flex shrink-0 items-center justify-center', hero ? 'h-56 w-full max-w-[360px]' : small ? 'h-[92px] w-[122px]' : 'h-36 w-48')}
+      className={clsx('relative mx-auto flex shrink-0 items-center justify-center', hero ? 'h-56 w-full max-w-[360px]' : small ? 'h-16 w-[84px]' : 'h-36 w-48')}
       aria-hidden
     >
       <div
@@ -370,6 +370,19 @@ export function ShipSkinsModal() {
         ? t('state.purchasable')
         : t('state.locked');
   const ownedCount = SHOP_SHIP_SKINS.filter((skin) => shipSkinUnlocked(skin, context)).length;
+  const selectedDetailRows = (
+    <div className="grid gap-2 font-space text-[9px] uppercase tracking-[0.12em] text-white/45">
+      <div className="normal-case tracking-normal text-white/58">{t(`skins.${selectedSkin.i18nKey}.desc` as any)}</div>
+      <div><span className="text-white/70">{t('detail.archetype')}</span> · {t(`archetypes.${selectedSkin.archetype}` as any)}</div>
+      <div><span className="text-white/70">{t('detail.unlock')}</span> · {t(`requirements.${shipSkinRequirementKey(selectedSkin)}` as any, { count: selectedSkin.unlock.count ?? 0 })}</div>
+      <div><span className="text-white/70">{t('detail.effect')}</span> · {t(`effects.${selectedSkin.visual.effect}` as any)}</div>
+      <div><span className="text-white/70">{t('detail.trail')}</span> · {t(`trails.${selectedSkin.visual.trailStyle}` as any)}</div>
+      <div><span className="text-white/70">{t('detail.aura')}</span> · {t(`auras.${selectedSkin.visual.auraStyle}` as any)}</div>
+      {selectedSkin.priceCredits ? (
+        <div><span className="text-white/70">{t('detail.price')}</span> · <span className="text-gold">{t('price', { amount: selectedSkin.priceCredits })}</span></div>
+      ) : null}
+    </div>
+  );
 
   return (
     <AnimatePresence>
@@ -378,25 +391,25 @@ export function ShipSkinsModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/85 p-2 sm:p-6 sm:backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-stretch justify-center overflow-hidden bg-black/92 p-0 sm:items-center sm:bg-black/85 sm:p-6 sm:backdrop-blur-sm"
           onClick={() => setShow(false)}
         >
           <motion.div
             initial={{ scale: 0.92, y: 12 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.96, opacity: 0 }}
-            className="max-h-[calc(var(--app-height,100dvh)_-_1rem_-_env(safe-area-inset-bottom))] w-full max-w-4xl overflow-y-auto rounded-xl border border-cyan/35 bg-[#030712]/95 p-2.5 shadow-[0_0_28px_rgba(92,246,255,0.12)] sm:max-h-[88dvh] sm:p-4 sm:shadow-[0_0_44px_rgba(92,246,255,0.16)]"
+            className="h-[var(--app-height,100dvh)] max-h-[var(--app-height,100dvh)] w-full overflow-y-auto overflow-x-hidden rounded-none border-0 border-cyan/35 bg-[#030712]/98 p-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-none sm:h-auto sm:max-h-[88dvh] sm:max-w-4xl sm:rounded-xl sm:border sm:bg-[#030712]/95 sm:p-4 sm:shadow-[0_0_44px_rgba(92,246,255,0.16)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div>
-                <div className="font-major text-lg text-cyan">{t('title')}</div>
-                <div className="mt-1 font-space text-[9px] uppercase tracking-[0.18em] text-white/40">{t('subtitle')}</div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="sticky top-0 z-30 -mx-2.5 mb-2 flex items-start justify-between gap-2 border-b border-white/10 bg-[#030712]/98 px-2.5 py-2 sm:static sm:mx-0 sm:mb-3 sm:border-b-0 sm:bg-transparent sm:p-0">
+              <div className="min-w-0">
+                <div className="truncate font-major text-base text-cyan sm:text-lg">{t('title')}</div>
+                <div className="mt-1 hidden font-space text-[9px] uppercase tracking-[0.18em] text-white/40 sm:block">{t('subtitle')}</div>
+                <div className="mt-1 flex flex-wrap gap-1.5 sm:mt-2">
                   <div className="rounded-md border border-gold/35 bg-gold/10 px-2 py-1 font-space text-[10px] uppercase tracking-[0.16em] text-gold">
                     {t('credits')}: {skinCredits ?? 0}
                   </div>
-                  <div className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 font-space text-[10px] uppercase tracking-[0.16em] text-white/45">
+                  <div className="hidden rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 font-space text-[10px] uppercase tracking-[0.16em] text-white/45 sm:block">
                     {ownedCount}/{SHOP_SHIP_SKINS.length} {t('ownedCount')}
                   </div>
                 </div>
@@ -411,17 +424,77 @@ export function ShipSkinsModal() {
             </div>
 
             <section
-              className={clsx('relative mb-3 overflow-hidden rounded-xl border bg-white/[0.035] p-3', selectedRarity.border)}
-              style={{ boxShadow: `inset 0 0 42px ${selectedSkin.glow}, ${selectedRarity.glow}` }}
+              className={clsx('relative mb-2 overflow-hidden rounded-lg border bg-white/[0.035] p-2 sm:mb-3 sm:rounded-xl sm:p-3', selectedRarity.border)}
+              style={{ boxShadow: `inset 0 0 18px ${selectedSkin.glow}, ${selectedRarity.glow}` }}
             >
-              <div className="pointer-events-none absolute inset-x-12 -top-20 h-40 rounded-full blur-3xl" style={{ background: selectedSkin.accent, opacity: 0.16 }} />
+              <div className="pointer-events-none absolute inset-x-12 -top-20 hidden h-40 rounded-full blur-3xl sm:block" style={{ background: selectedSkin.accent, opacity: 0.16 }} />
               {selectedSkin.rarity === 'cosmic' && (
-                <div className="pointer-events-none absolute inset-0 opacity-30">
+                <div className="pointer-events-none absolute inset-0 hidden opacity-30 sm:block">
                   <div className="absolute left-1/2 top-1/2 h-[150%] w-[64%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan/20 animate-spinslow" />
                   <div className="absolute left-1/2 top-1/2 h-[88%] w-[120%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-pink/20" />
                 </div>
               )}
-              <div className="grid gap-3 md:grid-cols-[minmax(300px,1fr)_320px]">
+              <div className="sm:hidden">
+                <div className="flex gap-2">
+                  <div className="relative overflow-hidden rounded-lg border border-white/10 bg-black/45">
+                    <ShipPreview skin={selectedSkin} small />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-space text-[11px] uppercase tracking-[0.14em] text-white/90">
+                      {t(`skins.${selectedSkin.i18nKey}.name` as any)}
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      <div className={clsx('inline-flex rounded border px-1.5 py-0.5 font-space text-[8px] uppercase tracking-[0.16em]', selectedRarity.text, selectedRarity.badge)}>
+                        {t(`rarity.${selectedSkin.rarity}` as any)}
+                      </div>
+                      <div className={clsx('rounded border px-1.5 py-0.5 font-space text-[8px] uppercase tracking-[0.14em]', selectedEquipped ? 'border-cyan/45 text-cyan' : selectedUnlocked ? 'border-gold/35 text-gold' : selectedPurchasable ? 'border-cyan/35 text-cyan/80' : 'border-danger/35 text-danger/80')}>
+                        {stateLabel}
+                      </div>
+                    </div>
+                    {selectedSkin.priceCredits ? (
+                      <div className="mt-1 font-space text-[9px] uppercase tracking-[0.14em] text-gold">
+                        {t('price', { amount: selectedSkin.priceCredits })}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+                {selectedProgress && selectedProgress.required > 0 && (
+                  <div className="mt-2">
+                    <div className="mb-1 flex justify-between font-space text-[8px] uppercase tracking-[0.14em] text-white/35">
+                      <span>{t('detail.progress')}</span>
+                      <span>{Math.min(selectedProgress.current, selectedProgress.required)} / {selectedProgress.required}</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                      <div className="h-full rounded-full" style={{ width: `${Math.min(100, (selectedProgress.current / selectedProgress.required) * 100)}%`, background: selectedSkin.accent }} />
+                    </div>
+                  </div>
+                )}
+                <details className="mt-2 rounded-lg border border-white/10 bg-black/32 p-2">
+                  <summary className="cursor-pointer font-space text-[9px] uppercase tracking-[0.16em] text-white/55">
+                    {t('detail.title')}
+                  </summary>
+                  <div className="mt-2">{selectedDetailRows}</div>
+                </details>
+                <button
+                  type="button"
+                  disabled={actionDisabled}
+                  onClick={() => {
+                    if (selectedUnlocked) equipShipSkin(selectedSkin.id);
+                    else if (selectedPurchasable) buyShipSkin(selectedSkin.id);
+                  }}
+                  className={clsx(
+                    'mt-2 w-full rounded-md border px-3 py-2 font-space text-[10px] uppercase tracking-[0.18em] transition active:scale-[0.98]',
+                    !actionDisabled
+                      ? 'border-cyan/50 bg-cyan/10 text-cyan'
+                      : selectedEquipped
+                        ? 'border-gold/40 bg-gold/10 text-gold'
+                        : 'border-white/10 bg-white/[0.03] text-white/35',
+                  )}
+                >
+                  {actionLabel}
+                </button>
+              </div>
+              <div className="hidden gap-3 sm:grid md:grid-cols-[minmax(300px,1fr)_320px]">
                 <div className="relative overflow-hidden rounded-lg border border-white/10 bg-black/45 py-4">
                   <div className="absolute left-4 top-3 rounded border border-white/10 bg-black/40 px-2 py-1 font-space text-[8px] uppercase tracking-[0.16em] text-white/45">
                     {t('heroPreview')}
@@ -443,17 +516,7 @@ export function ShipSkinsModal() {
                       {stateLabel}
                     </div>
                   </div>
-                  <div className="mt-3 grid gap-2 font-space text-[9px] uppercase tracking-[0.12em] text-white/45">
-                    <div className="normal-case tracking-normal text-white/58">{t(`skins.${selectedSkin.i18nKey}.desc` as any)}</div>
-                    <div><span className="text-white/70">{t('detail.archetype')}</span> · {t(`archetypes.${selectedSkin.archetype}` as any)}</div>
-                    <div><span className="text-white/70">{t('detail.unlock')}</span> · {t(`requirements.${shipSkinRequirementKey(selectedSkin)}` as any, { count: selectedSkin.unlock.count ?? 0 })}</div>
-                    <div><span className="text-white/70">{t('detail.effect')}</span> · {t(`effects.${selectedSkin.visual.effect}` as any)}</div>
-                    <div><span className="text-white/70">{t('detail.trail')}</span> · {t(`trails.${selectedSkin.visual.trailStyle}` as any)}</div>
-                    <div><span className="text-white/70">{t('detail.aura')}</span> · {t(`auras.${selectedSkin.visual.auraStyle}` as any)}</div>
-                    {selectedSkin.priceCredits ? (
-                      <div><span className="text-white/70">{t('detail.price')}</span> · <span className="text-gold">{t('price', { amount: selectedSkin.priceCredits })}</span></div>
-                    ) : null}
-                  </div>
+                  <div className="mt-3">{selectedDetailRows}</div>
                   {selectedProgress && selectedProgress.required > 0 && (
                     <div className="mt-3">
                       <div className="mb-1 flex justify-between font-space text-[8px] uppercase tracking-[0.14em] text-white/35">

@@ -1094,6 +1094,7 @@
       "locked": "Locked."
     },
     "detail": {
+      "title": "details",
       "archetype": "archetype",
       "unlock": "unlock",
       "effect": "effect",
