@@ -254,27 +254,33 @@ const COMBO_TIERS = [
 
 const ARENA_PERF = {
   desktopRenderMs: 24,
-  mobileRenderMs: 88,
-  emergencyRenderMs: 125,
-  mobileCollisionMs: 150,
+  mobileRenderMs: 140,
+  emergencyRenderMs: 320,
+  mobileSimMs: 96,
+  emergencySimMs: 180,
+  mobileCollisionMs: 240,
   desktopEnemyCap: 9,
-  mobileEnemyCap: 3,
+  mobileEnemyCap: 2,
+  emergencyEnemyCap: 1,
   desktopParticleCap: 34,
-  mobileParticleCap: 3,
+  mobileParticleCap: 1,
+  emergencyParticleCap: 0,
   desktopEffectCap: 4,
   mobileEffectCap: 1,
   desktopHpFloatCap: 5,
-  mobileHpFloatCap: 1,
+  mobileHpFloatCap: 0,
+  mobileDamageFloatCap: 1,
   desktopEnemyProjectileCap: 14,
-  mobileEnemyProjectileCap: 2,
+  mobileEnemyProjectileCap: 1,
   desktopDodgeFloatCap: 4,
-  mobileDodgeFloatCap: 1,
+  mobileDodgeFloatCap: 0,
   desktopMultishotExtraCap: 3,
   mobileMultishotExtraCap: 1,
   desktopChainCap: 2,
   mobileChainCap: 1,
-  emergencyMs: 6500,
-  mobileLagFrameMs: 105,
+  emergencyMs: 15_000,
+  mobileLagFrameMs: 120,
+  watchdogStrikes: 2,
 };
 
 const WEAPON_EVOLUTION_TIMING = {
@@ -1166,6 +1172,8 @@ export function CombatArena() {
   const lastEmergencyTrimRef = useRef(0);
   const lastRenderRef = useRef(0);
   const lastCollisionCheckRef = useRef(0);
+  const lastMobileSimRef = useRef(0);
+  const lagStrikeRef = useRef(0);
   const frameLoopTokenRef = useRef(0);
   const hitStopUntilRef = useRef(0);
   const shieldWasActiveRef = useRef(false);
@@ -1201,7 +1209,7 @@ export function CombatArena() {
   const [arenaPulse, setArenaPulse] = useState<{ kind: ArenaPulseKind; until: number } | null>(null);
   const [shieldCrackUntil, setShieldCrackUntil] = useState(0);
   const [upgradeSurge, setUpgradeSurge] = useState<{ labelKey: string; until: number } | null>(null);
-  const [canvasFailed, setCanvasFailed] = useState(false);
+  const [, setCanvasFailed] = useState(false);
 
   const perTapRef = useRef(perTap);
   const perSecRef = useRef(perSec);
@@ -1412,8 +1420,13 @@ export function CombatArena() {
     const origin = clampArenaVec({ x, y }, playerRef.current);
     const emergency = Date.now() < emergencyLowUntilRef.current;
     const low = lowDensityRef.current || emergency;
+    const cap = emergency ? ARENA_PERF.emergencyParticleCap : low ? ARENA_PERF.mobileParticleCap : ARENA_PERF.desktopParticleCap;
+    if (cap <= 0) {
+      particlesRef.current = [];
+      return;
+    }
     const adjustedCount = emergency
-      ? Math.min(2, Math.max(1, Math.floor(count * 0.18)))
+      ? Math.min(cap, Math.max(1, Math.floor(count * 0.12)))
       : Math.max(1, Math.floor(count * (low ? 0.32 : 1)));
     const burst: Particle[] = Array.from({ length: adjustedCount }).map(() => {
       const angle = Math.random() * Math.PI * 2;
@@ -1430,7 +1443,6 @@ export function CombatArena() {
         size: low ? 1.5 + Math.random() * 2.5 : 2 + Math.random() * 4,
       };
     });
-    const cap = low ? ARENA_PERF.mobileParticleCap : ARENA_PERF.desktopParticleCap;
     particlesRef.current = [...particlesRef.current.slice(-cap), ...burst].slice(-cap);
     if (!low) setParticles(particlesRef.current);
   }, []);
@@ -1445,6 +1457,7 @@ export function CombatArena() {
       : point;
     const id = hpFloatId++;
     const cap = (lowDensityRef.current || Date.now() < emergencyLowUntilRef.current) ? ARENA_PERF.mobileHpFloatCap : ARENA_PERF.desktopHpFloatCap;
+    if (cap <= 0) return;
     setHpFloats((items) => [
       ...items.slice(-(cap - 1)),
       { id, value, x: safePoint.x, y: safePoint.y, bornAt: Date.now() },
@@ -1463,7 +1476,9 @@ export function CombatArena() {
       ? clampArenaVec({ x: point.x + (point.x >= playerPoint.x ? 5 : -5), y: point.y - 8 }, playerPoint)
       : point;
     const id = damageFloatId++;
-    const cap = (lowDensityRef.current || Date.now() < emergencyLowUntilRef.current) ? 2 : 9;
+    const emergency = Date.now() < emergencyLowUntilRef.current;
+    const cap = emergency ? 0 : lowDensityRef.current ? ARENA_PERF.mobileDamageFloatCap : 9;
+    if (cap <= 0) return;
     setDamageFloats((items) => [
       ...items.slice(-(cap - 1)),
       { id, value, x: safePoint.x, y: safePoint.y, crit, bornAt: Date.now() },
@@ -1477,6 +1492,7 @@ export function CombatArena() {
     const point = clampArenaVec({ x, y }, playerRef.current);
     const id = dodgeFloatId++;
     const cap = (lowDensityRef.current || Date.now() < emergencyLowUntilRef.current) ? ARENA_PERF.mobileDodgeFloatCap : ARENA_PERF.desktopDodgeFloatCap;
+    if (cap <= 0) return;
     setDodgeFloats((items) => [
       ...items.slice(-(cap - 1)),
       { id, x: point.x, y: point.y, bornAt: Date.now() },
@@ -1538,12 +1554,13 @@ export function CombatArena() {
     emitParticles(crate.x, crate.y, def.color, lowDensityRef.current ? 7 : 14, def.id === 'cosmic' ? 1.35 : 0.9);
     pushDamageFloat(credits, crate.x, crate.y - 4, def.id !== 'basic');
     cosmeticCratesRef.current = cosmeticCratesRef.current.filter((item) => item.id !== crate.id);
-    setCosmeticCrates(cosmeticCratesRef.current);
+    if (!lowDensityRef.current) setCosmeticCrates(cosmeticCratesRef.current);
   }, [emitParticles, pushDamageFloat]);
 
   const fireEnemyProjectile = useCallback((origin: Vec, target: Vec, kind: EnemyProjectileKind, damageScale = 1, angleOffset = 0) => {
     const spec = ENEMY_PROJECTILES[kind];
-    const cap = (lowDensityRef.current || Date.now() < emergencyLowUntilRef.current) ? ARENA_PERF.mobileEnemyProjectileCap : ARENA_PERF.desktopEnemyProjectileCap;
+    const emergency = Date.now() < emergencyLowUntilRef.current;
+    const cap = (lowDensityRef.current || emergency) ? ARENA_PERF.mobileEnemyProjectileCap : ARENA_PERF.desktopEnemyProjectileCap;
     if (enemyProjectilesRef.current.length >= cap) return;
     const safeOrigin = clampArenaVec(origin, bossArenaPoint(Date.now(), bossPhaseInfo(bossRef.current.tier).progress));
     const safeTarget = clampArenaVec(target, playerRef.current);
@@ -1568,13 +1585,13 @@ export function CombatArena() {
 
   const triggerArenaPulse = useCallback((kind: ArenaPulseKind, durationMs = 520) => {
     const low = lowDensityRef.current || Date.now() < emergencyLowUntilRef.current;
-    if (low && arenaPulse) return;
+    if (low) return;
     const until = Date.now() + (low ? Math.min(durationMs, 260) : durationMs);
     setArenaPulse({ kind, until });
     setTimeout(() => {
       setArenaPulse((current) => current?.until === until ? null : current);
     }, (low ? Math.min(durationMs, 260) : durationMs) + 60);
-  }, [arenaPulse]);
+  }, []);
 
   const triggerBurstFire = useCallback((now = Date.now()) => {
     burstFireUntilRef.current = Math.max(
@@ -1602,10 +1619,10 @@ export function CombatArena() {
     const result = applyCombatDamageRef.current(amount);
     playerRef.current = { ...p, hitUntil: now + 360 };
     targetRef.current = { x: p.x, y: p.y };
-    setPlayer(playerRef.current);
+    if (!lowDensityRef.current) setPlayer(playerRef.current);
     pushHpFloat(result.damage, p.x, p.y - 6);
     emitParticles(p.x, p.y, '#ff3d6e', 10, 1.1);
-    useGame.setState({ shake: { intensity: 'small', at: now } });
+    if (!lowDensityRef.current) useGame.setState({ shake: { intensity: 'small', at: now } });
     if (sfxRef.current) audio.sfxPlayerHit();
     if (result.collapsed) {
       const healPct = COMBAT.bossCollapseHealMinPct + Math.random() * (COMBAT.bossCollapseHealMaxPct - COMBAT.bossCollapseHealMinPct);
@@ -1626,7 +1643,7 @@ export function CombatArena() {
       setPulses([]);
       setHazards([]);
       setPlayer(playerRef.current);
-      useGame.setState({ shake: { intensity: 'hard', at: now } });
+      if (!lowDensityRef.current) useGame.setState({ shake: { intensity: 'hard', at: now } });
       useGame.setState((state) => ({ boss: healedBoss, combo: 0, lastTapAt: 0 }));
       emitParticles(p.x, p.y, '#ff3d6e', lowDensityRef.current ? 8 : 28, lowDensityRef.current ? 0.9 : 1.8);
     } else {
@@ -1720,7 +1737,8 @@ export function CombatArena() {
     const activeStyle = styleRef.current;
     const tuning = bossPhaseCombatTuning(bossRef.current.tier, lowDensityRef.current);
     const wave = waveTypeById(waveTypeId);
-    const perfCap = lowDensityRef.current ? ARENA_PERF.mobileEnemyCap : ARENA_PERF.desktopEnemyCap;
+    const emergency = Date.now() < emergencyLowUntilRef.current;
+    const perfCap = lowDensityRef.current ? (emergency ? ARENA_PERF.emergencyEnemyCap : ARENA_PERF.mobileEnemyCap) : ARENA_PERF.desktopEnemyCap;
     const enemyCap = Math.min(perfCap, tuning.maxMinions);
     const targetCount = Math.min(enemyCap, 2 + activeChapter.order + Math.floor(waveRef.current / 3));
     const needed = Math.max(1, targetCount - enemiesRef.current.length);
@@ -1761,12 +1779,12 @@ export function CombatArena() {
     }
     waveRef.current += 1;
     activeWaveTypeRef.current = waveTypeId;
-    setWaveStatus({ type: waveTypeId, incoming: false, until: now + (wave.special ? 4200 : 2600) });
+    if (!lowDensityRef.current) setWaveStatus({ type: waveTypeId, incoming: false, until: now + (wave.special ? 4200 : 2600) });
     if (wave.special && forcedCount <= 0) addWaveHazard(waveTypeId, now);
     if (waveTypeId === 'elite') rollArtifactRewardRef.current('eliteWave');
     if (waveTypeId === 'anomaly') rollArtifactRewardRef.current('anomalyWave');
     enemiesRef.current = nextEnemies;
-    setEnemies(nextEnemies);
+    if (!lowDensityRef.current) setEnemies(nextEnemies);
   }, [addWaveHazard]);
 
   const strikeEnemy = useCallback((id: number, e: PointerEvent) => {
@@ -1815,7 +1833,7 @@ export function CombatArena() {
     }
 
     enemiesRef.current = next;
-    setEnemies(next);
+    if (!lowDensityRef.current) setEnemies(next);
     emitParticles(
       point.x,
       point.y,
@@ -1843,7 +1861,7 @@ export function CombatArena() {
       else audio.sfxCombatHit(comboRef.current);
     }
     if (critical || comboRef.current >= 10 || killed) {
-      useGame.setState({ shake: { intensity: critical || killed ? 'medium' : 'small', at: now } });
+      if (!lowDensityRef.current) useGame.setState({ shake: { intensity: critical || killed ? 'medium' : 'small', at: now } });
     }
     if (critical) setComboFlash(t('combat.criticalRupture'));
     else if (killed) setComboFlash(`x${Math.max(2, Math.floor(comboRef.current))}`);
@@ -1883,14 +1901,14 @@ export function CombatArena() {
       setPulses(canceledPulses);
       setBossWeakUntil(0);
       setComboFlash(t('combat.criticalRupture'));
-      useGame.setState({ shake: { intensity: 'hard', at: now } });
+      if (!lowDensityRef.current) useGame.setState({ shake: { intensity: 'hard', at: now } });
       if (comboRef.current >= 100) {
         hitStopUntilRef.current = Math.max(hitStopUntilRef.current, now + (lowDensityRef.current ? 32 : 55));
         triggerArenaPulse('crit', lowDensityRef.current ? 220 : 320);
       }
       if (sfxRef.current) audio.sfxCriticalRupture();
     } else {
-      if (comboRef.current >= 8) useGame.setState({ shake: { intensity: 'small', at: now } });
+      if (comboRef.current >= 8 && !lowDensityRef.current) useGame.setState({ shake: { intensity: 'small', at: now } });
       if (sfxRef.current) audio.sfxCombatHit(comboRef.current);
     }
   }, [bossDamageGuardMult, bossWeakUntil, emitParticles, finalBoss, pointFromEvent, t, triggerArenaPulse, triggerBurstFire]);
@@ -1922,7 +1940,7 @@ export function CombatArena() {
     setEnemies(enemiesRef.current);
     if (hitCount > 0) {
       emitParticles(center.x, center.y, color, Math.min(killedCount > 0 ? 36 : 28, 8 + hitCount * 5 + killedCount * 5), killedCount > 0 ? 1.9 : 1.6);
-      useGame.setState({ shake: { intensity: hitCount >= 3 ? 'medium' : 'small', at: Date.now() } });
+      if (!lowDensityRef.current) useGame.setState({ shake: { intensity: hitCount >= 3 ? 'medium' : 'small', at: Date.now() } });
       if (killedCount > 0) triggerArenaPulse('death', lowDensityRef.current ? 240 : 340);
     }
     return { hitCount, killedCount };
@@ -1994,25 +2012,44 @@ export function CombatArena() {
       const now = Date.now();
       const rawDt = nowPerf - last;
       if (lowDensityRef.current && rawDt > ARENA_PERF.mobileLagFrameMs) {
-        emergencyLowUntilRef.current = Math.max(emergencyLowUntilRef.current, now + ARENA_PERF.emergencyMs);
+        lagStrikeRef.current += 1;
+        if (lagStrikeRef.current >= ARENA_PERF.watchdogStrikes) {
+          emergencyLowUntilRef.current = Math.max(emergencyLowUntilRef.current, now + ARENA_PERF.emergencyMs);
+        }
         if (now - lastEmergencyTrimRef.current > 900) {
           lastEmergencyTrimRef.current = now;
-          projectilesRef.current = projectilesRef.current.slice(-Math.max(2, CORE_DEFENSE.projectileCapMobile - 1));
-          enemyProjectilesRef.current = enemyProjectilesRef.current.slice(-ARENA_PERF.mobileEnemyProjectileCap);
+          enemiesRef.current = enemiesRef.current.slice(-ARENA_PERF.emergencyEnemyCap);
+          projectilesRef.current = projectilesRef.current.slice(-2);
+          enemyProjectilesRef.current = enemyProjectilesRef.current.slice(-1);
           particlesRef.current = [];
           pulsesRef.current = pulsesRef.current.slice(-1);
           abilityEffectsRef.current = abilityEffectsRef.current.slice(-1);
           beamEffectsRef.current = beamEffectsRef.current.slice(-1);
           hazardsRef.current = hazardsRef.current.slice(-1);
+          setDamageFloats([]);
+          setDodgeFloats([]);
+          setHpFloats([]);
         }
-        setEmergencyLowDensity(true);
+        if (emergencyLowUntilRef.current > now) setEmergencyLowDensity(true);
       } else if (emergencyLowUntilRef.current > 0 && now > emergencyLowUntilRef.current) {
         emergencyLowUntilRef.current = 0;
+        lagStrikeRef.current = 0;
         setEmergencyLowDensity(false);
+      } else if (lowDensityRef.current && lagStrikeRef.current > 0 && rawDt < ARENA_PERF.mobileLagFrameMs * 0.65) {
+        lagStrikeRef.current -= 1;
       }
-      const dt = Math.min(42, rawDt);
+      const emergencyFrame = now < emergencyLowUntilRef.current;
+      const lowDensityFrame = lowDensityRef.current || emergencyFrame;
+      const simInterval = lowDensityFrame
+        ? emergencyFrame ? ARENA_PERF.emergencySimMs : ARENA_PERF.mobileSimMs
+        : 0;
+      if (simInterval > 0 && rawDt < simInterval) {
+        raf = requestAnimationFrame(frame);
+        return;
+      }
+      const dt = Math.min(lowDensityFrame ? 140 : 42, rawDt);
       last = nowPerf;
-      const lowDensityFrame = lowDensityRef.current || now < emergencyLowUntilRef.current;
+      lastMobileSimRef.current = nowPerf;
       const overlayPauseFrame = lowDensityFrame && heavyOverlayOpenRef.current;
       if (overlayPauseFrame) {
         const overlayRenderMs = tutorialOpenRef.current ? 700 : 420;
@@ -2035,7 +2072,8 @@ export function CombatArena() {
         return;
       }
       const activePhaseTuning = bossPhaseCombatTuning(bossRef.current.tier, lowDensityFrame);
-      const enemyCap = Math.min(lowDensityFrame ? ARENA_PERF.mobileEnemyCap : ARENA_PERF.desktopEnemyCap, activePhaseTuning.maxMinions);
+      const mobileEnemyCap = emergencyFrame ? ARENA_PERF.emergencyEnemyCap : ARENA_PERF.mobileEnemyCap;
+      const enemyCap = Math.min(lowDensityFrame ? mobileEnemyCap : ARENA_PERF.desktopEnemyCap, activePhaseTuning.maxMinions);
       const checkCollision = !lowDensityFrame || now - lastCollisionCheckRef.current >= ARENA_PERF.mobileCollisionMs;
       if (checkCollision) lastCollisionCheckRef.current = now;
       const activeAnomalies = activeBuffsRef.current.filter((buff) => buff.expiresAt > now);
@@ -2049,9 +2087,11 @@ export function CombatArena() {
       ) {
         rageTriggeredTierRef.current = currentBoss.tier;
         bossRageUntilRef.current = now + activeProfile.rage.durationMs;
-        setBossRageUntil(bossRageUntilRef.current);
-        setBossHitUntil(now + 900);
-        useGame.setState({ shake: { intensity: 'medium', at: now } });
+        if (!lowDensityFrame) {
+          setBossRageUntil(bossRageUntilRef.current);
+          setBossHitUntil(now + 900);
+          useGame.setState({ shake: { intensity: 'medium', at: now } });
+        }
       }
       const rageActive = now <= bossRageUntilRef.current;
       const pulseRateMult = activeProfile.pulseIntervalMult * (rageActive ? activeProfile.rage?.pulseIntervalMult ?? 1 : 1);
@@ -2233,15 +2273,17 @@ export function CombatArena() {
           const warningMs = lowDensityFrame ? 720 : 920;
           pendingWaveRef.current = { type: nextWave.id, dueAt: now + warningMs };
           activeWaveTypeRef.current = nextWave.id;
-          setWaveStatus({ type: nextWave.id, incoming: true, until: now + warningMs + 1200 });
-          triggerArenaPulse(nextWave.id === 'anomaly' ? 'anomaly' : nextWave.id === 'elite' ? 'elite' : 'wave', lowDensityFrame ? 360 : 560);
+          if (!lowDensityFrame) {
+            setWaveStatus({ type: nextWave.id, incoming: true, until: now + warningMs + 1200 });
+            triggerArenaPulse(nextWave.id === 'anomaly' ? 'anomaly' : nextWave.id === 'elite' ? 'elite' : 'wave', 560);
+          }
         } else {
           spawnWave(now, 0, undefined, nextWave.id);
         }
       }
 
       const burstActive = now <= burstFireUntilRef.current;
-      const projectileCap = lowDensityFrame ? CORE_DEFENSE.projectileCapMobile : CORE_DEFENSE.projectileCapDesktop;
+      const projectileCap = lowDensityFrame ? (emergencyFrame ? 2 : Math.min(3, CORE_DEFENSE.projectileCapMobile)) : CORE_DEFENSE.projectileCapDesktop;
       const shotStats = projectileStats({
         perTap: perTapRef.current,
         perSec: perSecRef.current,
@@ -2667,15 +2709,19 @@ export function CombatArena() {
       ) {
         lastBossShieldAtRef.current = now;
         bossShieldUntilRef.current = now + activeProfile.shieldWindow.durationMs;
-        setBossShieldUntil(bossShieldUntilRef.current);
-        setBossHitUntil(now + 650);
+        if (!lowDensityFrame) {
+          setBossShieldUntil(bossShieldUntilRef.current);
+          setBossHitUntil(now + 650);
+        }
         emitParticles(bossArenaPoint(now, activePhaseTuning.info.progress).x, bossArenaPoint(now, activePhaseTuning.info.progress).y, '#80fff4', 10, 0.85);
       }
       const shieldActiveFrame = now <= bossShieldUntilRef.current;
       if (shieldWasActiveRef.current && !shieldActiveFrame) {
         const bossPoint = bossArenaPoint(now, activePhaseTuning.info.progress);
-        setShieldCrackUntil(now + (lowDensityFrame ? 360 : 520));
-        triggerArenaPulse('shield', lowDensityFrame ? 260 : 420);
+        if (!lowDensityFrame) {
+          setShieldCrackUntil(now + 520);
+          triggerArenaPulse('shield', 420);
+        }
         emitParticles(bossPoint.x, bossPoint.y, '#80fff4', lowDensityFrame ? 8 : 16, 1.05);
       }
       shieldWasActiveRef.current = shieldActiveFrame;
@@ -2701,7 +2747,7 @@ export function CombatArena() {
           },
         ];
         setBossWeakUntil((current) => Math.max(current, fireAt));
-        setBossHitUntil(now + activeProfile.orbitSweep.warningMs);
+        if (!lowDensityFrame) setBossHitUntil(now + activeProfile.orbitSweep.warningMs);
       }
 
       if (now - lastBossPulseRef.current > activePhaseTuning.pulseIntervalMs * pulseRateMult * anomalyMult(activeAnomalies, 'bossSlow')) {
@@ -2725,7 +2771,7 @@ export function CombatArena() {
           },
         ];
         setBossWeakUntil((current) => Math.max(current, fireAt));
-        setBossHitUntil(now + warningMs);
+        if (!lowDensityFrame) setBossHitUntil(now + warningMs);
       }
       pulsesRef.current = pulsesRef.current
         .map((pulse) => {
@@ -2762,7 +2808,7 @@ export function CombatArena() {
         lastBossProjectileShotRef.current = now;
         const shots = lowDensityFrame ? [-0.16, 0.16] : [-0.24, 0, 0.24];
         shots.forEach((offset) => fireEnemyProjectile(bossPointForShots, p, 'basic', 0.62 * activePhaseTuning.pulseDamageMult, offset));
-        setBossHitUntil(now + 420);
+        if (!lowDensityFrame) setBossHitUntil(now + 420);
       }
       if (
         activeChapter.id === 'uranus' &&
@@ -2772,7 +2818,7 @@ export function CombatArena() {
         lastBossProjectileShotRef.current = now;
         const shots = lowDensityFrame ? [0] : [-0.18, 0.18];
         shots.forEach((offset) => fireEnemyProjectile(bossPointForShots, p, 'heavy', 0.64 * activePhaseTuning.pulseDamageMult, offset));
-        setBossHitUntil(now + 420);
+        if (!lowDensityFrame) setBossHitUntil(now + 420);
       }
 
       const phase = activePhaseTuning.info.phase;
@@ -2905,12 +2951,14 @@ export function CombatArena() {
       ) {
         lastBossSummonRef.current = now;
         const summonCount = Math.min(enemyCap - enemiesRef.current.length, activePhaseTuning.summonCount + (bossIsMajor ? 1 : 0));
-        setBossSummonUntil(now + 1250);
-        setBossHitUntil(now + 950);
+        if (!lowDensityFrame) {
+          setBossSummonUntil(now + 1250);
+          setBossHitUntil(now + 950);
+        }
         spawnWave(now, summonCount, activeProfile.summonBias);
         const bossPoint = bossArenaPoint(now, activePhaseTuning.info.progress);
         emitParticles(bossPoint.x, bossPoint.y, activeChapter.accent, bossIsMajor ? 22 : 16, 1.35);
-        useGame.setState({ shake: { intensity: 'small', at: now } });
+        if (!lowDensityFrame) useGame.setState({ shake: { intensity: 'small', at: now } });
       }
 
       particlesRef.current = particlesRef.current
@@ -2948,15 +2996,15 @@ export function CombatArena() {
       if (nowPerf - lastRenderRef.current >= renderInterval) {
         lastRenderRef.current = nowPerf;
         setPlayer(p);
-        setEnemies(enemiesRef.current);
-        setPulses(pulsesRef.current);
-        setProjectiles(projectilesRef.current);
-        setEnemyProjectiles(enemyProjectilesRef.current);
-        setCosmeticCrates(cosmeticCratesRef.current);
-        setHazards(hazardsRef.current);
-        setParticles(particlesRef.current);
-        setAbilityEffects(abilityEffectsRef.current);
-        setBeamEffects(beamEffectsRef.current);
+        setEnemies(lowDensityFrame ? enemiesRef.current.slice(-enemyCap) : enemiesRef.current);
+        setPulses(lowDensityFrame ? pulsesRef.current.slice(-1) : pulsesRef.current);
+        setProjectiles(lowDensityFrame ? projectilesRef.current.slice(-(emergencyFrame ? 2 : 3)) : projectilesRef.current);
+        setEnemyProjectiles(lowDensityFrame ? enemyProjectilesRef.current.slice(-ARENA_PERF.mobileEnemyProjectileCap) : enemyProjectilesRef.current);
+        setCosmeticCrates(lowDensityFrame ? [] : cosmeticCratesRef.current);
+        setHazards(lowDensityFrame ? hazardsRef.current.slice(-1) : hazardsRef.current);
+        setParticles(lowDensityFrame ? particlesRef.current.slice(-(emergencyFrame ? ARENA_PERF.emergencyParticleCap : ARENA_PERF.mobileParticleCap)) : particlesRef.current);
+        setAbilityEffects(lowDensityFrame ? abilityEffectsRef.current.slice(-1) : abilityEffectsRef.current);
+        setBeamEffects(lowDensityFrame ? beamEffectsRef.current.slice(-1) : beamEffectsRef.current);
       }
       raf = requestAnimationFrame(frame);
     };
@@ -3106,15 +3154,16 @@ export function CombatArena() {
   const weakPointX = Math.cos(weakPointAngle) * weakPointRadius;
   const weakPointY = Math.sin(weakPointAngle) * weakPointRadius;
   const playerGlow = visualLowDensity ? 0.22 : 1;
+  const visualEmergency = visualLowDensity && emergencyLowDensity;
   const renderedPulses = visualLowDensity ? pulses.slice(-1) : pulses;
   const renderedHazards = visualLowDensity ? hazards.slice(-1) : hazards;
   const renderedEnemyProjectiles = visualLowDensity ? enemyProjectiles.slice(-ARENA_PERF.mobileEnemyProjectileCap) : enemyProjectiles;
-  const renderedParticles = visualLowDensity ? particles.slice(-ARENA_PERF.mobileParticleCap) : particles;
-  const renderedHpFloats = visualLowDensity ? hpFloats.slice(-ARENA_PERF.mobileHpFloatCap) : hpFloats;
-  const renderedDamageFloats = visualLowDensity ? damageFloats.slice(-2) : damageFloats;
-  const renderedDodgeFloats = visualLowDensity ? dodgeFloats.slice(-ARENA_PERF.mobileDodgeFloatCap) : dodgeFloats;
+  const renderedParticles = visualEmergency ? [] : visualLowDensity ? particles.slice(-ARENA_PERF.mobileParticleCap) : particles;
+  const renderedHpFloats = visualLowDensity ? [] : hpFloats;
+  const renderedDamageFloats = visualEmergency ? [] : visualLowDensity ? damageFloats.slice(-ARENA_PERF.mobileDamageFloatCap) : damageFloats;
+  const renderedDodgeFloats = visualLowDensity ? [] : dodgeFloats;
   const renderedBeamEffects = visualLowDensity ? beamEffects.slice(-1) : beamEffects;
-  const canvasVisualsActive = visualLowDensity && !canvasFailed;
+  const canvasVisualsActive = visualLowDensity;
   const orbitEffectSize = 112 * (1 + buildBonuses.orbitSlashRadiusPct + artifactBonuses.orbitRadiusPct + upgradeBonuses.orbitRadiusPct);
   const activeEvolutionIndicators = activeWeaponEvolutions.slice(0, visualLowDensity ? 2 : 6);
   const weaponEvolutionToastDef = weaponEvolutionToast ? weaponEvolutionById(weaponEvolutionToast) : undefined;
@@ -3153,7 +3202,7 @@ export function CombatArena() {
         transform: hitStopActive ? 'scale(0.998)' : undefined,
         borderColor: arenaPulseActive ? pulseAccent : planetTheme.arenaBorder,
         boxShadow: visualLowDensity
-          ? `0 0 ${waveBorderActive ? 12 : 8}px ${arenaPulseActive ? pulseAccent : planetTheme.ambientGlow}`
+          ? undefined
           : `0 0 ${arenaPulseActive ? 48 : 34}px ${arenaPulseActive ? pulseAccent : planetTheme.ambientGlow}`,
         background: `radial-gradient(circle at 50% 22%, ${planetTheme.arenaTint}, ${style.arenaGlow} 34%, rgba(0,0,0,0.48) 100%)`,
       }}
@@ -3494,12 +3543,12 @@ export function CombatArena() {
           borderColor: bossWeakActive ? '#ffd166' : bossShieldActive ? '#80fff4' : bossRageActive || bossWarningActive ? '#ff3d6e' : finalBoss ? chapter.accent : mega ? '#ffd166' : '#ff3d6e',
           color: bossShieldActive ? '#80fff4' : finalBoss ? chapter.accent : '#ff3d6e',
           boxShadow: bossWeakActive
-            ? lowDensity ? '0 0 28px rgba(255,209,102,0.42)' : '0 0 62px rgba(255,209,102,0.64), inset 0 0 24px rgba(255,209,102,0.2)'
+            ? lowDensity ? undefined : '0 0 62px rgba(255,209,102,0.64), inset 0 0 24px rgba(255,209,102,0.2)'
             : bossShieldActive
-              ? lowDensity ? '0 0 28px rgba(128,255,244,0.36)' : '0 0 58px rgba(128,255,244,0.48), inset 0 0 24px rgba(128,255,244,0.18)'
+              ? lowDensity ? undefined : '0 0 58px rgba(128,255,244,0.48), inset 0 0 24px rgba(128,255,244,0.18)'
               : bossRageActive || bossWarningActive
-              ? lowDensity ? '0 0 30px rgba(255,61,110,0.42)' : '0 0 64px rgba(255,61,110,0.58), inset 0 0 24px rgba(255,61,110,0.18)'
-              : lowDensity ? `0 0 ${finalBoss ? 26 : 20}px ${finalBoss ? chapter.glow : 'rgba(255,61,110,0.32)'}` : `0 0 ${finalBoss ? 52 : 34}px ${finalBoss ? chapter.glow : 'rgba(255,61,110,0.42)'}`,
+              ? lowDensity ? undefined : '0 0 64px rgba(255,61,110,0.58), inset 0 0 24px rgba(255,61,110,0.18)'
+              : lowDensity ? undefined : `0 0 ${finalBoss ? 52 : 34}px ${finalBoss ? chapter.glow : 'rgba(255,61,110,0.42)'}`,
         }}
         aria-label="enemy mothership"
       >
