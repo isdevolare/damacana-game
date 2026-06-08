@@ -253,7 +253,7 @@ const COMBO_TIERS = [
 ] as const;
 
 const ARENA_PERF = {
-  desktopRenderMs: 24,
+  desktopRenderMs: 33,
   mobileRenderMs: 140,
   emergencyRenderMs: 320,
   mobileSimMs: 96,

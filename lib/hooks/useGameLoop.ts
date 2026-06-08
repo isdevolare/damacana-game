@@ -37,7 +37,10 @@ export function useGameLoop() {
     let last = performance.now();
     let raf = 0;
     const step = (now: number) => {
-      const dt = now - last;
+      // Clamp dt so returning from a backgrounded tab (where rAF is paused)
+      // doesn't deliver one huge frame that spikes a full tick of progress.
+      // Offline gains are handled separately by claimOfflineProgress().
+      const dt = Math.min(now - last, 100);
       last = now;
       tick(dt);
       refreshResearchProgress();
