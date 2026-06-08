@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
 import { BALANCE } from './config/balance';
 import { prestigePermanentBonuses, prestigeShardGain } from './config/prestige';
 import { LEVELS, activeLevels, levelForTotal } from './config/levels';
@@ -1033,6 +1033,68 @@ const initialState: Persisted = {
   seenOnboardingHintIds: [],
   hasStarted: false,
 };
+
+// --- Persistence backend abstraction -----------------------------------------
+// A minimal string KV interface so the throttling layer stays decoupled from the
+// concrete storage. Today it wraps localStorage; on Capacitor this can be swapped
+// for a Preferences-backed implementation without touching the throttle logic.
+interface PersistenceBackend {
+  read: (name: string) => string | null;
+  write: (name: string, value: string) => void;
+  remove: (name: string) => void;
+}
+
+const localStorageBackend: PersistenceBackend = {
+  read: (name) => localStorage.getItem(name),
+  write: (name, value) => localStorage.setItem(name, value),
+  remove: (name) => localStorage.removeItem(name),
+};
+
+// Throttles writes: the game loop mutates state ~60×/s, but we only need to
+// persist occasionally. This buffers the latest value and flushes at most once
+// per `flushMs`, and flushes IMMEDIATELY on pagehide / tab-hidden so progress is
+// never lost when the app is backgrounded or closed. Reads/removes pass through.
+function createThrottledStorage(backend: PersistenceBackend, flushMs = 4000): StateStorage {
+  let pending: { name: string; value: string } | null = null;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const flush = () => {
+    if (timer !== null) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    if (pending !== null) {
+      backend.write(pending.name, pending.value);
+      pending = null;
+    }
+  };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('pagehide', flush);
+    window.addEventListener('visibilitychange', () => {
+      if (document.hidden) flush();
+    });
+  }
+
+  return {
+    getItem: (name) => backend.read(name),
+    setItem: (name, value) => {
+      pending = { name, value };
+      if (timer === null) {
+        timer = setTimeout(flush, flushMs);
+      }
+    },
+    removeItem: (name) => {
+      // Drop any buffered write so a stale value can't resurrect after clear.
+      pending = null;
+      if (timer !== null) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      backend.remove(name);
+    },
+  };
+}
 
 export const useGame = create<GameState>()(
   persist(
@@ -2262,7 +2324,9 @@ export const useGame = create<GameState>()(
     }),
     {
       name: 'damacana_v1',
-      storage: createJSONStorage(() => (typeof window !== 'undefined' ? localStorage : (undefined as never))),
+      storage: createJSONStorage(() =>
+        typeof window !== 'undefined' ? createThrottledStorage(localStorageBackend) : (undefined as never),
+      ),
       partialize: (s) => ({
         damacana: s.damacana,
         totalEarned: s.totalEarned,
