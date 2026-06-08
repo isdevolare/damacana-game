@@ -5,6 +5,7 @@ import type { PointerEvent } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useGame, selectArtifactBonuses, selectAscensionBonuses, selectBuildBonuses, selectCombatStats, selectPerSec, selectPerTap, selectResearchBonuses } from '@/lib/store';
+import { useShallow } from 'zustand/react/shallow';
 import type { Buff } from '@/lib/store';
 import { currentChapter } from '@/lib/config/chapters';
 import { bossPhaseCombatTuning, bossPhaseInfo } from '@/lib/config/bossMissions';
@@ -1058,7 +1059,10 @@ export function CombatArena() {
   const legacyTree = useGame((s) => s.tree);
   const perTap = useGame(selectPerTap);
   const perSec = useGame(selectPerSec);
-  const combatStats = useGame(selectCombatStats);
+  // useShallow: selectCombatStats rebuilds a new object every store update, so
+  // a plain subscription re-renders this component ~60×/s (tickAuto). Shallow-
+  // comparing the returned fields skips the re-render when stats are unchanged.
+  const combatStats = useGame(useShallow(selectCombatStats));
   const researchBonuses = useGame(selectResearchBonuses);
   const buildBonuses = useGame(selectBuildBonuses);
   const artifactBonuses = useGame(selectArtifactBonuses);
