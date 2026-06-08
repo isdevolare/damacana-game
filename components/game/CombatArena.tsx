@@ -1050,7 +1050,11 @@ let cosmeticCrateId = 1;
 
 export function CombatArena() {
   const t = useTranslations();
-  const boss = useGame((s) => s.boss);
+  // boss.hpCur changes every frame (auto-damage), which re-rendered this whole
+  // 4386-line component ~60×/s. Hold it as throttled local render state instead:
+  // the frame loop keeps bossRef fresh (getState) for combat logic, and we push
+  // to this state only at the throttled render cadence (see commit block below).
+  const [boss, setBoss] = useState(() => useGame.getState().boss);
   const combo = useGame((s) => s.combo);
   const levelIdx = useGame((s) => s.levelIdx);
   const totalPrestiges = useGame((s) => s.totalPrestiges);
@@ -1080,7 +1084,8 @@ export function CombatArena() {
   const playerHp = useGame((s) => s.playerHp);
   const playerMana = useGame((s) => s.playerMana);
   const abilityCooldowns = useGame((s) => s.combatAbilityCooldowns);
-  const activeBuffs = useGame((s) => s.activeBuffs);
+  // Same isolation as boss: activeBuffs is rebuilt (new array) every frame.
+  const [activeBuffs, setActiveBuffs] = useState(() => useGame.getState().activeBuffs);
   const tap = useGame((s) => s.tapDamacana);
   const applyCombatDamage = useGame((s) => s.applyCombatDamage);
   const healCombatHp = useGame((s) => s.healCombatHp);
@@ -1253,7 +1258,8 @@ export function CombatArena() {
   useEffect(() => { planetThemeRef.current = planetTheme; }, [planetTheme]);
   useEffect(() => { sfxRef.current = sfxEnabled; }, [sfxEnabled]);
   useEffect(() => { tapRef.current = tap; }, [tap]);
-  useEffect(() => { bossRef.current = boss; }, [boss]);
+  // bossRef is synced fresh from the store inside the frame loop (60fps) so combat
+  // logic stays accurate; the throttled `boss` render state no longer drives it.
   useEffect(() => { bossProfileRef.current = bossProfile; }, [bossProfile]);
   useEffect(() => { chapterRef.current = chapter; }, [chapter]);
   useEffect(() => { combatStatsRef.current = combatStats; }, [combatStats]);
@@ -1264,7 +1270,7 @@ export function CombatArena() {
   useEffect(() => { spendCombatAbilityRef.current = spendCombatAbility; }, [spendCombatAbility]);
   useEffect(() => { boostCombatComboRef.current = boostCombatCombo; }, [boostCombatCombo]);
   useEffect(() => { reduceCombatComboRef.current = reduceCombatCombo; }, [reduceCombatCombo]);
-  useEffect(() => { activeBuffsRef.current = activeBuffs; }, [activeBuffs]);
+  // activeBuffsRef likewise synced fresh in the frame loop (see below).
   useEffect(() => { researchBonusesRef.current = researchBonuses; }, [researchBonuses]);
   useEffect(() => { buildBonusesRef.current = buildBonuses; }, [buildBonuses]);
   useEffect(() => { artifactBonusesRef.current = artifactBonuses; }, [artifactBonuses]);
@@ -2014,6 +2020,12 @@ export function CombatArena() {
     const frame = (nowPerf: number) => {
       if (frameLoopTokenRef.current !== loopToken) return;
       const now = Date.now();
+      // Keep combat-logic refs 60fps-fresh from the store WITHOUT subscribing the
+      // component (which would re-render it ~60×/s). The throttled commit below
+      // pushes these to React render state at the normal render cadence.
+      const liveState = useGame.getState();
+      bossRef.current = liveState.boss;
+      activeBuffsRef.current = liveState.activeBuffs;
       const rawDt = nowPerf - last;
       if (lowDensityRef.current && rawDt > ARENA_PERF.mobileLagFrameMs) {
         lagStrikeRef.current += 1;
@@ -2999,6 +3011,11 @@ export function CombatArena() {
           : ARENA_PERF.desktopRenderMs;
       if (nowPerf - lastRenderRef.current >= renderInterval) {
         lastRenderRef.current = nowPerf;
+        // Throttled push of the high-frequency boss/buff state into React render
+        // state (refs are already fresh this frame). This is what replaces the
+        // removed 60fps store subscriptions.
+        setBoss(bossRef.current);
+        setActiveBuffs(activeBuffsRef.current);
         setPlayer(p);
         setEnemies(lowDensityFrame ? enemiesRef.current.slice(-enemyCap) : enemiesRef.current);
         setPulses(lowDensityFrame ? pulsesRef.current.slice(-1) : pulsesRef.current);
