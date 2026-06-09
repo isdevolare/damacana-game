@@ -3336,7 +3336,7 @@ export function CombatArena() {
             <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/10">
               <div
                 className="h-full transition-[width]"
-                style={{ width: `${bossHpPct}%`, background: finalBoss ? chapter.accent : '#ff3d6e', boxShadow: `0 0 16px ${finalBoss ? chapter.glow : 'rgba(255,61,110,0.6)'}` }}
+                style={{ width: `${bossHpPct}%`, background: finalBoss ? chapter.accent : '#ff3d6e', boxShadow: lowDensity ? undefined : `0 0 16px ${finalBoss ? chapter.glow : 'rgba(255,61,110,0.6)'}` }}
               />
             </div>
           </div>
@@ -3351,7 +3351,7 @@ export function CombatArena() {
                 style={{
                   width: `${playerHpPct}%`,
                   background: playerHit || playerHpPct < 35 ? '#ff3d6e' : '#5cf6ff',
-                  boxShadow: playerHit ? '0 0 14px rgba(255,61,110,0.85)' : '0 0 12px rgba(92,246,255,0.72)',
+                  boxShadow: lowDensity ? undefined : playerHit ? '0 0 14px rgba(255,61,110,0.85)' : '0 0 12px rgba(92,246,255,0.72)',
                 }}
               />
             </div>
@@ -3361,7 +3361,7 @@ export function CombatArena() {
             </div>
             <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
               <div
-                className="h-full bg-purple transition-[width] duration-300 shadow-[0_0_10px_rgba(184,122,255,0.75)]"
+                className={`h-full bg-purple transition-[width] duration-300${lowDensity ? '' : ' shadow-[0_0_10px_rgba(184,122,255,0.75)]'}`}
                 style={{ width: `${playerManaPct}%` }}
               />
             </div>
@@ -3620,7 +3620,7 @@ export function CombatArena() {
             </div>
           </>
         )}
-        <div className="absolute bottom-[14%] h-[12%] w-[54%] rounded-full opacity-70 blur-sm" style={{ background: bossRageActive ? '#ff3d6e' : chapter.accent }} />
+        <div className={`absolute bottom-[14%] h-[12%] w-[54%] rounded-full opacity-70${lowDensity ? '' : ' blur-sm'}`} style={{ background: bossRageActive ? '#ff3d6e' : chapter.accent }} />
         <div className="relative font-vt text-3xl drop-shadow-[0_0_12px_currentColor]">{chapter.planetGlyph}</div>
       </motion.button>
 
