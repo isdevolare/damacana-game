@@ -3,6 +3,7 @@
 import { useGame } from '@/lib/store';
 import { currentChapter } from '@/lib/config/chapters';
 import { planetThemeForChapter } from '@/lib/config/planetThemes';
+import { useLowDensity } from '@/lib/hooks/useLowDensity';
 import { useEffect, useState } from 'react';
 
 interface Star { id: number; x: number; y: number; s: number; o: number; d: number }
@@ -12,13 +13,18 @@ export function Background() {
   const completedChapters = useGame((s) => s.completedChapters);
   const chapter = currentChapter(completedChapters);
   const theme = planetThemeForChapter(chapter.id);
+  // On mobile / low-density, this always-visible full-screen layer is the biggest
+  // continuous-paint source. Drop the animated flows, thin out and freeze the
+  // stars, and reduce blur/glow below.
+  const lowDensity = useLowDensity();
 
   const [stars, setStars] = useState<Star[]>([]);
   const [flows, setFlows] = useState<Flow[]>([]);
 
   useEffect(() => {
+    const starCount = lowDensity ? Math.min(14, theme.starDensity) : theme.starDensity;
     setStars(
-      Array.from({ length: theme.starDensity }).map((_, i) => ({
+      Array.from({ length: starCount }).map((_, i) => ({
         id: i,
         x: Math.random() * 100,
         y: Math.random() * 100,
@@ -27,16 +33,20 @@ export function Background() {
         d: 2 + Math.random() * 5,
       })),
     );
+    // Flows are blurred + box-shadowed elements animating across the whole screen
+    // every frame — removed entirely on mobile.
     setFlows(
-      Array.from({ length: theme.dustDensity }).map((_, i) => ({
-        id: i,
-        x: 5 + Math.random() * 90,
-        d: 5 + Math.random() * 7,
-        delay: Math.random() * 5,
-        h: 80 + Math.random() * 160,
-      })),
+      lowDensity
+        ? []
+        : Array.from({ length: theme.dustDensity }).map((_, i) => ({
+            id: i,
+            x: 5 + Math.random() * 90,
+            d: 5 + Math.random() * 7,
+            delay: Math.random() * 5,
+            h: 80 + Math.random() * 160,
+          })),
     );
-  }, [theme.dustDensity, theme.starDensity]);
+  }, [theme.dustDensity, theme.starDensity, lowDensity]);
 
   return (
     <div
@@ -50,10 +60,10 @@ export function Background() {
         }}
       />
       <div
-        className="absolute left-1/2 top-[11%] h-[210px] w-[210px] -translate-x-1/2 rounded-full opacity-40 blur-[1px] transition-[background,box-shadow] duration-700"
+        className={`absolute left-1/2 top-[11%] h-[210px] w-[210px] -translate-x-1/2 rounded-full opacity-40 transition-[background,box-shadow] duration-700${lowDensity ? '' : ' blur-[1px]'}`}
         style={{
           background: theme.planetGradient,
-          boxShadow: `0 0 90px 24px ${theme.ambientGlow}`,
+          boxShadow: lowDensity ? `0 0 36px 8px ${theme.ambientGlow}` : `0 0 90px 24px ${theme.ambientGlow}`,
         }}
       />
       {theme.effect === 'rings' && (
@@ -68,7 +78,7 @@ export function Background() {
           />
         </>
       )}
-      {theme.effect === 'storm' && (
+      {!lowDensity && theme.effect === 'storm' && (
         <div
           className="absolute left-1/2 top-[18%] h-24 w-[280px] -translate-x-1/2 rounded-full opacity-25 blur-[2px]"
           style={{
@@ -76,13 +86,13 @@ export function Background() {
           }}
         />
       )}
-      {theme.effect === 'iceFog' && (
+      {!lowDensity && theme.effect === 'iceFog' && (
         <div
           className="absolute left-1/2 top-[24%] h-44 w-[340px] -translate-x-1/2 rounded-full opacity-20 blur-lg"
           style={{ background: theme.dustColor }}
         />
       )}
-      {theme.effect === 'dust' && (
+      {!lowDensity && theme.effect === 'dust' && (
         <div
           className="absolute inset-x-0 top-[28%] h-20 opacity-20 blur-[1px]"
           style={{
@@ -90,7 +100,7 @@ export function Background() {
           }}
         />
       )}
-      {theme.effect === 'ember' && (
+      {!lowDensity && theme.effect === 'ember' && (
         <div
           className="absolute inset-x-0 top-[18%] h-44 opacity-24 blur-[2px]"
           style={{
@@ -98,7 +108,7 @@ export function Background() {
           }}
         />
       )}
-      {theme.effect === 'flare' && (
+      {!lowDensity && theme.effect === 'flare' && (
         <div
           className="absolute left-1/2 top-[10%] h-[250px] w-[250px] -translate-x-1/2 rounded-full opacity-20 blur-md"
           style={{
@@ -116,7 +126,7 @@ export function Background() {
             width: s.s,
             height: s.s,
             opacity: s.o,
-            animation: `pulse2 ${s.d}s ease-in-out infinite`,
+            animation: lowDensity ? undefined : `pulse2 ${s.d}s ease-in-out infinite`,
           }}
         />
       ))}
