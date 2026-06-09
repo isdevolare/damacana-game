@@ -3600,13 +3600,13 @@ export function CombatArena() {
         {bossSummoning && (
           <div className="absolute -inset-4 rounded-full border border-dashed border-cyan/50 sm:animate-spinslow sm:shadow-[0_0_28px_rgba(92,246,255,0.24)]" />
         )}
-        {bossShieldActive && !lowDensity && (
+        {bossShieldActive && (
           <div className="absolute -inset-4 rounded-full border-2 border-cyan/55 bg-cyan/5 shadow-[0_0_26px_rgba(128,255,244,0.32)]" />
         )}
-        {shieldCrackActive && !lowDensity && (
+        {shieldCrackActive && (
           <div className="absolute -inset-5 rounded-full border-2 border-dashed border-white/65 bg-white/5 shadow-[0_0_28px_rgba(128,255,244,0.36)]" />
         )}
-        {bossRageActive && !lowDensity && (
+        {bossRageActive && (
           <div className="absolute -inset-5 rounded-full border-2 border-dashed border-danger/60 bg-danger/5 shadow-[0_0_30px_rgba(255,61,110,0.34)]" />
         )}
         {bossWeakActive && (
@@ -3627,8 +3627,8 @@ export function CombatArena() {
             )}
           </>
         )}
-        <div className={`absolute bottom-[14%] h-[12%] w-[54%] rounded-full opacity-70${lowDensity ? '' : ' blur-sm'}`} style={{ background: bossRageActive ? '#ff3d6e' : chapter.accent }} />
-        <div className={`relative font-vt text-3xl${lowDensity ? '' : ' drop-shadow-[0_0_12px_currentColor]'}`}>{chapter.planetGlyph}</div>
+        <div className="absolute bottom-[14%] h-[12%] w-[54%] rounded-full opacity-70 blur-sm" style={{ background: bossRageActive ? '#ff3d6e' : chapter.accent }} />
+        <div className="relative font-vt text-3xl drop-shadow-[0_0_12px_currentColor]">{chapter.planetGlyph}</div>
       </motion.button>
 
       {!canvasVisualsActive && renderedHazards.map((hazard) => {

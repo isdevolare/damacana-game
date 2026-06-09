@@ -60,10 +60,10 @@ export function Background() {
         }}
       />
       <div
-        className={`absolute left-1/2 top-[11%] h-[210px] w-[210px] -translate-x-1/2 rounded-full opacity-40 transition-[background,box-shadow] duration-700${lowDensity ? '' : ' blur-[1px]'}`}
+        className="absolute left-1/2 top-[11%] h-[210px] w-[210px] -translate-x-1/2 rounded-full opacity-40 blur-[1px] transition-[background,box-shadow] duration-700"
         style={{
           background: theme.planetGradient,
-          boxShadow: lowDensity ? `0 0 36px 8px ${theme.ambientGlow}` : `0 0 90px 24px ${theme.ambientGlow}`,
+          boxShadow: `0 0 90px 24px ${theme.ambientGlow}`,
         }}
       />
       {theme.effect === 'rings' && (
@@ -78,7 +78,7 @@ export function Background() {
           />
         </>
       )}
-      {!lowDensity && theme.effect === 'storm' && (
+      {theme.effect === 'storm' && (
         <div
           className="absolute left-1/2 top-[18%] h-24 w-[280px] -translate-x-1/2 rounded-full opacity-25 blur-[2px]"
           style={{
@@ -86,13 +86,13 @@ export function Background() {
           }}
         />
       )}
-      {!lowDensity && theme.effect === 'iceFog' && (
+      {theme.effect === 'iceFog' && (
         <div
           className="absolute left-1/2 top-[24%] h-44 w-[340px] -translate-x-1/2 rounded-full opacity-20 blur-lg"
           style={{ background: theme.dustColor }}
         />
       )}
-      {!lowDensity && theme.effect === 'dust' && (
+      {theme.effect === 'dust' && (
         <div
           className="absolute inset-x-0 top-[28%] h-20 opacity-20 blur-[1px]"
           style={{
@@ -100,7 +100,7 @@ export function Background() {
           }}
         />
       )}
-      {!lowDensity && theme.effect === 'ember' && (
+      {theme.effect === 'ember' && (
         <div
           className="absolute inset-x-0 top-[18%] h-44 opacity-24 blur-[2px]"
           style={{
@@ -108,7 +108,7 @@ export function Background() {
           }}
         />
       )}
-      {!lowDensity && theme.effect === 'flare' && (
+      {theme.effect === 'flare' && (
         <div
           className="absolute left-1/2 top-[10%] h-[250px] w-[250px] -translate-x-1/2 rounded-full opacity-20 blur-md"
           style={{
