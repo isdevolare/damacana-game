@@ -1302,6 +1302,12 @@ export const useGame = create<GameState>()(
         const s = get();
         const now = Date.now();
         let buffs = s.activeBuffs.filter((b) => b.expiresAt > now);
+        // filter() only removes expired buffs (order preserved), so an equal
+        // length means nothing changed — reuse the original array reference to
+        // avoid re-rendering activeBuffs subscribers (AnomalyEffectsHud, ...) 60×/s.
+        // The boss-kill path below reassigns `buffs` to a fresh array when it adds
+        // drops, so genuine changes are still propagated.
+        if (buffs.length === s.activeBuffs.length) buffs = s.activeBuffs;
 
         const ps = derivedPerSec({ ...s, activeBuffs: buffs });
         const passiveGain = (ps * dtMs) / 1000;
