@@ -3392,7 +3392,7 @@ export function CombatArena() {
           initial={{ opacity: 0, y: 10, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0 }}
-          className="pointer-events-none absolute left-1/2 top-[26%] z-50 w-[min(88%,310px)] -translate-x-1/2 rounded-lg border bg-black/82 px-3 py-2 text-center shadow-[0_0_24px_rgba(92,246,255,0.16)] backdrop-blur-sm"
+          className={`pointer-events-none absolute left-1/2 top-[26%] z-50 w-[min(88%,310px)] -translate-x-1/2 rounded-lg border bg-black/82 px-3 py-2 text-center shadow-[0_0_24px_rgba(92,246,255,0.16)]${lowDensity ? '' : ' backdrop-blur-sm'}`}
           style={{
             borderColor: `${weaponEvolutionToastDef.accent}88`,
             boxShadow: lowDensity ? undefined : `0 0 24px ${weaponEvolutionToastDef.accent}33`,
@@ -3444,7 +3444,7 @@ export function CombatArena() {
           initial={{ opacity: 0, y: 6, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0 }}
-          className="pointer-events-none absolute left-1/2 top-[16%] z-40 -translate-x-1/2 rounded-md border bg-black/72 px-2.5 py-1 text-center shadow-[0_0_18px_rgba(0,0,0,0.45)] backdrop-blur-sm"
+          className={`pointer-events-none absolute left-1/2 top-[16%] z-40 -translate-x-1/2 rounded-md border bg-black/72 px-2.5 py-1 text-center shadow-[0_0_18px_rgba(0,0,0,0.45)]${lowDensity ? '' : ' backdrop-blur-sm'}`}
           style={{
             borderColor: activeWaveDef.accent,
             boxShadow: lowDensity ? undefined : `0 0 18px ${activeWaveDef.accent}44`,
@@ -3467,7 +3467,7 @@ export function CombatArena() {
           initial={{ opacity: 0, y: 6, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0 }}
-          className="pointer-events-none absolute right-2 top-[16%] z-40 rounded-md border bg-black/72 px-2 py-1 text-center shadow-[0_0_18px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:right-3"
+          className={`pointer-events-none absolute right-2 top-[16%] z-40 rounded-md border bg-black/72 px-2 py-1 text-center shadow-[0_0_18px_rgba(0,0,0,0.45)] sm:right-3${lowDensity ? '' : ' backdrop-blur-sm'}`}
           style={{
             borderColor: HAZARD_STYLE[activeHazardWarning.kind].color,
             boxShadow: lowDensity ? undefined : `0 0 18px ${HAZARD_STYLE[activeHazardWarning.kind].color}44`,
