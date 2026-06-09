@@ -255,9 +255,9 @@ const COMBO_TIERS = [
 
 const ARENA_PERF = {
   desktopRenderMs: 33,
-  mobileRenderMs: 140,
+  mobileRenderMs: 50,
   emergencyRenderMs: 320,
-  mobileSimMs: 96,
+  mobileSimMs: 50,
   emergencySimMs: 180,
   mobileCollisionMs: 240,
   desktopEnemyCap: 9,
