@@ -36,15 +36,27 @@ export function useGameLoop() {
     if (!has) return;
     let last = performance.now();
     let raf = 0;
+    // Accumulate frame deltas and only run the store-touching tick ~20×/s instead
+    // of every rAF frame (~60×/s). Passive income and auto-damage are linear in dt
+    // (gain = ps * dt / 1000), so a single tick(acc) over the accumulated window
+    // produces the exact same totals — only the computation (and its per-call
+    // allocations: 3x full-state spreads, filtered arrays, the set() object) runs
+    // a third as often, cutting the GC churn that caused the stutter spikes.
+    const TICK_INTERVAL_MS = 50;
+    let acc = 0;
     const step = (now: number) => {
       // Clamp dt so returning from a backgrounded tab (where rAF is paused)
       // doesn't deliver one huge frame that spikes a full tick of progress.
       // Offline gains are handled separately by claimOfflineProgress().
       const dt = Math.min(now - last, 100);
       last = now;
-      tick(dt);
-      refreshResearchProgress();
-      addPlayTime(dt);
+      acc += dt;
+      if (acc >= TICK_INTERVAL_MS) {
+        tick(acc);
+        refreshResearchProgress();
+        addPlayTime(acc);
+        acc = 0;
+      }
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
