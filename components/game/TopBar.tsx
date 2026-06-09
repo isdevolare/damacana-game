@@ -6,7 +6,6 @@ import { currentChapter } from '@/lib/config/chapters';
 import { systemRequirementKey, systemUnlocked } from '@/lib/config/systemUnlocks';
 import { skillTierRequirementKey, skillTierUnlocked } from '@/lib/config/skillTree';
 import { ascensionPointGain, ascensionUnlocked } from '@/lib/config/ascension';
-import { useLowDensity } from '@/lib/hooks/useLowDensity';
 import { useTranslations } from 'next-intl';
 
 export function TopBar() {
@@ -27,10 +26,6 @@ export function TopBar() {
   const ownedBuildNodeIds = useGame((s) => s.ownedBuildNodeIds);
   const runArtifacts = useGame((s) => s.runArtifacts);
   const permanentArtifacts = useGame((s) => s.permanentArtifacts);
-  // backdrop-blur re-rasterizes the content behind this always-visible bar every
-  // frame the background changes — expensive on mobile GPUs. Drop it (the opaque
-  // bg below covers the same area) on low-density devices.
-  const lowDensity = useLowDensity();
   const t = useTranslations();
 
   const levels = activeLevels(totalPrestiges);
@@ -95,7 +90,7 @@ export function TopBar() {
         </div>
       </div>
 
-      <div className={`mt-1.5 rounded-lg border border-cyan/15 px-2 py-1.5 sm:mt-2 ${lowDensity ? 'bg-black/55' : 'bg-black/25 backdrop-blur-sm'}`}>
+      <div className="mt-1.5 rounded-lg border border-cyan/15 bg-black/25 px-2 py-1.5 backdrop-blur-sm sm:mt-2">
         <div className="mb-1 flex items-center justify-between gap-2">
           <span className="truncate font-space text-[7px] uppercase tracking-[0.22em] text-white/45 sm:text-[8px]">
             {t('ui.coreSystems')}

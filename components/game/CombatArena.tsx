@@ -3336,7 +3336,7 @@ export function CombatArena() {
             <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/10">
               <div
                 className="h-full transition-[width]"
-                style={{ width: `${bossHpPct}%`, background: finalBoss ? chapter.accent : '#ff3d6e', boxShadow: lowDensity ? undefined : `0 0 16px ${finalBoss ? chapter.glow : 'rgba(255,61,110,0.6)'}` }}
+                style={{ width: `${bossHpPct}%`, background: finalBoss ? chapter.accent : '#ff3d6e', boxShadow: `0 0 16px ${finalBoss ? chapter.glow : 'rgba(255,61,110,0.6)'}` }}
               />
             </div>
           </div>
@@ -3351,7 +3351,7 @@ export function CombatArena() {
                 style={{
                   width: `${playerHpPct}%`,
                   background: playerHit || playerHpPct < 35 ? '#ff3d6e' : '#5cf6ff',
-                  boxShadow: lowDensity ? undefined : playerHit ? '0 0 14px rgba(255,61,110,0.85)' : '0 0 12px rgba(92,246,255,0.72)',
+                  boxShadow: playerHit ? '0 0 14px rgba(255,61,110,0.85)' : '0 0 12px rgba(92,246,255,0.72)',
                 }}
               />
             </div>
@@ -3361,7 +3361,7 @@ export function CombatArena() {
             </div>
             <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
               <div
-                className={`h-full bg-purple transition-[width] duration-300${lowDensity ? '' : ' shadow-[0_0_10px_rgba(184,122,255,0.75)]'}`}
+                className="h-full bg-purple transition-[width] duration-300 shadow-[0_0_10px_rgba(184,122,255,0.75)]"
                 style={{ width: `${playerManaPct}%` }}
               />
             </div>
@@ -3392,7 +3392,7 @@ export function CombatArena() {
           initial={{ opacity: 0, y: 10, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0 }}
-          className={`pointer-events-none absolute left-1/2 top-[26%] z-50 w-[min(88%,310px)] -translate-x-1/2 rounded-lg border bg-black/82 px-3 py-2 text-center shadow-[0_0_24px_rgba(92,246,255,0.16)]${lowDensity ? '' : ' backdrop-blur-sm'}`}
+          className="pointer-events-none absolute left-1/2 top-[26%] z-50 w-[min(88%,310px)] -translate-x-1/2 rounded-lg border bg-black/82 px-3 py-2 text-center shadow-[0_0_24px_rgba(92,246,255,0.16)] backdrop-blur-sm"
           style={{
             borderColor: `${weaponEvolutionToastDef.accent}88`,
             boxShadow: lowDensity ? undefined : `0 0 24px ${weaponEvolutionToastDef.accent}33`,
@@ -3444,7 +3444,7 @@ export function CombatArena() {
           initial={{ opacity: 0, y: 6, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0 }}
-          className={`pointer-events-none absolute left-1/2 top-[16%] z-40 -translate-x-1/2 rounded-md border bg-black/72 px-2.5 py-1 text-center shadow-[0_0_18px_rgba(0,0,0,0.45)]${lowDensity ? '' : ' backdrop-blur-sm'}`}
+          className="pointer-events-none absolute left-1/2 top-[16%] z-40 -translate-x-1/2 rounded-md border bg-black/72 px-2.5 py-1 text-center shadow-[0_0_18px_rgba(0,0,0,0.45)] backdrop-blur-sm"
           style={{
             borderColor: activeWaveDef.accent,
             boxShadow: lowDensity ? undefined : `0 0 18px ${activeWaveDef.accent}44`,
@@ -3467,7 +3467,7 @@ export function CombatArena() {
           initial={{ opacity: 0, y: 6, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0 }}
-          className={`pointer-events-none absolute right-2 top-[16%] z-40 rounded-md border bg-black/72 px-2 py-1 text-center shadow-[0_0_18px_rgba(0,0,0,0.45)] sm:right-3${lowDensity ? '' : ' backdrop-blur-sm'}`}
+          className="pointer-events-none absolute right-2 top-[16%] z-40 rounded-md border bg-black/72 px-2 py-1 text-center shadow-[0_0_18px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:right-3"
           style={{
             borderColor: HAZARD_STYLE[activeHazardWarning.kind].color,
             boxShadow: lowDensity ? undefined : `0 0 18px ${HAZARD_STYLE[activeHazardWarning.kind].color}44`,
@@ -3613,7 +3613,7 @@ export function CombatArena() {
           <>
             {/* "weak now" indicator — keep the ring (mechanic is timing-based, any
                 tap on the boss during the window crits), drop its glow on mobile */}
-            <div className={`absolute -inset-3 rounded-full border-2 border-gold/70${lowDensity ? '' : ' shadow-[0_0_30px_rgba(255,209,102,0.45)]'}`} />
+            <div className="absolute -inset-3 rounded-full border-2 border-gold/70 shadow-[0_0_30px_rgba(255,209,102,0.45)]" />
             {/* The per-frame rotating, shadowed marker is the heaviest paint source
                 (box-shadow on a transform that updates every frame). It's purely
                 decorative, so skip it entirely on mobile. */}
