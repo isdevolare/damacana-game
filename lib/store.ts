@@ -1307,7 +1307,7 @@ export const useGame = create<GameState>()(
         const passiveGain = (ps * dtMs) / 1000;
         const autoTapRate = derivedAutoTapRate({ ...s, activeBuffs: buffs });
 
-        let boss = { ...s.boss };
+        let boss = s.boss;
         let dmcDelta = passiveGain;
         let shardsDelta = 0;
         let skinCreditsDelta = 0;
@@ -1328,6 +1328,11 @@ export const useGame = create<GameState>()(
           let dmgPool = perTap * autoTaps;
           while (dmgPool > 0 && boss.hpCur > 0) {
             const apply = Math.min(boss.hpCur, dmgPool * bossDmgMult);
+            // Clone lazily before the first in-place mutation: never mutate the
+            // persisted boss object, and keep boss === s.boss (original reference)
+            // when autoTapRate is 0 so the set() below emits the same reference and
+            // boss subscribers (TopBar, OnboardingHints, ...) don't re-render 60×/s.
+            if (boss === s.boss) boss = { ...boss };
             boss.hpCur -= apply;
             dmgPool -= apply / bossDmgMult;
             if (boss.hpCur <= 0) {
