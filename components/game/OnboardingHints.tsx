@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useGame } from '@/lib/store';
+import { useThrottledGameValue } from '@/lib/hooks/useThrottledGameValue';
 import { UPGRADES, upgradeCost } from '@/lib/config/upgrades';
 import { systemUnlocked } from '@/lib/config/systemUnlocks';
 
@@ -13,7 +14,11 @@ export function OnboardingHints() {
   const hasStarted = useGame((s) => s.hasStarted);
   const tutorialOpen = useGame((s) => s.showTutorial);
   const activeHintId = useGame((s) => s.activeOnboardingHintId);
-  const damacana = useGame((s) => s.damacana);
+  // damacana is only used to decide whether to surface the "first upgrade" hint
+  // (a threshold check in the effect below), not rendered — read it throttled so
+  // this always-mounted component doesn't re-render ~60×/s. boss is left as-is here
+  // (Madde A already keeps its reference stable at low level).
+  const damacana = useThrottledGameValue((s) => s.damacana, 180);
   const levelIdx = useGame((s) => s.levelIdx);
   const upgrades = useGame((s) => s.upgrades);
   const boss = useGame((s) => s.boss);

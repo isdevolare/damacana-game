@@ -3,11 +3,15 @@
 import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { useGame, selectPerTap, selectPerSec } from '@/lib/store';
+import { useThrottledGameValue } from '@/lib/hooks/useThrottledGameValue';
 import { fmt } from '@/lib/util';
 import { useTranslations } from 'next-intl';
 
 export function Counter() {
-  const dmc = useGame((s) => s.damacana);
+  // damacana updates ~60×/s; the headline counter only needs to look live, so read
+  // it throttled (~10×/s) to stop this component re-rendering every frame. Display
+  // only — no logic depends on its precision here.
+  const dmc = useThrottledGameValue((s) => s.damacana, 100);
   const shards = useGame((s) => s.shards);
   const perTap = useGame(selectPerTap);
   const perSec = useGame(selectPerSec);
