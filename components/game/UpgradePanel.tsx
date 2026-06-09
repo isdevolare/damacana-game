@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from '@/lib/store';
+import { useThrottledGameValue } from '@/lib/hooks/useThrottledGameValue';
 import {
   UPGRADES,
   affordableUpgradeCount,
@@ -30,7 +31,13 @@ const RARITY_STYLE = {
 
 export function UpgradePanel() {
   const upgrades = useGame((s) => s.upgrades);
-  const dmc = useGame((s) => s.damacana);
+  // damacana changes ~60×/s; this 220-line panel only uses it to show affordability
+  // (count/cost/can highlights), which doesn't need per-frame accuracy. Read a
+  // throttled view so the panel re-renders ~5×/s instead of 60×/s. The actual
+  // purchase (`buy` below) goes through the store action, which validates against
+  // the precise live damacana — so the economy stays exact and no stale-value buy
+  // can occur; only the visual affordability hint lags by up to ~180ms.
+  const dmc = useThrottledGameValue((s) => s.damacana, 180);
   const levelIdx = useGame((s) => s.levelIdx);
   const buy = useGame((s) => s.buyUpgrade);
   const sfxEnabled = useGame((s) => !s.audio.muted);
