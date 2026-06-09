@@ -3264,7 +3264,7 @@ export function CombatArena() {
           style={{ background: planetTheme.uiAccent, boxShadow: `0 0 40px ${planetTheme.ambientGlow}` }}
         />
       )}
-      {(activeArenaPulse || activeUpgradeSurge || comboArenaPulse || visualPressure || bossRageActive || bossCorruptedWarningActive) && (
+      {!lowDensity && (activeArenaPulse || activeUpgradeSurge || comboArenaPulse || visualPressure || bossRageActive || bossCorruptedWarningActive) && (
         <div
           className="pointer-events-none absolute inset-0 z-[6]"
           style={{
@@ -3600,28 +3600,35 @@ export function CombatArena() {
         {bossSummoning && (
           <div className="absolute -inset-4 rounded-full border border-dashed border-cyan/50 sm:animate-spinslow sm:shadow-[0_0_28px_rgba(92,246,255,0.24)]" />
         )}
-        {bossShieldActive && (
+        {bossShieldActive && !lowDensity && (
           <div className="absolute -inset-4 rounded-full border-2 border-cyan/55 bg-cyan/5 shadow-[0_0_26px_rgba(128,255,244,0.32)]" />
         )}
-        {shieldCrackActive && (
+        {shieldCrackActive && !lowDensity && (
           <div className="absolute -inset-5 rounded-full border-2 border-dashed border-white/65 bg-white/5 shadow-[0_0_28px_rgba(128,255,244,0.36)]" />
         )}
-        {bossRageActive && (
+        {bossRageActive && !lowDensity && (
           <div className="absolute -inset-5 rounded-full border-2 border-dashed border-danger/60 bg-danger/5 shadow-[0_0_30px_rgba(255,61,110,0.34)]" />
         )}
         {bossWeakActive && (
           <>
-            <div className="absolute -inset-3 rounded-full border-2 border-gold/70 shadow-[0_0_30px_rgba(255,209,102,0.45)]" />
-            <div
-              className="absolute left-1/2 top-1/2 h-12 w-12 rounded-full border-2 border-gold bg-gold/15 shadow-[0_0_24px_rgba(255,209,102,0.95)]"
-              style={{ transform: `translate(calc(-50% + ${weakPointX}px), calc(-50% + ${weakPointY}px))` }}
-            >
-              <div className="absolute inset-2 rounded-full bg-gold/75 shadow-[0_0_18px_rgba(255,209,102,0.9)]" />
-            </div>
+            {/* "weak now" indicator — keep the ring (mechanic is timing-based, any
+                tap on the boss during the window crits), drop its glow on mobile */}
+            <div className={`absolute -inset-3 rounded-full border-2 border-gold/70${lowDensity ? '' : ' shadow-[0_0_30px_rgba(255,209,102,0.45)]'}`} />
+            {/* The per-frame rotating, shadowed marker is the heaviest paint source
+                (box-shadow on a transform that updates every frame). It's purely
+                decorative, so skip it entirely on mobile. */}
+            {!lowDensity && (
+              <div
+                className="absolute left-1/2 top-1/2 h-12 w-12 rounded-full border-2 border-gold bg-gold/15 shadow-[0_0_24px_rgba(255,209,102,0.95)]"
+                style={{ transform: `translate(calc(-50% + ${weakPointX}px), calc(-50% + ${weakPointY}px))` }}
+              >
+                <div className="absolute inset-2 rounded-full bg-gold/75 shadow-[0_0_18px_rgba(255,209,102,0.9)]" />
+              </div>
+            )}
           </>
         )}
         <div className={`absolute bottom-[14%] h-[12%] w-[54%] rounded-full opacity-70${lowDensity ? '' : ' blur-sm'}`} style={{ background: bossRageActive ? '#ff3d6e' : chapter.accent }} />
-        <div className="relative font-vt text-3xl drop-shadow-[0_0_12px_currentColor]">{chapter.planetGlyph}</div>
+        <div className={`relative font-vt text-3xl${lowDensity ? '' : ' drop-shadow-[0_0_12px_currentColor]'}`}>{chapter.planetGlyph}</div>
       </motion.button>
 
       {!canvasVisualsActive && renderedHazards.map((hazard) => {
