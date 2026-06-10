@@ -580,7 +580,7 @@ function drawCanvasShip(
   const halfW = bodyWidth / 2;
   const halfH = bodyHeight / 2;
   const glow = playerHit ? '#ff3d6e' : burstFireActive ? skin.engine : skin.accent;
-  const pulse = lowDensity ? 1 : 1 + Math.sin(renderNow / 260) * 0.018;
+  const pulse = 1 + Math.sin(renderNow / 260) * 0.018;
 
   ctx.save();
   ctx.translate(x, y);
@@ -593,7 +593,7 @@ function drawCanvasShip(
   ctx.ellipse(0, 0, size * 0.82, size * 0.62, 0, 0, Math.PI * 2);
   ctx.stroke();
 
-  ctx.globalAlpha = lowDensity ? 0.38 : 0.48;
+  ctx.globalAlpha = 0.48;
   const trailHeight = skin.visual.trailStyle === 'wake' ? halfH * 1.3 : halfH * 0.95;
   const trailWidth = skin.visual.trailStyle === 'twin' ? halfW * 0.72 : halfW * 0.46;
   const trailGradient = ctx.createLinearGradient(0, halfH * 0.35, 0, halfH + trailHeight);
@@ -608,7 +608,7 @@ function drawCanvasShip(
   ], trailGradient);
 
   ctx.globalAlpha = 0.9;
-  ctx.shadowBlur = lowDensity ? 0 : 5;
+  ctx.shadowBlur = 5;
   ctx.shadowColor = glow;
   const wingFill = ctx.createLinearGradient(-halfW, -halfH, halfW, halfH);
   wingFill.addColorStop(0, `${skin.hull}ee`);
@@ -627,7 +627,7 @@ function drawCanvasShip(
           : [[0, -halfH], [halfW * 0.72, -halfH * 0.16], [halfW, halfH * 0.5], [halfW * 0.32, halfH * 0.28], [0, halfH], [-halfW * 0.32, halfH * 0.28], [-halfW, halfH * 0.5], [-halfW * 0.72, -halfH * 0.16]];
   drawCanvasPolygon(ctx, wingPoints, wingFill, `${skin.accent}99`);
 
-  ctx.shadowBlur = lowDensity ? 0 : 3;
+  ctx.shadowBlur = 3;
   const bodyFill = ctx.createLinearGradient(0, -halfH, 0, halfH);
   bodyFill.addColorStop(0, `${skin.accent}88`);
   bodyFill.addColorStop(0.4, skin.hull);
@@ -642,7 +642,7 @@ function drawCanvasShip(
   ], bodyFill, `${skin.accent}aa`);
 
   ctx.globalAlpha = playerHit ? 0.92 : 0.78;
-  ctx.shadowBlur = lowDensity ? 0 : 8;
+  ctx.shadowBlur = 8;
   ctx.shadowColor = playerHit ? '#ff3d6e' : skin.accent;
   ctx.fillStyle = playerHit ? '#ff3d6e' : skin.visual.coreColor;
   ctx.beginPath();
@@ -667,7 +667,7 @@ function drawCanvasEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy, player: Ve
   ctx.rotate(angle);
   ctx.scale(hit ? 1.12 : 1, hit ? 1.12 : 1);
   ctx.globalAlpha = 0.86;
-  ctx.shadowBlur = lowDensity ? 0 : hit ? 10 : 5;
+  ctx.shadowBlur = hit ? 10 : 5;
   ctx.shadowColor = color;
   drawCanvasPolygon(ctx, [
     [0, -size],
@@ -1000,7 +1000,7 @@ function CombatCanvas({
       const playerY = canvasY(player.y, height);
       if (combo >= 15) {
         ctx.save();
-        ctx.globalAlpha = lowDensity ? 0.12 + intensity * 0.08 : 0.18 + intensity * 0.12;
+        ctx.globalAlpha = 0.18 + intensity * 0.12;
         ctx.strokeStyle = combo >= 500 ? '#ffd166' : '#ff5ce8';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
@@ -3167,7 +3167,7 @@ export function CombatArena() {
                 : t('combat.bossTarget');
   const visualLowDensity = lowDensity || emergencyLowDensity;
   const bossSize = Math.round((visualLowDensity ? (finalBoss || mega ? 112 : 92) : (finalBoss || mega ? 128 : 104)) * CORE_DEFENSE.bossControllerScale);
-  const coreSize = visualLowDensity ? CORE_DEFENSE.mobilePlayerCoreSizePx : CORE_DEFENSE.playerCoreSizePx;
+  const coreSize = CORE_DEFENSE.playerCoreSizePx;
   const coreShieldSize = visualLowDensity ? CORE_DEFENSE.playerShieldSizePx - 10 : CORE_DEFENSE.playerShieldSizePx;
   const shipBodyScale = visualLowDensity ? 1.26 : 1.4;
   const weakPointAngle = bossProfile.rotatingWeakPoint ? (renderNow / 1000) * bossProfile.rotatingWeakPoint.speed : 0;
